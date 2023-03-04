@@ -1,27 +1,18 @@
 package RoverUI;
 
-import RoboCam.RoverFrontEnd;
 import RoverUI.Vehicle.Truck;
-import com.phidget22.AttachEvent;
-import com.phidget22.AttachListener;
-import com.phidget22.DeviceClass;
 import com.phidget22.Encoder;
-import com.phidget22.LogLevel;
-import com.phidget22.PhidgetException;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
+
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class GroundPanel extends javax.swing.JPanel
-                         implements MouseMotionListener {
+        implements MouseMotionListener {
 
     private final Truck mTruck;
     private final Point.Double mMousePos = new Point.Double();
@@ -29,10 +20,10 @@ public class GroundPanel extends javax.swing.JPanel
     private Object mSelectedObject = null;
     private boolean mIsLeftMouseUsed = true;
     private boolean mTroubleshootingMessages = false;
-    
+
     public String Batch_time_stamp_into_mysql = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS").format(new Date());
-    
-    private        Encoder enCh = null;
+
+    private Encoder enCh = null;
 
     private ArrayList<XYDoubleListener> mXYListeners = new ArrayList<>();
     private BufferedImage mGroundImage;
@@ -43,7 +34,7 @@ public class GroundPanel extends javax.swing.JPanel
     public GroundPanel() {
         initComponents();
         addMouseMotionListener(this);
-        mTruck = new Truck(new Point.Double(getWidth()*0.5 , getHeight()*0.6));
+        mTruck = new Truck(new Point.Double(getWidth() * 0.5, getHeight() * 0.6));
     }
 
     public void setGroundImageUrl(String url) {
@@ -53,16 +44,16 @@ public class GroundPanel extends javax.swing.JPanel
 //    public void SetDutyCycleWeedClipperHead(double duty) throws InterruptedException, Exception{
 ////        mTruck.SetDutyCycleWeedClipperHead(duty);
 //    }
-    
+
 //    public void baseMotorSetPosition(double baseMotorPosition) throws Exception{
 //        mTruck.baseMotorSetPosition(baseMotorPosition);
 //    }
-    
-    
+
+
     public String getBatchTime() {
         return Batch_time_stamp_into_mysql;
     }
-    
+
     public Truck getTruck() {
         return mTruck;
     }
@@ -73,32 +64,44 @@ public class GroundPanel extends javax.swing.JPanel
 
     public void setTruckStreeMode(String streeModeName) {
         mTruck.setSteeringMode(streeModeName);
-        System.err.println("streeModeName "+streeModeName);
-        if(streeModeName=="Stopped"){
+        System.err.println("streeModeName " + streeModeName);
+        if (streeModeName == "Stopped") {
             mTruck.stopMoving();
         }
-        if(mTroubleshootingMessages){System.out.println("    mMousePos = " + mMousePos);}
-        if(mTroubleshootingMessages){System.out.println("1 ForwardSteer testing getWidth() = " + getWidth() + " mTruck.getSteerCircleEdgeY() = " + mTruck.getSteerCircleEdgeY());}
+        if (mTroubleshootingMessages) {
+            System.out.println("    mMousePos = " + mMousePos);
+        }
+        if (mTroubleshootingMessages) {
+            System.out.println("1 ForwardSteer testing getWidth() = " + getWidth() + " mTruck.getSteerCircleEdgeY() = " + mTruck.getSteerCircleEdgeY());
+        }
         mMousePos.setLocation(getWidth() * 0.5, mTruck.getSteerCircleEdgeY());
         adjustMousePos();
         mTruck.rotateWheelsTo(mMousePos);
-        if(mTroubleshootingMessages){System.out.println("    mMousePos = " + mMousePos);}
-        if(mTroubleshootingMessages){System.out.println("2 ForwardSteer testing getWidth() = " + getWidth() + " mTruck.getSteerCircleEdgeY() = " + mTruck.getSteerCircleEdgeY());}
+        if (mTroubleshootingMessages) {
+            System.out.println("    mMousePos = " + mMousePos);
+        }
+        if (mTroubleshootingMessages) {
+            System.out.println("2 ForwardSteer testing getWidth() = " + getWidth() + " mTruck.getSteerCircleEdgeY() = " + mTruck.getSteerCircleEdgeY());
+        }
         repaint();
-        if(mTroubleshootingMessages){System.out.println("    mMousePos = " + mMousePos);}
-        if(mTroubleshootingMessages){System.out.println("3 ForwardSteer testing getWidth() = " + getWidth() + " mTruck.getSteerCircleEdgeY() = " + mTruck.getSteerCircleEdgeY());}
-        
+        if (mTroubleshootingMessages) {
+            System.out.println("    mMousePos = " + mMousePos);
+        }
+        if (mTroubleshootingMessages) {
+            System.out.println("3 ForwardSteer testing getWidth() = " + getWidth() + " mTruck.getSteerCircleEdgeY() = " + mTruck.getSteerCircleEdgeY());
+        }
+
     }
 
     public void setDrawScale(double setDrawScale) {
         mTruck.setDrawScale(setDrawScale);
     }
 
-    public void moveForwardxSteps(){
+    public void moveForwardxSteps() {
         repaint();
     }
-    
-    public void moveBackxSteps(){
+
+    public void moveBackxSteps() {
         repaint();
     }
 
@@ -106,18 +109,18 @@ public class GroundPanel extends javax.swing.JPanel
         mTruck.updateEmergencyStopToFalse();
         mTruck.updateWheelVelocityLimit(newVelocityLimit);
     }
-    
-    public void addSpeed(){
+
+    public void addSpeed() {
         mTruck.addSpeed();
         repaint();
     }
 
-    public void reduceSpeed(){
+    public void reduceSpeed() {
         mTruck.reduceSpeed();
         repaint();
     }
 
-    
+
 //public void EncoderExample() {
 //
 //        try {
@@ -193,62 +196,69 @@ public class GroundPanel extends javax.swing.JPanel
      * adjusted by Truck's drawing scale.
      * This function will set the position of mouse
      * after reverting those relativeness.
-     * @param pos 
+     *
+     * @param pos
      */
     public void setMousePosRelToTruck(Point.Double pos) {
         setMousePos(
-            (pos.x * mTruck.getDrawScale()) + mTruck.getDrawLocation().x, 
-            (pos.y * mTruck.getDrawScale()) + mTruck.getDrawLocation().y
+                (pos.x * mTruck.getDrawScale()) + mTruck.getDrawLocation().x,
+                (pos.y * mTruck.getDrawScale()) + mTruck.getDrawLocation().y
         );
     }
-    
+
     /**
-     * This function will adjust mouse position to keep it 
+     * This function will adjust mouse position to keep it
      * within required bounds.
      */
     private void adjustMousePos() {
-        if(mTroubleshootingMessages){System.out.println("A adjustMousePos value set here " + mMousePos.x + " mTruck.getSteerCircleEdgeMaxX() = " + mTruck.getSteerCircleEdgeMaxX());}
+        if (mTroubleshootingMessages) {
+            System.out.println("A adjustMousePos value set here " + mMousePos.x + " mTruck.getSteerCircleEdgeMaxX() = " + mTruck.getSteerCircleEdgeMaxX());
+        }
         mMousePos.x = Math.min(mMousePos.x, mTruck.getSteerCircleEdgeMaxX());
-        if(mTroubleshootingMessages){System.out.println("B adjustMousePos value set here " + mMousePos.x + " mTruck.getSteerCircleEdgeMaxX() = " + mTruck.getSteerCircleEdgeMaxX());}
+        if (mTroubleshootingMessages) {
+            System.out.println("B adjustMousePos value set here " + mMousePos.x + " mTruck.getSteerCircleEdgeMaxX() = " + mTruck.getSteerCircleEdgeMaxX());
+        }
         mMousePos.x = Math.max(mMousePos.x, mTruck.getSteerCircleEdgeMinX());
-        if(mTroubleshootingMessages){System.out.println("C adjustMousePos value set here " + mMousePos.x + " mTruck.getSteerCircleEdgeMinX() = " + mTruck.getSteerCircleEdgeMinX());}
+        if (mTroubleshootingMessages) {
+            System.out.println("C adjustMousePos value set here " + mMousePos.x + " mTruck.getSteerCircleEdgeMinX() = " + mTruck.getSteerCircleEdgeMinX());
+        }
     }
-    
+
     public void increaseMousePosXFraction(double pos) {
         setHypotheticalMousePos(
-                mMousePos.x + pos*0.5*getWidth(), 
+                mMousePos.x + pos * 0.5 * getWidth(),
                 mMousePos.y
         );
     }
 
-    public void setHypotheticalMousePos(double xPos, double yPos){
+    public void setHypotheticalMousePos(double xPos, double yPos) {
         mMousePos.setLocation(xPos, yPos);
         adjustMousePos();
         mTruck.rotateWheelsTo(mMousePos);
         repaint();
         fireMousePosListeners();
     }
-    
-    public void setHypotheticalMousePosX(double xPos){
+
+    public void setHypotheticalMousePosX(double xPos) {
         mMousePos.setLocation(xPos, mMousePos.y);
         adjustMousePos();
         mTruck.rotateWheelsTo(mMousePos);
         repaint();
     }
-    
+
     public void setMousePosFromCenter(double xPos, double yPos) {
-        setMousePos(getWidth()*(1+xPos)*0.5, getHeight()*(1+yPos)*0.5);
+        setMousePos(getWidth() * (1 + xPos) * 0.5, getHeight() * (1 + yPos) * 0.5);
     }
-    
+
     public void setMousePosAngle(double angleRad) {
         /*System.out.println(String.format(
                 "angleRad=%f", 180*angleRad/Math.PI);*/
         setMousePos(
-                getWidth()*(1-Math.sin(angleRad))*0.5,
-                getHeight()*(1-Math.cos(angleRad))*0.5
+                getWidth() * (1 - Math.sin(angleRad)) * 0.5,
+                getHeight() * (1 - Math.cos(angleRad)) * 0.5
         );
     }
-    
+
     public void setMousePos(double xPos, double yPos) {
         if (!mIsLeftMouseUsed) {
             xPos = getWidth() - xPos;
@@ -258,11 +268,11 @@ public class GroundPanel extends javax.swing.JPanel
         //System.out.println(mMousePos.x + " this tracks any motion of the mouse"); //this tracks any motion of the mouse
         repaint();
     }
-    
+
     public double getMousePosX() {
         return mMousePos.x;
     }
-    
+
     public double getSteerCircleEdgeY() {
         return mTruck.getSteerCircleEdgeY();
     }
@@ -281,7 +291,7 @@ public class GroundPanel extends javax.swing.JPanel
             grphcs.drawImage(mGroundImage, 0, 0, getWidth(), getHeight(),
                     0, 0, mGroundImage.getWidth(), mGroundImage.getHeight(), null);
         }
-        mTruck.moveTo((int)(getWidth()*0.5), (int)(getHeight()*0.5));
+        mTruck.moveTo((int) (getWidth() * 0.5), (int) (getHeight() * 0.5));
         mTruck.draw((Graphics2D) grphcs); // this runs repeatedly
     }
 
@@ -292,19 +302,19 @@ public class GroundPanel extends javax.swing.JPanel
                 mSelectedObject = mTruck;
             }
         } else if (mSelectedObject == mTruck) {
-            mTruck.moveRelative(me.getX()-mMousePos.x,
-                    me.getY()-mMousePos.y);
+            mTruck.moveRelative(me.getX() - mMousePos.x,
+                    me.getY() - mMousePos.y);
             repaint();
         }
         mMousePos.setLocation(me.getX(), me.getY());
     }
-    
+
     public void fireMousePosListeners() {
         mTruck.calc(mMousePos);
-        for (XYDoubleListener listener: mXYListeners) {
+        for (XYDoubleListener listener : mXYListeners) {
             listener.onChange(
-                (mMousePos.x - mTruck.getDrawLocation().x)/mTruck.getDrawScale(), 
-                (mMousePos.y - mTruck.getDrawLocation().y)/mTruck.getDrawScale()
+                    (mMousePos.x - mTruck.getDrawLocation().x) / mTruck.getDrawScale(),
+                    (mMousePos.y - mTruck.getDrawLocation().y) / mTruck.getDrawScale()
             );
             //System.out.println("mouse moved to: "+mMousePos.x+ " and "+mMousePos.y);
         }
@@ -315,7 +325,8 @@ public class GroundPanel extends javax.swing.JPanel
      * will be fired. The listener gets the current position of
      * mouse with respect to Truck's center point adjusted
      * by Truck scale.
-     * @param me 
+     *
+     * @param me
      */
     @Override
     public void mouseMoved(MouseEvent me) {
@@ -342,12 +353,12 @@ public class GroundPanel extends javax.swing.JPanel
         javax.swing.GroupLayout mIPCamPanelGroundLayout = new javax.swing.GroupLayout(mIPCamPanelGround);
         mIPCamPanelGround.setLayout(mIPCamPanelGroundLayout);
         mIPCamPanelGroundLayout.setHorizontalGroup(
-            mIPCamPanelGroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 574, Short.MAX_VALUE)
+                mIPCamPanelGroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 574, Short.MAX_VALUE)
         );
         mIPCamPanelGroundLayout.setVerticalGroup(
-            mIPCamPanelGroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 453, Short.MAX_VALUE)
+                mIPCamPanelGroundLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 453, Short.MAX_VALUE)
         );
 
         add(mIPCamPanelGround);

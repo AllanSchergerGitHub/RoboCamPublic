@@ -1,12 +1,10 @@
 package Utility;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.ImageIcon;
-import javax.swing.JColorChooser;
 
 public class ColorChooserButton extends javax.swing.JPanel {
     public static interface ColorChangedListener {
@@ -20,25 +18,26 @@ public class ColorChooserButton extends javax.swing.JPanel {
         initComponents();
         setColor(mColor, false);
     }
-    
+
     /**
      * @return the current color
      */
     public Color getColor() {
         return mColor;
     }
-    
+
     /**
      * Set the color, without notifying the listeners.
-     * @param color 
+     *
+     * @param color
      */
     public void setColor(Color color) {
         setColor(color, false);
     }
-    
+
     /***
      * Set the color and optionally notify the listeners.
-     * 
+     *
      * @param newColor - The news color to be set
      * @param notify - if true then all the color-change listeners will be fired.
      */
@@ -56,31 +55,32 @@ public class ColorChooserButton extends javax.swing.JPanel {
             }
         }
     }
-    
+
     /**
      * Add the given listener to be fired when different
      * color is selected by user.
-     * @param listener 
+     *
+     * @param listener
      */
     public void addColorChangeListener(ColorChangedListener listener) {
         mListeners.add(listener);
     }
-    
+
     /**
      * Creates and returns an image icon of given dimension and color.
-     * 
-     * @param color Fill color
+     *
+     * @param color  Fill color
      * @param width
      * @param height
      * @return image icon.
      */
-    public static  ImageIcon createIcon(Color color, int width, int height) {
+    public static ImageIcon createIcon(Color color, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = image.createGraphics();
         graphics.setColor(color);
         graphics.fillRect(0, 0, width, height);
         graphics.setXORMode(Color.DARK_GRAY);
-        graphics.drawRect(0, 0, width-1, height-1);
+        graphics.drawRect(0, 0, width - 1, height - 1);
         image.flush();
         ImageIcon icon = new ImageIcon(image);
         return icon;
@@ -99,10 +99,10 @@ public class ColorChooserButton extends javax.swing.JPanel {
         mColorButton = new javax.swing.JButton();
 
         java.awt.GridBagLayout layout = new java.awt.GridBagLayout();
-        layout.columnWidths = new int[] {1};
-        layout.rowHeights = new int[] {1};
-        layout.columnWeights = new double[] {1.0};
-        layout.rowWeights = new double[] {1.0};
+        layout.columnWidths = new int[]{1};
+        layout.rowHeights = new int[]{1};
+        layout.columnWeights = new double[]{1.0};
+        layout.rowWeights = new double[]{1.0};
         setLayout(layout);
 
         mColorButton.addActionListener(new java.awt.event.ActionListener() {

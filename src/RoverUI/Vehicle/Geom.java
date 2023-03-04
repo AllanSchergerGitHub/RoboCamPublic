@@ -1,6 +1,6 @@
 package RoverUI.Vehicle;
 
-import java.awt.Point;
+import java.awt.*;
 
 public class Geom {
     public static double getSlope(Point.Double point1, Point.Double point2) {

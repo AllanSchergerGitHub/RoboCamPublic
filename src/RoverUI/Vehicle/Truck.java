@@ -1,16 +1,10 @@
 package RoverUI.Vehicle;
 
 import Chart.ChartParamsDataset;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Stroke;
+
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 
 public class Truck {
@@ -23,18 +17,18 @@ public class Truck {
     private final Wheel mWheelRearRight;
 
     //private final Arm mArm;
-    
+
     private int wheel_ID = 3;
-    
+
     private final Wheel[] mWheels;
     private final SteeringArc mSteeringArc;
 
-    Point.Double modifiedMousePos = new Point.Double(427.5,180); //(434.5 when on UI?) - adjusting the x here can help if the wheels don't face straight ahead when the 'forwardsteer' button is pressed.
+    Point.Double modifiedMousePos = new Point.Double(427.5, 180); //(434.5 when on UI?) - adjusting the x here can help if the wheels don't face straight ahead when the 'forwardsteer' button is pressed.
     private Boolean mTroubleshootingMessages = false; // set this to true for additional messages to help with modifiedMousePos problems.
     Point.Double modifiedRelMousePos = new Point.Double();
-     
+
     private final int encoderPosition_display = 0;
-    
+
     //Point.Double rotateWheelsTo_toPoint;// = (Point.Double)(100.0,100.0);
     private double mDrawWidth = 103.5;
     private double mTruckDrawLength = 100;
@@ -55,22 +49,22 @@ public class Truck {
     private double frontLeftDeltaX = 1;
     private double rearRightDeltaX = 1;
     private double rearLeftDeltaX = 1;
-    
-    private Point.Double mDrawLocation = new Point.Double(434,180);
+
+    private Point.Double mDrawLocation = new Point.Double(434, 180);
     private Point.Double rotateWheelsTo_toPoint;
-    
+
     private double mDrawAngle = 0;
 
     private SteeringMode mSteeringMode = SteeringMode.NONE;
     private double mForwardAngle = 0.0;// Negative value means backward
     private double mForwardAngleRaw = 0.0;// Negative value means backward
-       
+
     private final Color mTruckColor = Color.BLUE;
 
 
     private final Rectangle.Double mTruckRectangle = new Rectangle.Double();
     Rectangle.Double mMouseBoundingBox = new Rectangle.Double();
-    
+
     private final Stroke mTruckStroke = new BasicStroke(2);
 
     int[] startX = new int[8];
@@ -80,11 +74,11 @@ public class Truck {
     int deviceNumber = 0;
     double deltaX = 0;
     double deltaY = 0;
-    
+
     double[] speedRatioTarget = new double[8];
     double[] anglesActual = {0, 0};
     double[] BaseLengthActual = {0, 0};
-    
+
     double slopeRoverBodyTarget = 0;
     double slopeFrontOuter = 0;
     double slopeFrontInner = 0;
@@ -95,15 +89,15 @@ public class Truck {
     double angleFrontInner = 1;
     double angleRearOuter = 1;
     double angleRearInner = 1;
-    
+
     double wheelDiameter = 13;
-        
+
     double roverBodySpeedTarget = 1;
-    double frontLeftSpeedTarget =1;
-    double frontRightSpeedTarget =1;
-    double rearLeftSpeedTarget =1;
-    double rearRightSpeedTarget =1;
-    
+    double frontLeftSpeedTarget = 1;
+    double frontRightSpeedTarget = 1;
+    double rearLeftSpeedTarget = 1;
+    double rearRightSpeedTarget = 1;
+
     // Holds the Y value of steering circle
     private double mSteerCircleEdgeY = 0;
     private double mSteerCircleEdgeX;
@@ -121,31 +115,35 @@ public class Truck {
         mWheelRearLeft = new Wheel(Wheel.WHEEL_REAR_LEFT, Color.RED);
         mWheelRearRight = new Wheel(Wheel.WHEEL_REAR_RIGHT, Color.RED);
 
-        mWheels = new Wheel[] {
-            mWheelFrontLeft, mWheelFrontRight,
-            mWheelRearLeft, mWheelRearRight
+        mWheels = new Wheel[]{
+                mWheelFrontLeft, mWheelFrontRight,
+                mWheelRearLeft, mWheelRearRight
         };
 
         mSteeringArc = new SteeringArc();
-        
+
         mDrawLocation = new Point.Double();
-        if(mTroubleshootingMessages){System.out.println("AA Draw Location defined here " + mDrawLocation);}
-        drawLocation = new Point.Double(427.5,180.0); //427.5 if this is set to a lower value the bounding box is closer to the correct starting point but there must be a negative that is lower so the circle is farther right as this gets smaller.
+        if (mTroubleshootingMessages) {
+            System.out.println("AA Draw Location defined here " + mDrawLocation);
+        }
+        drawLocation = new Point.Double(427.5, 180.0); //427.5 if this is set to a lower value the bounding box is closer to the correct starting point but there must be a negative that is lower so the circle is farther right as this gets smaller.
         mDrawLocation.setLocation(drawLocation);
-        if(mTroubleshootingMessages){System.out.println("BB Draw Location defined here " + mDrawLocation);}
+        if (mTroubleshootingMessages) {
+            System.out.println("BB Draw Location defined here " + mDrawLocation);
+        }
 
         calculateDimensions();
         mWheelFrontLeft.setDrawAngle(10); // runs only once at start up
     }
-    
+
     public double getSteerCircleEdgeY() {
         return mDrawLocation.y + mSteerCircleEdgeY;
     }
-    
+
     public double getSteerCircleEdgeMaxX() {
         return mMouseBoundingBox.getMaxX();
     }
-    
+
     public double getSteerCircleEdgeMinX() {
         return mMouseBoundingBox.getMinX();
     }
@@ -154,7 +152,7 @@ public class Truck {
         return mWheels;
     }
 
-    public void setSteeringMode(String steeringModeName){
+    public void setSteeringMode(String steeringModeName) {
         mSteeringMode = SteeringMode.getByName(steeringModeName);
     }
 
@@ -177,7 +175,7 @@ public class Truck {
         return mDrawScale;
     }
 
-    
+
     public Point.Double getDrawLocation() {
         return mDrawLocation;
     }
@@ -186,56 +184,53 @@ public class Truck {
     public double getForwardAngle() {
         return mForwardAngle;
     }
-    
+
     /**
-     * 
      * getForwardAngleRaw is the cumulative forward angle. Raw means it is not weighted by the speedratios
      */
-    public double getForwardAngleRaw(){// this is the cumulative forward angle. Raw means it is not weighted by the speedratios
+    public double getForwardAngleRaw() {// this is the cumulative forward angle. Raw means it is not weighted by the speedratios
         return mForwardAngleRaw;
     }
 
     /**
-     * 
      * addForwardAngle is the incremental amount to add
      */
     public void addForwardAngle(double angle) {
         mForwardAngle = angle; // mForwardAngle += angle;//Why this line is commented?
     }
-    
+
     /**
-     * 
      * addForwardAngleRaw  is the cumulative forward angle. Raw means it is not weighted by the speedratios.
      * this value is primarily used to update the label on GUI
      */
     public void addForwardAngleRaw(double angle) { // this is the cumulative forward angle. Raw means it is not weighted by the speedratios
         mForwardAngleRaw += angle;
     }
-    
+
     public void changeTroubleshootingDisplay(int mWheel_ID) {
-        System.err.println("pressed "+wheel_ID+" ------------------------------------------------------------------------------");
+        System.err.println("pressed " + wheel_ID + " ------------------------------------------------------------------------------");
         wheel_ID = mWheel_ID;
     }
-    
+
     private void calculateDimensions() {
-        mTruckRectangle.setRect(-mDrawWidth/2*mDrawScale,
-                -mTruckDrawLength/2*mDrawScale,
-                mDrawWidth*mDrawScale,
-                mTruckDrawLength*mDrawScale
+        mTruckRectangle.setRect(-mDrawWidth / 2 * mDrawScale,
+                -mTruckDrawLength / 2 * mDrawScale,
+                mDrawWidth * mDrawScale,
+                mTruckDrawLength * mDrawScale
         );
         mWheelFrontLeft.setDrawLocation(
                 mTruckRectangle.x, mTruckRectangle.y);
-        
+
         mWheelFrontLeft.setDrawScale(mDrawScale);
-        
+
         mWheelFrontRight.setDrawLocation(
                 mTruckRectangle.getMaxX(), mTruckRectangle.y);
         mWheelFrontRight.setDrawScale(mDrawScale);
-        
+
         mWheelRearLeft.setDrawLocation(
                 mTruckRectangle.x, mTruckRectangle.getMaxY());
         mWheelRearLeft.setDrawScale(mDrawScale);
-        
+
         mWheelRearRight.setDrawLocation(
                 mTruckRectangle.getMaxX(), mTruckRectangle.getMaxY());
         mWheelRearRight.setDrawScale(mDrawScale);
@@ -250,59 +245,61 @@ public class Truck {
         pointY -= mDrawLocation.y;
         return mTruckRectangle.contains(pointX, pointY);
     }
-    
-    public void moveForwardxSteps(){
+
+    public void moveForwardxSteps() {
         updateWheelSpeed();
     }
-    
-    public void moveBackxSteps(){
+
+    public void moveBackxSteps() {
         updateWheelSpeed();
     }
-    
-    public void addSpeed(){
+
+    public void addSpeed() {
         mTruckSpeed++;
         updateWheelSpeed();
     }
 
-    public void reduceSpeed(){
+    public void reduceSpeed() {
         mTruckSpeed--;
         updateWheelSpeed();
     }
-    
+
     public double getSpeed() {
         return mTruckSpeed;
     }
 
     public void setSpeed(double speed) {
         mTruckSpeed = speed;
-        System.out.println("mTruckSpeed setSpeed = "+mTruckSpeed);
+        System.out.println("mTruckSpeed setSpeed = " + mTruckSpeed);
         updateWheelSpeed();
     }
 
-    public void updateEmergencyStopToFalse(){
-        for (Wheel wheel: mWheels) {
+    public void updateEmergencyStopToFalse() {
+        for (Wheel wheel : mWheels) {
             wheel.setEmergencyStopSetVelocityToFalse();
         }
     }
-    
+
     public void updateWheelVelocityLimit(double velocityLimit) {
-        for (Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             wheel.setWheelVelocityLimit(velocityLimit);
         }
     }
 
     public void updateWheelSpeed() {
-        for (Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             wheel.setWheelSpeed(mTruckSpeed);
         }
     }
 
     public void moveTo(double pointX, double pointY) { // this runs continuously
-                testValue = pointX;
+        testValue = pointX;
         mDrawLocation.setLocation(pointX, pointY);
         calculateDimensions();
     }
-double testValue =0;
+
+    double testValue = 0;
+
     public void moveRelative(double pointX, double pointY) {
         mDrawLocation.x += pointX;
         mDrawLocation.y += pointY;
@@ -310,31 +307,31 @@ double testValue =0;
     }
 
     public void increaseWheelsAngle(double angle) {
-        for (Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             wheel.increaseDrawAngle(angle);
         }
     }
 
     public void setWheelsAngle(double angle) {
-        for (Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             wheel.setDrawAngle(angle);
         }
     }
-    
+
     public void setWheelsAngle(int wheelIndex, double angle) {
         if (wheelIndex >= mWheels.length || wheelIndex < 0) return;
         mWheels[wheelIndex].setDrawAngle(angle);
     }
-    
+
     public void increaseWheelsAngle(int wheelIndex, double angle) {
         if (wheelIndex >= mWheels.length || wheelIndex < 0) return;
-        
+
         mWheels[wheelIndex].increaseDrawAngle(angle);
     }
-    
+
     public void stopMoving() {
         mSteeringMode = SteeringMode.NONE;
-        for(Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             //System.out.println("testing stopped code: "+wheel.getWheelName());
             wheel.setDrawAngle(0);
             wheel.setSpeeed("Truck.java_stopMoving", angleRoverBodyTarget);
@@ -343,9 +340,9 @@ double testValue =0;
             //wheel.setSpeedRatio(1);
         }
     }
-    
+
     public boolean isStraight() {
-        for(Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             if (Math.abs(wheel.getGhostAngle()) > STRAIGHT_ANGLE_TOLERANCE) {
                 return false;
             }
@@ -353,16 +350,16 @@ double testValue =0;
         return true;
     }
 
-    private void rotateWheels(){
-        
+    private void rotateWheels() {
+
         Point.Double diffPoint;
         double angle;
         //System.out.print("delta:");
         //System.out.println((mWheelFrontRight.getReadDutyCycle(0)-mWheelFrontRight.getReadDutyCycle(1)));
-        
-        switch(mSteeringMode) {
+
+        switch (mSteeringMode) {
             case NONE:
-                for(Wheel wheel: mWheels) {
+                for (Wheel wheel : mWheels) {
                     wheel.setDrawAngle(0);
                     wheel.setSpeeed("Truck.java_rotateWheelsTo", angleRoverBodyTarget);
                     wheel.setWheelVelocityLimit(0);
@@ -397,11 +394,11 @@ double testValue =0;
 
             case TURN_AROUND:
                 rotateWheelsTo_toPoint.setLocation(rotateWheelsTo_toPoint.x,
-                        mDrawLocation.y-mTruckDrawLength/2*mDrawScale); // need to measure off the center point of the wheel and not the corner of the wheel.
+                        mDrawLocation.y - mTruckDrawLength / 2 * mDrawScale); // need to measure off the center point of the wheel and not the corner of the wheel.
                 diffPoint = Geom.getDiff(rotateWheelsTo_toPoint, mDrawLocation);
 
                 mTruckHypotenuse = mDrawLocation.distance(rotateWheelsTo_toPoint);
-                mTruckSpeedBaseline = (2*mTruckHypotenuse*Math.PI)/mWheelDiameter;
+                mTruckSpeedBaseline = (2 * mTruckHypotenuse * Math.PI) / mWheelDiameter;
 
                 mWheelFrontLeft.setDrawAngle(0);
                 mWheelFrontLeft.setHypotenuseTo(diffPoint);
@@ -414,7 +411,7 @@ double testValue =0;
 
                 mWheelRearRight.rotateTo(diffPoint, 0);
                 mWheelRearRight.setHypotenuseTo(diffPoint);
-                
+
                 break;
             case SIDE_TO_SIDE:
                 mTruckSpeedBaseline = 1;
@@ -425,7 +422,7 @@ double testValue =0;
 
                 mWheelFrontRight.setDrawAngle(angle);
                 mWheelFrontRight.setSpeeed("Truck.java_rotateWheelsTo case SIDE_TO_SIDE", angleRoverBodyTarget);
-               // mWheelFrontRight.setSpeedRatio(mTruckSpeedBaseline);
+                // mWheelFrontRight.setSpeedRatio(mTruckSpeedBaseline);
 
                 mWheelRearLeft.setDrawAngle(angle);
                 mWheelRearLeft.setSpeeed("Truck.java_rotateWheelsTo case SIDE_TO_SIDE", angleRoverBodyTarget);
@@ -465,7 +462,7 @@ double testValue =0;
                 angle = 90 + Geom.getSlope(mDrawLocation, rotateWheelsTo_toPoint);
                 mTruckHypotenuse = mDrawLocation.distance(rotateWheelsTo_toPoint);
                 mTruckSpeedBaseline = 1;
-                
+
                 mWheelFrontLeft.setDrawAngle(angleFrontOuter);
                 mWheelFrontLeft.setHypotenuse(mTruckDrawLength, frontLeftHyp, frontLeftDeltaY, frontLeftDeltaX);
                 mWheelFrontLeft.setSpeeed("Truck.java_rotateWheelsTo case FRONT_STEER", angleRoverBodyTarget);
@@ -483,10 +480,10 @@ double testValue =0;
                 mWheelRearRight.setHypotenuse(mTruckDrawLength, rearRightHyp, rearRightDeltaY, rearRightDeltaX);
                 mWheelRearRight.setSpeeedRatioRear(speedRatioTarget[4]);
                 mWheelRearRight.setSpeeed("Truck.java_rotateWheelsTo case FRONT_STEER", angleRoverBodyTarget);
-            break;
+                break;
         }
     }
-    
+
     public void rotateWheelsTo(Point.Double mRotateWheelsTo_toPoint) {
         rotateWheelsTo_toPoint = mRotateWheelsTo_toPoint;
         rotateWheels();
@@ -496,7 +493,7 @@ double testValue =0;
         Chart.ChartParamsDataset[] chartParamsDatasets =
                 new ChartParamsDataset[mWheels.length];
         int i = 0;
-        for (Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             chartParamsDatasets[i] = wheel.getChartParamsDataset();
             i++;
         }
@@ -504,7 +501,7 @@ double testValue =0;
     }
 
     public void updateChartParamsDataset() {
-        for (Wheel wheel: mWheels) {
+        for (Wheel wheel : mWheels) {
             wheel.updateChartParamsDataset();
         }
     }
@@ -512,72 +509,79 @@ double testValue =0;
     /**
      * Calculate & update different angles and positions based
      * on given mouse position
-     * @param mousePos 
+     *
+     * @param mousePos
      */
     public void calc(Point.Double mousePos) {
-        
+
         relMousePos.setLocation(Geom.getDiff(mousePos, mDrawLocation));
         // MouseBoundingBox holds the area in which
         // the the movement of mouse will control the movement of steercircle
         mMouseBoundingBox = new Rectangle.Double();
-        if(mTroubleshootingMessages){System.out.println("This needs to be set sooner: mDrawLocation.x + mTruckRectangle.getCenterX() - mTruckRectangle.getWidth() * 0.5, " + mDrawLocation.x + " " + mTruckRectangle.getCenterX() + " " + mTruckRectangle.getWidth()/2);}
+        if (mTroubleshootingMessages) {
+            System.out.println("This needs to be set sooner: mDrawLocation.x + mTruckRectangle.getCenterX() - mTruckRectangle.getWidth() * 0.5, " + mDrawLocation.x + " " + mTruckRectangle.getCenterX() + " " + mTruckRectangle.getWidth() / 2);
+        }
         mMouseBoundingBox.setRect(
-            // Set the left X value of the the left value of the truck box
-            mDrawLocation.x + mTruckRectangle.getCenterX() - mTruckRectangle.getWidth() * 0.5,
-            // Set the top Y value before the tip of front wheels including
-            // some fraction of wheel outer box height
-            mDrawLocation.y + mWheelFrontLeft.getOuterTopY() - mWheelFrontLeft.getOuterHeight() / 2,
-            // Set the width to that of truck box
-            mTruckRectangle.getWidth(),
-            // Set the height to some fraction of the wheel outerbox
-            // for modest display
-            mWheelFrontLeft.getOuterHeight() / 2
+                // Set the left X value of the the left value of the truck box
+                mDrawLocation.x + mTruckRectangle.getCenterX() - mTruckRectangle.getWidth() * 0.5,
+                // Set the top Y value before the tip of front wheels including
+                // some fraction of wheel outer box height
+                mDrawLocation.y + mWheelFrontLeft.getOuterTopY() - mWheelFrontLeft.getOuterHeight() / 2,
+                // Set the width to that of truck box
+                mTruckRectangle.getWidth(),
+                // Set the height to some fraction of the wheel outerbox
+                // for modest display
+                mWheelFrontLeft.getOuterHeight() / 2
         );
 
-        if ( (mousePos.x >= mMouseBoundingBox.getMinX() && mousePos.x <= mMouseBoundingBox.getMaxX() )
-            && ( mousePos.y >= mMouseBoundingBox.getMinY() && mousePos.y <= mMouseBoundingBox.getMaxY())
-                ){
-            modifiedMousePos.x=mousePos.x;
-            modifiedRelMousePos.x=mousePos.x;
-            if(mTroubleshootingMessages){System.err.println("This fixes the bounding box (too late though) changing modifiedMousePos.x and modifiedRelMousePos.x " + modifiedMousePos.x + " " + modifiedRelMousePos.x);}
+        if ((mousePos.x >= mMouseBoundingBox.getMinX() && mousePos.x <= mMouseBoundingBox.getMaxX())
+                && (mousePos.y >= mMouseBoundingBox.getMinY() && mousePos.y <= mMouseBoundingBox.getMaxY())
+        ) {
+            modifiedMousePos.x = mousePos.x;
+            modifiedRelMousePos.x = mousePos.x;
+            if (mTroubleshootingMessages) {
+                System.err.println("This fixes the bounding box (too late though) changing modifiedMousePos.x and modifiedRelMousePos.x " + modifiedMousePos.x + " " + modifiedRelMousePos.x);
+            }
         }
 
-        modifiedMousePos.y = +40 * mDrawScale+mTruckDrawLength/mDrawScale*2;
+        modifiedMousePos.y = +40 * mDrawScale + mTruckDrawLength / mDrawScale * 2;
         // see steerCircleEdgeY variable as it is related to this setting
-        modifiedRelMousePos.y = -40 * mDrawScale-mTruckDrawLength;//-180; 
+        modifiedRelMousePos.y = -40 * mDrawScale - mTruckDrawLength;//-180;
 
         // what is mSteerCircleEdgeX? it should be zero for 'straight'
         // can i just set mSteerCircleEdgeX = modifiedMousePos.x?
-        
-        mSteerCircleEdgeX = -mDrawLocation.x+modifiedMousePos.x;
-        if(mTroubleshootingMessages){System.out.println("mSteerCircleEdgeX " + mSteerCircleEdgeX + " (this should read zero when driving straight forward) " + -mDrawLocation.x+" "+modifiedMousePos.x + " "+mousePos.x);}
+
+        mSteerCircleEdgeX = -mDrawLocation.x + modifiedMousePos.x;
+        if (mTroubleshootingMessages) {
+            System.out.println("mSteerCircleEdgeX " + mSteerCircleEdgeX + " (this should read zero when driving straight forward) " + -mDrawLocation.x + " " + modifiedMousePos.x + " " + mousePos.x);
+        }
         // first number determines how high above the rover the steer heading dot is
-        mSteerCircleEdgeY = -mDrawLocation.y+ mMouseBoundingBox.getMinY()+12; // a positive number makes the circle lower on the screen
-        
+        mSteerCircleEdgeY = -mDrawLocation.y + mMouseBoundingBox.getMinY() + 12; // a positive number makes the circle lower on the screen
+
 // -----------------------------------------------------------------------------------        
         deviceNumber = 4; // set to steering point
-        startX[deviceNumber] = (int)(mTruckRectangle.x+mDrawWidth/2*mDrawScale);
+        startX[deviceNumber] = (int) (mTruckRectangle.x + mDrawWidth / 2 * mDrawScale);
         // Aug 8 2019 - added +mTruckDrawLength/2*mDrawScale to the code. without this the line started at the top of rover
-        startY[deviceNumber] = (int)(mTruckRectangle.y+mTruckDrawLength/2*mDrawScale); 
+        startY[deviceNumber] = (int) (mTruckRectangle.y + mTruckDrawLength / 2 * mDrawScale);
         double leftEdge = modifiedMousePos.x;
-        endX[deviceNumber] = (int)(leftEdge);
+        endX[deviceNumber] = (int) (leftEdge);
         // endX is the end of the line drawn out from the wheel - this is the center point of the turning radius (for mode 2, 4)
-        endY[deviceNumber] = (int)mTruckRectangle.getMaxY();
+        endY[deviceNumber] = (int) mTruckRectangle.getMaxY();
         double steerCircleHyptotenuse = 1;
 
-        deltaX = startX[deviceNumber] - (int)mSteerCircleEdgeX;
-        deltaY = startY[deviceNumber] - (int)mSteerCircleEdgeY+mTruckDrawLength/2*mDrawScale;
-        slopeSteerHeading = (deltaY)/(deltaX);
+        deltaX = startX[deviceNumber] - (int) mSteerCircleEdgeX;
+        deltaY = startY[deviceNumber] - (int) mSteerCircleEdgeY + mTruckDrawLength / 2 * mDrawScale;
+        slopeSteerHeading = (deltaY) / (deltaX);
         angleSteerHeading = Math.toDegrees(Math.atan(slopeSteerHeading));
-               
+
         // this is an incredibly long line that isn't fully displayed. We intersect this line to determine the crossingpoint.
-        double endX2   = startX[deviceNumber] + 999999 * Math.cos(Math.toRadians(angleSteerHeading+90))*mDrawScale;
-        double endY2   = startY[deviceNumber] + 999999 * Math.sin(Math.toRadians(angleSteerHeading+90))*mDrawScale;
+        double endX2 = startX[deviceNumber] + 999999 * Math.cos(Math.toRadians(angleSteerHeading + 90)) * mDrawScale;
+        double endY2 = startY[deviceNumber] + 999999 * Math.sin(Math.toRadians(angleSteerHeading + 90)) * mDrawScale;
         // this is an imaginary line so don't draw it
-         //g2d.drawLine(startX[deviceNumber], startY[deviceNumber], (int)endX2, (int)endY2);
-        deltaX = startX[deviceNumber] - (int)endX2; //should this be divided by mDrawScale? this feeds crossingpoint so it explains why cp is what it is.
-        deltaY = startY[deviceNumber] - (int)endY2;
-        slopeRoverBodySteerHypot = (deltaY)/(deltaX);
+        //g2d.drawLine(startX[deviceNumber], startY[deviceNumber], (int)endX2, (int)endY2);
+        deltaX = startX[deviceNumber] - (int) endX2; //should this be divided by mDrawScale? this feeds crossingpoint so it explains why cp is what it is.
+        deltaY = startY[deviceNumber] - (int) endY2;
+        slopeRoverBodySteerHypot = (deltaY) / (deltaX);
         angleRoverBodySteerHypot = Math.toDegrees(Math.atan(slopeRoverBodySteerHypot));
         // y = m x + b;  m is the slope; b is a constant indicating above/below on the y axis
         // flat line across the lower part of rover has equation of 0 x + b since the slope is zero.  Thus y = mTruckRectangle.getMaxY());
@@ -595,18 +599,18 @@ double testValue =0;
         //                 slopeRoverBodySteerHypot * ?? = y - startY[deviceNumber]
         //                 ?? = (y - startY[deviceNumber])/slopeRoverBodySteerHypot
         //                 ?? = (mTruckRectangle.getMaxY()) - startY[deviceNumber])/slopeRoverBodySteerHypot
-        crossingPoint = (mTruckRectangle.getMaxY() - bOfcrossingPoint)/slopeRoverBodySteerHypot;
-                
-        endX[deviceNumber] = (int)crossingPoint;
-        
-        deltaX = (startX[deviceNumber]-endX[deviceNumber])/mDrawScale;
-        deltaY = (startY[deviceNumber]-endY[deviceNumber])/mDrawScale;
-        double hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY,2)), 0.5); // don't divide deltaY by 2 even though midpoint because in this case (the rover case) we're already only 1/2 way up???
-        
+        crossingPoint = (mTruckRectangle.getMaxY() - bOfcrossingPoint) / slopeRoverBodySteerHypot;
+
+        endX[deviceNumber] = (int) crossingPoint;
+
+        deltaX = (startX[deviceNumber] - endX[deviceNumber]) / mDrawScale;
+        deltaY = (startY[deviceNumber] - endY[deviceNumber]) / mDrawScale;
+        double hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY, 2)), 0.5); // don't divide deltaY by 2 even though midpoint because in this case (the rover case) we're already only 1/2 way up???
+
         // Rover body actuals (based on calcs derived from actual front wheel steering positions
         anglesActual = Wheel.getGhostAngleStatic(); // must use actual steering angle values when calc'ing speed or the wheels will turn at wrong speeds relative to each other.
         BaseLengthActual = Wheel.getBaseLengthStatic();
-        
+
 //        System.out.println("anglesActual "
 //                            + String.format("%.4f",anglesActual[0])+" "
 //                            + String.format("%.4f",anglesActual[1])
@@ -620,28 +624,26 @@ double testValue =0;
 
         //double slopeRoverBodySteerHypotActual = (deltaY)/(deltaX);
         //crossingPointActual = (mTruckRectangle.getMaxY() - b_Actual)/slopeRoverBodySteerHypotActual;
-        
-        if(deltaX==0) {
+
+        if (deltaX == 0) {
             slopeRoverBodyTarget = 1;
-        }
-        else
-        {
-            slopeRoverBodyTarget = (deltaY)/(deltaX); // target slope (updates as fast as the mouse moves to a new position). The steppers are slow to reach target position.
-            
+        } else {
+            slopeRoverBodyTarget = (deltaY) / (deltaX); // target slope (updates as fast as the mouse moves to a new position). The steppers are slow to reach target position.
+
         }
         angleRoverBodyTarget = Math.toDegrees(Math.atan(slopeRoverBodyTarget));
-        roverBodySpeedTarget = (2*hypotenuse*Math.PI)/wheelDiameter;               
-        
-        
+        roverBodySpeedTarget = (2 * hypotenuse * Math.PI) / wheelDiameter;
+
+
 //        int labelX_hyp = (int) endX[deviceNumber]+(int)deltaX/2*(int)mDrawScale+4; // all of these could be removed after some more testing. use xDisplay and yDisplay instead. note made Jan 1, 2020
 //        int labelY_hyp = (int) endY[deviceNumber]+(int)deltaY/2*(int)mDrawScale+4;
 //        labelX_hyp = (int) -100;
 //        labelY_hyp = (int) 60;
         //g2d.drawString("roverBodySpeedTarget "+roverBodySpeedTarget+"; angleFrontInner "+angleFrontInner+"; radius "+String.format("%.1f", hypotenuse)+" startX "+startX[deviceNumber] +" startY "+startY[deviceNumber]+" endX "+endX[deviceNumber] +" endY "+endY[deviceNumber], labelX_hyp, labelY_hyp);
-        
+
         mSteeringArc.SteeringArc(); // doesn't do anything - this is a placeholder to move the arc math into
         // first wheel circle starts here -> mDrawLocation.x, mDrawLocation.y
-        
+
         // 1 - centerX and centerY can be defined as:
         //      centerX = min( top of rover, max(mousex, bottom of rover) )
         //      centerY = max( side of rover, mouseY*1000)
@@ -649,76 +651,72 @@ double testValue =0;
         // 3 - top / left of circle are:
         //      top = centerX - radius
         //      left = centerY - radius
-                
+
         // device 0 - front left
         deviceNumber = 0;
-        startX[deviceNumber] = (int)(mTruckRectangle.x);//+mDrawWidth); // +wheelWidth_int/2
-        startY[deviceNumber] = (int)(mTruckRectangle.y);//+mTruckDrawLength);
-        endX[deviceNumber] = (int)(crossingPoint);
-        
-        endY[deviceNumber] = (int)mTruckRectangle.getMaxY();
-        
-        deltaX = (startX[deviceNumber]-endX[deviceNumber])/mDrawScale;
-        deltaY = (startY[deviceNumber]-endY[deviceNumber])/mDrawScale;
-        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY,2)), 0.5);
+        startX[deviceNumber] = (int) (mTruckRectangle.x);//+mDrawWidth); // +wheelWidth_int/2
+        startY[deviceNumber] = (int) (mTruckRectangle.y);//+mTruckDrawLength);
+        endX[deviceNumber] = (int) (crossingPoint);
+
+        endY[deviceNumber] = (int) mTruckRectangle.getMaxY();
+
+        deltaX = (startX[deviceNumber] - endX[deviceNumber]) / mDrawScale;
+        deltaY = (startY[deviceNumber] - endY[deviceNumber]) / mDrawScale;
+        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY, 2)), 0.5);
         frontLeftDeltaX = deltaX;
         frontLeftDeltaY = deltaY;
         frontLeftHyp = hypotenuse;
 
-        if(deltaX==0) {
+        if (deltaX == 0) {
             slopeFrontOuter = 1;
-        }
-        else
-        {
-            slopeFrontOuter = (deltaY)/(deltaX);
+        } else {
+            slopeFrontOuter = (deltaY) / (deltaX);
             angleFrontOuter = Math.toDegrees(Math.atan(slopeFrontOuter));
         }
-        frontLeftSpeedTarget = (2*hypotenuse*Math.PI)/wheelDiameter;                
-        
+        frontLeftSpeedTarget = (2 * hypotenuse * Math.PI) / wheelDiameter;
+
         // front left oval
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -170;
 
         // device 1 - front right
         deviceNumber = 1;
-        startX[deviceNumber] = (int)(mTruckRectangle.getMaxX());//+mDrawWidth); // +wheelWidth_int/2
-        startY[deviceNumber] = (int)(mTruckRectangle.y);//+mTruckDrawLength);
-        endX[deviceNumber] = (int)(crossingPoint);
-        endY[deviceNumber] = (int)mTruckRectangle.getMaxY();
+        startX[deviceNumber] = (int) (mTruckRectangle.getMaxX());//+mDrawWidth); // +wheelWidth_int/2
+        startY[deviceNumber] = (int) (mTruckRectangle.y);//+mTruckDrawLength);
+        endX[deviceNumber] = (int) (crossingPoint);
+        endY[deviceNumber] = (int) mTruckRectangle.getMaxY();
 
-        deltaX = (startX[deviceNumber]-endX[deviceNumber])/mDrawScale;
-        deltaY = (startY[deviceNumber]-endY[deviceNumber])/mDrawScale;
-        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY,2)), 0.5);
+        deltaX = (startX[deviceNumber] - endX[deviceNumber]) / mDrawScale;
+        deltaY = (startY[deviceNumber] - endY[deviceNumber]) / mDrawScale;
+        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY, 2)), 0.5);
         frontRightDeltaX = deltaX;
         frontRightDeltaY = deltaY;
         frontRightHyp = hypotenuse;
-        if(deltaX==0) {
+        if (deltaX == 0) {
             slopeFrontInner = 1;
-        }
-        else
-        {
-            slopeFrontInner = (deltaY)/(deltaX);
+        } else {
+            slopeFrontInner = (deltaY) / (deltaX);
             angleFrontInner = Math.toDegrees(Math.atan(slopeFrontInner));
         }
-        frontRightSpeedTarget = (2*hypotenuse*Math.PI)/wheelDiameter;               
-        
+        frontRightSpeedTarget = (2 * hypotenuse * Math.PI) / wheelDiameter;
+
         // front right steer circle
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -150;
-        
+
         // device 2 - rear left
         deviceNumber = 2;
-        startX[deviceNumber] = (int)(mTruckRectangle.getMinX());//+mDrawWidth); // +wheelWidth_int/2
-        startY[deviceNumber] = (int)(mTruckRectangle.getMaxY());//+mTruckDrawLength);
-        endX[deviceNumber] = (int)(crossingPoint); //(int) BaseLengthActual[0]; //(int)(crossingPoint); changed Aug 3 to use actual rotation of steppers vs target rotation
-        endY[deviceNumber] = (int)(mTruckRectangle.getMaxY());//+mTruckDrawLength);
+        startX[deviceNumber] = (int) (mTruckRectangle.getMinX());//+mDrawWidth); // +wheelWidth_int/2
+        startY[deviceNumber] = (int) (mTruckRectangle.getMaxY());//+mTruckDrawLength);
+        endX[deviceNumber] = (int) (crossingPoint); //(int) BaseLengthActual[0]; //(int)(crossingPoint); changed Aug 3 to use actual rotation of steppers vs target rotation
+        endY[deviceNumber] = (int) (mTruckRectangle.getMaxY());//+mTruckDrawLength);
 
-        deltaX = (startX[deviceNumber]-endX[deviceNumber])/mDrawScale;
-        deltaY = (startY[deviceNumber]-endY[deviceNumber])/mDrawScale;
-        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY,2)), 0.5);
+        deltaX = (startX[deviceNumber] - endX[deviceNumber]) / mDrawScale;
+        deltaY = (startY[deviceNumber] - endY[deviceNumber]) / mDrawScale;
+        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY, 2)), 0.5);
 //        System.out.println("rLft - deltaX: "+deltaX+"; crossingPoint(not divided by mDrawScale!): "+String.format("%.2f", crossingPoint)+"; deltaY "+deltaY+"; hypotenuse: "+hypotenuse+ 
 //                " startX: "+(startX[deviceNumber]+"; endX: "+endX[deviceNumber])+"; mDrawScale: "+mDrawScale);
-                
+
 //                " BaseLengthActual[0] "
 //                +String.format("%.2f", BaseLengthActual[0])+ " BaseLengthActual[1] "
 //                +String.format("%.2f", BaseLengthActual[1])+
@@ -728,16 +726,14 @@ double testValue =0;
         rearLeftDeltaX = deltaX;
         rearLeftDeltaY = deltaY;
         rearLeftHyp = hypotenuse;
-        if(deltaX==0) {
+        if (deltaX == 0) {
             slopeRearOuter = 1;
-        }
-        else
-        {
-            slopeRearOuter = (deltaY)/(deltaX);
+        } else {
+            slopeRearOuter = (deltaY) / (deltaX);
             angleRearOuter = Math.toDegrees(Math.atan(slopeRearOuter));
         }
-        rearLeftSpeedTarget = (2*hypotenuse*Math.PI)/wheelDiameter;               
-        
+        rearLeftSpeedTarget = (2 * hypotenuse * Math.PI) / wheelDiameter;
+
         // rear left steer circle
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -110;
@@ -745,44 +741,42 @@ double testValue =0;
 
         // device 3 - rear right
         deviceNumber = 3;
-        startX[deviceNumber] = (int)(mTruckRectangle.getMaxX());//+mDrawWidth); // +wheelWidth_int/2
-        startY[deviceNumber] = (int)(mTruckRectangle.getMaxY());//+mTruckDrawLength);
-        endX[deviceNumber] = (int)(crossingPoint);
-        endY[deviceNumber] = (int)(mTruckRectangle.getMaxY());//+mTruckDrawLength);
+        startX[deviceNumber] = (int) (mTruckRectangle.getMaxX());//+mDrawWidth); // +wheelWidth_int/2
+        startY[deviceNumber] = (int) (mTruckRectangle.getMaxY());//+mTruckDrawLength);
+        endX[deviceNumber] = (int) (crossingPoint);
+        endY[deviceNumber] = (int) (mTruckRectangle.getMaxY());//+mTruckDrawLength);
 
-        deltaX = (startX[deviceNumber]-endX[deviceNumber])/mDrawScale;
-        deltaY = (startY[deviceNumber]-endY[deviceNumber])/mDrawScale;
-        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY,2)), 0.5);
+        deltaX = (startX[deviceNumber] - endX[deviceNumber]) / mDrawScale;
+        deltaY = (startY[deviceNumber] - endY[deviceNumber]) / mDrawScale;
+        hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY, 2)), 0.5);
         rearRightDeltaX = deltaX;
         rearRightDeltaY = deltaY;
         rearRightHyp = hypotenuse;
-        if(deltaX==0) {
+        if (deltaX == 0) {
             slopeRearInner = 1;
-        }
-        else
-        {
-            slopeRearInner = (deltaY)/(deltaX);
+        } else {
+            slopeRearInner = (deltaY) / (deltaX);
             angleRearInner = Math.toDegrees(Math.atan(slopeRearInner));
         }
-        rearRightSpeedTarget = (2*hypotenuse*Math.PI)/wheelDiameter;               
-        
+        rearRightSpeedTarget = (2 * hypotenuse * Math.PI) / wheelDiameter;
+
         // rear right steer circle
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -130;
         //g2d.drawString("rearRightSpeedTarget "+String.format("%.1f",rearRightSpeedTarget)+"; angleRearOuter "+String.format("%.1f",angleRearInner)+"; radius "+String.format("%.1f", hypotenuse), labelX_hyp, labelY_hyp);
 
-        
+
         speedRatioTarget[0] = 1; // device 0 is the rover body so should be ratio 1.  roverBodySpeedTarget is only used to calc the speedRatioTarget[x] values - speedRatioTarget[0] is the target speed of the rover
-        speedRatioTarget[1] = frontLeftSpeedTarget/roverBodySpeedTarget;
-        speedRatioTarget[2] = frontRightSpeedTarget/roverBodySpeedTarget;
-        speedRatioTarget[3] = rearLeftSpeedTarget/roverBodySpeedTarget;
+        speedRatioTarget[1] = frontLeftSpeedTarget / roverBodySpeedTarget;
+        speedRatioTarget[2] = frontRightSpeedTarget / roverBodySpeedTarget;
+        speedRatioTarget[3] = rearLeftSpeedTarget / roverBodySpeedTarget;
 //        System.err.println(
 //                "angleRearOuter "+String.format("%.4f", angleRearOuter)+
 //                " speedRatioTarget[3]: "+String.format("%.4f", speedRatioTarget[3])+
 //                "; roverBodySpeedTarget "+String.format("%.2f", roverBodySpeedTarget)+
 //                "; rearLeftSpeed: "+String.format("%.2f", rearLeftSpeedTarget)+
 //                " rearLeftHyp: "+String.format("%.2f", rearLeftHyp));
-        speedRatioTarget[4] = rearRightSpeedTarget/roverBodySpeedTarget;
+        speedRatioTarget[4] = rearRightSpeedTarget / roverBodySpeedTarget;
 //        System.err.println(
 //                "angleRearInner "+String.format("%.4f", angleRearInner)+
 //                " speedRatioTarget[4]: "+String.format("%.4f", speedRatioTarget[4])+
@@ -791,10 +785,10 @@ double testValue =0;
 //                " rearRightHyp: "+String.format("%.2f", rearRightHyp));        
         rotateWheels();
     }
-    
-    
+
+
     public void draw(Graphics2D g2d) {
-        
+
         boolean displayTroubleshootingValues = true;
         int xDisplayBase = 120;
         int yDisplayBase = -150;
@@ -828,132 +822,132 @@ double testValue =0;
         // steer line. line going up from middle of rover // line from top rover center to upper end of steering heading
         g2d.setColor(Color.GREEN);
         deviceNumber = 4; // // set to steering point
-        
+
         // small oval on upper end of steer line
-        g2d.fillOval((int)mSteerCircleEdgeX-12/2, (int)mSteerCircleEdgeY-12/2, 12, 12);
+        g2d.fillOval((int) mSteerCircleEdgeX - 12 / 2, (int) mSteerCircleEdgeY - 12 / 2, 12, 12);
         g2d.setColor(Color.RED);
-        g2d.drawLine((int)mSteerCircleEdgeX, (int)mSteerCircleEdgeY, startX[deviceNumber], startY[deviceNumber]);
-        deltaX = startX[deviceNumber] - (int)mSteerCircleEdgeX;
-        deltaY = startY[deviceNumber] - (int)mSteerCircleEdgeY+mTruckDrawLength/2*mDrawScale;
+        g2d.drawLine((int) mSteerCircleEdgeX, (int) mSteerCircleEdgeY, startX[deviceNumber], startY[deviceNumber]);
+        deltaX = startX[deviceNumber] - (int) mSteerCircleEdgeX;
+        deltaY = startY[deviceNumber] - (int) mSteerCircleEdgeY + mTruckDrawLength / 2 * mDrawScale;
         //g2d.drawString("slopeSteerHeading / angleSteerHeading "+String.format("%.2f",slopeSteerHeading)+" / "+String.format("%.2f",angleSteerHeading), -385, -220);
-               
-        if(displayTroubleshootingValues && wheel_ID==4){
+
+        if (displayTroubleshootingValues && wheel_ID == 4) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplayBase+0;
-            yDisplay = yDisplayBase+0;
-            g2d.drawString(testValue+"    modifiedMousePos.x: "+modifiedMousePos.x, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    mDrawLocation.x: "+mDrawLocation.x, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    steerCircleEdgeX: "+mSteerCircleEdgeX, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    steerCircleEdgeY: "+mSteerCircleEdgeY, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    mTruckDrawLength: "+mTruckDrawLength, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    mDrawScale: "+mDrawScale, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    deltaX: "+deltaX, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    deltaY: "+deltaY+" slopeSteerHeading: "+slopeSteerHeading, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    angleSteerHeading: "+String.format("%.3f",angleSteerHeading), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
-            g2d.drawString("    relMousePos.x: "+String.format("%.3f",relMousePos.x), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    relMousePos.y: "+String.format("%.3f",relMousePos.y), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    modifiedMousePos.x: "+String.format("%.3f",modifiedMousePos.x), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    modifiedMousePos.y: "+String.format("%.3f",modifiedMousePos.y), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    modifiedRelMousePos.x: "+String.format("%.3f",modifiedRelMousePos.x), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    modifiedRelMousePos.y: "+String.format("%.3f",modifiedRelMousePos.y), xDisplay, yDisplay);  
+            xDisplay = xDisplayBase + 0;
+            yDisplay = yDisplayBase + 0;
+            g2d.drawString(testValue + "    modifiedMousePos.x: " + modifiedMousePos.x, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    mDrawLocation.x: " + mDrawLocation.x, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    steerCircleEdgeX: " + mSteerCircleEdgeX, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    steerCircleEdgeY: " + mSteerCircleEdgeY, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    mTruckDrawLength: " + mTruckDrawLength, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    mDrawScale: " + mDrawScale, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    deltaX: " + deltaX, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    deltaY: " + deltaY + " slopeSteerHeading: " + slopeSteerHeading, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    angleSteerHeading: " + String.format("%.3f", angleSteerHeading), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
+            g2d.drawString("    relMousePos.x: " + String.format("%.3f", relMousePos.x), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    relMousePos.y: " + String.format("%.3f", relMousePos.y), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    modifiedMousePos.x: " + String.format("%.3f", modifiedMousePos.x), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    modifiedMousePos.y: " + String.format("%.3f", modifiedMousePos.y), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    modifiedRelMousePos.x: " + String.format("%.3f", modifiedRelMousePos.x), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    modifiedRelMousePos.y: " + String.format("%.3f", modifiedRelMousePos.y), xDisplay, yDisplay);
         }
-        
+
         // line that goes at a right angle to the steer heading line. 
         // this is an incredibly long line that isn't fully displayed. We intersect this line to determine the crossingpoint.
-        double endX2   = startX[deviceNumber] + 999999 * Math.cos(Math.toRadians(angleSteerHeading+90))*mDrawScale;
-        double endY2   = startY[deviceNumber] + 999999 * Math.sin(Math.toRadians(angleSteerHeading+90))*mDrawScale;
+        double endX2 = startX[deviceNumber] + 999999 * Math.cos(Math.toRadians(angleSteerHeading + 90)) * mDrawScale;
+        double endY2 = startY[deviceNumber] + 999999 * Math.sin(Math.toRadians(angleSteerHeading + 90)) * mDrawScale;
         // this is an imaginary line so don't draw it
-         //g2d.drawLine(startX[deviceNumber], startY[deviceNumber], (int)endX2, (int)endY2);
-        deltaX = startX[deviceNumber] - (int)endX2; //should this be divided by mDrawScale? this feeds crossingpoint so it explains why cp is what it is.
-        deltaY = startY[deviceNumber] - (int)endY2;
-                
-        if(displayTroubleshootingValues && wheel_ID==4){
+        //g2d.drawLine(startX[deviceNumber], startY[deviceNumber], (int)endX2, (int)endY2);
+        deltaX = startX[deviceNumber] - (int) endX2; //should this be divided by mDrawScale? this feeds crossingpoint so it explains why cp is what it is.
+        deltaY = startY[deviceNumber] - (int) endY2;
+
+        if (displayTroubleshootingValues && wheel_ID == 4) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+30;
-            g2d.drawString("angleSteerHeading: "+String.format("%.3f",angleSteerHeading)+" crossingPoint: "+crossingPoint, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    mTruckRectangle.getMaxY(): "+mTruckRectangle.getMaxY(), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    b: "+bOfcrossingPoint+" slopeRoverBodyHypot: "+slopeRoverBodySteerHypot, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    angleRoverBodyHypot: "+String.format("%.3f",angleRoverBodySteerHypot), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    startX: "+startX[deviceNumber]+" startY: "+(startY[deviceNumber]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    deltaX: "+deltaX+" deltaY: "+String.format("%.1f",deltaY), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    endX2: "+String.format("%.1f",endX2), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    endY2: "+String.format("%.1f",endY2), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 30;
+            g2d.drawString("angleSteerHeading: " + String.format("%.3f", angleSteerHeading) + " crossingPoint: " + crossingPoint, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    mTruckRectangle.getMaxY(): " + mTruckRectangle.getMaxY(), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    b: " + bOfcrossingPoint + " slopeRoverBodyHypot: " + slopeRoverBodySteerHypot, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    angleRoverBodyHypot: " + String.format("%.3f", angleRoverBodySteerHypot), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    startX: " + startX[deviceNumber] + " startY: " + (startY[deviceNumber]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    deltaX: " + deltaX + " deltaY: " + String.format("%.1f", deltaY), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    endX2: " + String.format("%.1f", endX2), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    endY2: " + String.format("%.1f", endY2), xDisplay, yDisplay);
         }
-                
+
         //g2d.drawString("crossingPoint "+String.format("%.2f",crossingPoint)+". slope: "+String.format("%.4f",slopeRoverBodySteerHypot)+". angle: "+String.format("%.2f",angleRoverBodySteerHypot), -125, -190);
         g2d.setColor(Color.ORANGE);
-        g2d.drawOval((int)crossingPoint-8/2, (int)mTruckRectangle.getMaxY()-8/2, 8, 8); // this is a little circle drawn at the crossing point.
-        g2d.drawLine((int)crossingPoint, (int)mTruckRectangle.getMaxY(), startX[deviceNumber], (int)startY[deviceNumber]); // startY is the location up/down on rover where the line starts.
-        
-        g2d.setColor(Color.ORANGE);        
+        g2d.drawOval((int) crossingPoint - 8 / 2, (int) mTruckRectangle.getMaxY() - 8 / 2, 8, 8); // this is a little circle drawn at the crossing point.
+        g2d.drawLine((int) crossingPoint, (int) mTruckRectangle.getMaxY(), startX[deviceNumber], (int) startY[deviceNumber]); // startY is the location up/down on rover where the line starts.
+
+        g2d.setColor(Color.ORANGE);
         g2d.setStroke(new BasicStroke(1));
-        g2d.drawLine(startX[deviceNumber], startY[deviceNumber]+1, endX[deviceNumber], endY[deviceNumber]); // hypotenuse line that goes out from center of rover body
-        
-        if(displayTroubleshootingValues && (wheel_ID==1 || wheel_ID==2)){
+        g2d.drawLine(startX[deviceNumber], startY[deviceNumber] + 1, endX[deviceNumber], endY[deviceNumber]); // hypotenuse line that goes out from center of rover body
+
+        if (displayTroubleshootingValues && (wheel_ID == 1 || wheel_ID == 2)) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplayBase+0;
-            yDisplay = yDisplayBase+0;
+            xDisplay = xDisplayBase + 0;
+            yDisplay = yDisplayBase + 0;
             g2d.drawString("Rover Body Center Orange Line", xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    crossingPoint: "+String.format("%.1f",crossingPoint), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("    EndX: "+endX[deviceNumber]+ "  EndY: "+endY[deviceNumber], xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    crossingPoint: " + String.format("%.1f", crossingPoint), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("    EndX: " + endX[deviceNumber] + "  EndY: " + endY[deviceNumber], xDisplay, yDisplay);
         }
-        
+
         g2d.setColor(Color.BLUE);
-        deltaX = (startX[deviceNumber]-endX[deviceNumber])/mDrawScale;
-        deltaY = (startY[deviceNumber]-endY[deviceNumber])/mDrawScale;
-        double hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY,2)), 0.5); // don't divide deltaY by 2 even though midpoint because in this case (the rover case) we're already only 1/2 way up???
-        
+        deltaX = (startX[deviceNumber] - endX[deviceNumber]) / mDrawScale;
+        deltaY = (startY[deviceNumber] - endY[deviceNumber]) / mDrawScale;
+        double hypotenuse = Math.pow((Math.pow(deltaX, 2) + Math.pow(deltaY, 2)), 0.5); // don't divide deltaY by 2 even though midpoint because in this case (the rover case) we're already only 1/2 way up???
+
         // Rover body actuals (based on calcs derived from actual front wheel steering positions
         anglesActual = Wheel.getGhostAngleStatic(); // must use actual steering angle values when calc'ing speed or the wheels will turn at wrong speeds relative to each other.
         BaseLengthActual = Wheel.getBaseLengthStatic();
-        
+
 //        System.out.println("anglesActual "
 //                            + String.format("%.4f",anglesActual[0])+" "
 //                            + String.format("%.4f",anglesActual[1])
@@ -967,65 +961,63 @@ double testValue =0;
 
         //double slopeRoverBodySteerHypotActual = (deltaY)/(deltaX);
         //crossingPointActual = (mTruckRectangle.getMaxY() - b_Actual)/slopeRoverBodySteerHypotActual;
-        
-        if(deltaX==0) {
+
+        if (deltaX == 0) {
             slopeRoverBodyTarget = 1;
-        }
-        else
-        {
-            slopeRoverBodyTarget = (deltaY)/(deltaX); // target slope (updates as fast as the mouse moves to a new position). The steppers are slow to reach target position.
-            
+        } else {
+            slopeRoverBodyTarget = (deltaY) / (deltaX); // target slope (updates as fast as the mouse moves to a new position). The steppers are slow to reach target position.
+
         }
         angleRoverBodyTarget = Math.toDegrees(Math.atan(slopeRoverBodyTarget));
-        roverBodySpeedTarget = (2*hypotenuse*Math.PI)/wheelDiameter;               
-        
+        roverBodySpeedTarget = (2 * hypotenuse * Math.PI) / wheelDiameter;
+
         Color colortemp = g2d.getColor();
         g2d.setColor(Color.ORANGE);
         // roverBody steering oval (circle that goes through center of rover body)
-        g2d.drawOval((int)(crossingPoint-hypotenuse*mDrawScale), (int)(mTruckRectangle.getMaxY()-hypotenuse*mDrawScale), (int)(hypotenuse*2*mDrawScale), (int)(hypotenuse*2*mDrawScale));
+        g2d.drawOval((int) (crossingPoint - hypotenuse * mDrawScale), (int) (mTruckRectangle.getMaxY() - hypotenuse * mDrawScale), (int) (hypotenuse * 2 * mDrawScale), (int) (hypotenuse * 2 * mDrawScale));
 
-        if(displayTroubleshootingValues && (wheel_ID==1 || wheel_ID==2)){
+        if (displayTroubleshootingValues && (wheel_ID == 1 || wheel_ID == 2)) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" Rover Body SpeedTarget "+String.format("%.1f",roverBodySpeedTarget), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" hypotenuse: "+(int)hypotenuse, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+18;
-            g2d.drawString(" anglesActual[0]BLDC: "+String.format("%.3f",anglesActual[0]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" anglesActual[1]BLDC: "+String.format("%.3f",anglesActual[1]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" BaseLengthActual[0]: "+String.format("%.3f",BaseLengthActual[0]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" BaseLengthActual[1]: "+String.format("%.3f",BaseLengthActual[1]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" mWheelFrontLeftSR: "+String.format("%.3f",mWheelFrontLeft.modified_mSpeedRatio), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" mWheelFrontRightSR: "+String.format("%.3f",mWheelFrontRight.modified_mSpeedRatio), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+18;
-            g2d.drawString(" angleRoverBodyTarget: "+String.format("%.2f",angleRoverBodyTarget), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" Rover Body SpeedTarget " + String.format("%.1f", roverBodySpeedTarget), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" hypotenuse: " + (int) hypotenuse, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 18;
+            g2d.drawString(" anglesActual[0]BLDC: " + String.format("%.3f", anglesActual[0]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" anglesActual[1]BLDC: " + String.format("%.3f", anglesActual[1]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" BaseLengthActual[0]: " + String.format("%.3f", BaseLengthActual[0]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" BaseLengthActual[1]: " + String.format("%.3f", BaseLengthActual[1]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" mWheelFrontLeftSR: " + String.format("%.3f", mWheelFrontLeft.modified_mSpeedRatio), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" mWheelFrontRightSR: " + String.format("%.3f", mWheelFrontRight.modified_mSpeedRatio), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 18;
+            g2d.drawString(" angleRoverBodyTarget: " + String.format("%.2f", angleRoverBodyTarget), xDisplay, yDisplay);
         }
-        
+
         g2d.setColor(colortemp);
-        
+
 //        int labelX_hyp = (int) endX[deviceNumber]+(int)deltaX/2*(int)mDrawScale+4; // all of these could be removed after some more testing. use xDisplay and yDisplay instead. note made Jan 1, 2020
 //        int labelY_hyp = (int) endY[deviceNumber]+(int)deltaY/2*(int)mDrawScale+4;
 //        labelX_hyp = (int) -100;
 //        labelY_hyp = (int) 60;
         //g2d.drawString("roverBodySpeedTarget "+roverBodySpeedTarget+"; angleFrontInner "+angleFrontInner+"; radius "+String.format("%.1f", hypotenuse)+" startX "+startX[deviceNumber] +" startY "+startY[deviceNumber]+" endX "+endX[deviceNumber] +" endY "+endY[deviceNumber], labelX_hyp, labelY_hyp);
-        
+
         mSteeringArc.SteeringArc(); // doesn't do anything - this is a placeholder to move the arc math into
         // first wheel circle starts here -> mDrawLocation.x, mDrawLocation.y
-        
+
         // 1 - centerX and centerY can be defined as:
         //      centerX = min( top of rover, max(mousex, bottom of rover) )
         //      centerY = max( side of rover, mouseY*1000)
@@ -1033,179 +1025,179 @@ double testValue =0;
         // 3 - top / left of circle are:
         //      top = centerX - radius
         //      left = centerY - radius
-                
+
         // device 0 - front left
         deviceNumber = 0;
         g2d.setColor(Color.RED);
         g2d.drawLine(startX[deviceNumber], startY[deviceNumber], endX[deviceNumber], endY[deviceNumber]);
-        
-        hypotenuse = frontLeftHyp;        
+
+        hypotenuse = frontLeftHyp;
         // front left oval
-        g2d.drawOval((int)(crossingPoint-hypotenuse*mDrawScale), (int)(mTruckRectangle.getMaxY()-hypotenuse*mDrawScale), (int)(hypotenuse*2*mDrawScale), (int)(hypotenuse*2*mDrawScale));
+        g2d.drawOval((int) (crossingPoint - hypotenuse * mDrawScale), (int) (mTruckRectangle.getMaxY() - hypotenuse * mDrawScale), (int) (hypotenuse * 2 * mDrawScale), (int) (hypotenuse * 2 * mDrawScale));
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -170;
         //g2d.drawString("frontLeftSpeedTarget "+String.format("%.1f",frontLeftSpeedTarget)+"; angleFrontOuter "+String.format("%.1f",angleFrontOuter)+"; radius "+String.format("%.1f", hypotenuse), labelX_hyp, labelY_hyp);
 
-        if(displayTroubleshootingValues && wheel_ID==1){
+        if (displayTroubleshootingValues && wheel_ID == 1) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
-            g2d.drawString("Front Left Wheel Red Line "+wheel_ID, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" X: "+startX[deviceNumber]+" Y: "+(startY[deviceNumber]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" EndX: "+endX[deviceNumber]+ "  EndY: "+endY[deviceNumber], xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" SpeedTarget "+String.format("%.1f",frontLeftSpeedTarget), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" AngleTarget "+String.format("%.1f",angleFrontOuter)+"; radius "+String.format("%.1f", hypotenuse), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
+            g2d.drawString("Front Left Wheel Red Line " + wheel_ID, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" X: " + startX[deviceNumber] + " Y: " + (startY[deviceNumber]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" EndX: " + endX[deviceNumber] + "  EndY: " + endY[deviceNumber], xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" SpeedTarget " + String.format("%.1f", frontLeftSpeedTarget), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" AngleTarget " + String.format("%.1f", angleFrontOuter) + "; radius " + String.format("%.1f", hypotenuse), xDisplay, yDisplay);
         }
 
         // device 1 - front right
         deviceNumber = 1;
         hypotenuse = frontRightHyp;
         // front right steer circle
-        g2d.drawOval((int)(crossingPoint-hypotenuse*mDrawScale), (int)(mTruckRectangle.getMaxY()-hypotenuse*mDrawScale), (int)(hypotenuse*2*mDrawScale), (int)(hypotenuse*2*mDrawScale));
+        g2d.drawOval((int) (crossingPoint - hypotenuse * mDrawScale), (int) (mTruckRectangle.getMaxY() - hypotenuse * mDrawScale), (int) (hypotenuse * 2 * mDrawScale), (int) (hypotenuse * 2 * mDrawScale));
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -150;
         //g2d.drawString("frontRightSpeedTarget "+String.format("%.1f",frontRightSpeedTarget)+"; angleFrontInner "+String.format("%.1f",angleFrontInner)+"; radius "+String.format("%.1f", hypotenuse), labelX_hyp, labelY_hyp);
 
-        if(displayTroubleshootingValues && wheel_ID==1){
+        if (displayTroubleshootingValues && wheel_ID == 1) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
-            g2d.drawString("Front Right Wheel Red Line "+wheel_ID, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" X: "+startX[deviceNumber]+" Y: "+(startY[deviceNumber]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" EndX: "+endX[deviceNumber]+ "  EndY: "+endY[deviceNumber], xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" SpeedTarget "+String.format("%.1f",frontRightSpeedTarget), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" AngleTarget "+String.format("%.1f",angleFrontInner)+"; radius "+String.format("%.1f", hypotenuse), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
-            g2d.drawString("FrontLeft  speedRatioT[1] "+String.format("%.4f",speedRatioTarget[1]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("FrontRight speedRatioT[2] "+String.format("%.4f",speedRatioTarget[2]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
+            g2d.drawString("Front Right Wheel Red Line " + wheel_ID, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" X: " + startX[deviceNumber] + " Y: " + (startY[deviceNumber]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" EndX: " + endX[deviceNumber] + "  EndY: " + endY[deviceNumber], xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" SpeedTarget " + String.format("%.1f", frontRightSpeedTarget), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" AngleTarget " + String.format("%.1f", angleFrontInner) + "; radius " + String.format("%.1f", hypotenuse), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
+            g2d.drawString("FrontLeft  speedRatioT[1] " + String.format("%.4f", speedRatioTarget[1]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("FrontRight speedRatioT[2] " + String.format("%.4f", speedRatioTarget[2]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
             g2d.drawString("Speed ratios printed don't match target speed ratios ", xDisplay, yDisplay);
         }
-        
+
         // device 2 - rear left
         deviceNumber = 2;
         g2d.setColor(Color.BLACK);
-        g2d.drawLine(startX[deviceNumber], startY[deviceNumber]+1, endX[deviceNumber], endY[deviceNumber]+1);
+        g2d.drawLine(startX[deviceNumber], startY[deviceNumber] + 1, endX[deviceNumber], endY[deviceNumber] + 1);
         hypotenuse = rearLeftHyp;
-      
+
         // rear left steer circle
-        g2d.drawOval((int)(crossingPoint-hypotenuse*mDrawScale), (int)(mTruckRectangle.getMaxY()-hypotenuse*mDrawScale), (int)(hypotenuse*2*mDrawScale), (int)(hypotenuse*2*mDrawScale));
+        g2d.drawOval((int) (crossingPoint - hypotenuse * mDrawScale), (int) (mTruckRectangle.getMaxY() - hypotenuse * mDrawScale), (int) (hypotenuse * 2 * mDrawScale), (int) (hypotenuse * 2 * mDrawScale));
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -110;
         //g2d.drawString("rearLeftSpeedTarget "+String.format("%.1f",rearLeftSpeedTarget)+"; angleRearOuter "+String.format("%.1f",angleRearOuter)+"; radius "+String.format("%.1f", hypotenuse), labelX_hyp, labelY_hyp);
 
-        if(displayTroubleshootingValues && wheel_ID==2){
+        if (displayTroubleshootingValues && wheel_ID == 2) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
-            g2d.drawString("Rear Left Wheel Red Line "+wheel_ID, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" X: "+startX[deviceNumber]+" Y: "+(startY[deviceNumber]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" EndX: "+endX[deviceNumber]+ "  EndY: "+endY[deviceNumber], xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" SpeedTarget "+String.format("%.1f",rearLeftSpeedTarget), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" Angle "+String.format("%.1f",angleRearOuter)+"; radius "+String.format("%.1f", hypotenuse), xDisplay, yDisplay);
-        }        
-        
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
+            g2d.drawString("Rear Left Wheel Red Line " + wheel_ID, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" X: " + startX[deviceNumber] + " Y: " + (startY[deviceNumber]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" EndX: " + endX[deviceNumber] + "  EndY: " + endY[deviceNumber], xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" SpeedTarget " + String.format("%.1f", rearLeftSpeedTarget), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" Angle " + String.format("%.1f", angleRearOuter) + "; radius " + String.format("%.1f", hypotenuse), xDisplay, yDisplay);
+        }
+
         // device 3 - rear right
         deviceNumber = 3;
         g2d.setColor(Color.BLACK);
-        g2d.drawLine(startX[deviceNumber], startY[deviceNumber]+1, endX[deviceNumber], endY[deviceNumber]+1);
+        g2d.drawLine(startX[deviceNumber], startY[deviceNumber] + 1, endX[deviceNumber], endY[deviceNumber] + 1);
         hypotenuse = rearRightHyp;
-        
+
         // rear right steer circle
-        g2d.drawOval((int)(crossingPoint-hypotenuse*mDrawScale), (int)(mTruckRectangle.getMaxY()-hypotenuse*mDrawScale), (int)(hypotenuse*2*mDrawScale), (int)(hypotenuse*2*mDrawScale));
+        g2d.drawOval((int) (crossingPoint - hypotenuse * mDrawScale), (int) (mTruckRectangle.getMaxY() - hypotenuse * mDrawScale), (int) (hypotenuse * 2 * mDrawScale), (int) (hypotenuse * 2 * mDrawScale));
 //        labelX_hyp = (int) -385;
 //        labelY_hyp = (int) -130;
         //g2d.drawString("rearRightSpeedTarget "+String.format("%.1f",rearRightSpeedTarget)+"; angleRearOuter "+String.format("%.1f",angleRearInner)+"; radius "+String.format("%.1f", hypotenuse), labelX_hyp, labelY_hyp);
 
-        if(displayTroubleshootingValues && wheel_ID==2){
+        if (displayTroubleshootingValues && wheel_ID == 2) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
-            g2d.drawString("Rear Right Wheel Red Line "+wheel_ID, xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" X: "+startX[deviceNumber]+" Y: "+(startY[deviceNumber]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" EndX: "+endX[deviceNumber]+ "  EndY: "+endY[deviceNumber], xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" SpeedTarget "+String.format("%.1f",rearRightSpeedTarget), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString(" Angle "+String.format("%.1f",angleRearInner)+"; radius "+String.format("%.1f", hypotenuse), xDisplay, yDisplay);
-        }        
-        
-        if(displayTroubleshootingValues && wheel_ID==2){
-            g2d.setColor(Color.RED);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
-            g2d.drawString("RearLeft  speedRatioT[3] "+String.format("%.4f",speedRatioTarget[3]), xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+15;
-            g2d.drawString("RearRight speedRatioT[4] "+String.format("%.4f",speedRatioTarget[4]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
+            g2d.drawString("Rear Right Wheel Red Line " + wheel_ID, xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" X: " + startX[deviceNumber] + " Y: " + (startY[deviceNumber]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" EndX: " + endX[deviceNumber] + "  EndY: " + endY[deviceNumber], xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" SpeedTarget " + String.format("%.1f", rearRightSpeedTarget), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString(" Angle " + String.format("%.1f", angleRearInner) + "; radius " + String.format("%.1f", hypotenuse), xDisplay, yDisplay);
         }
-        
-        if(displayTroubleshootingValues && wheel_ID==3){
+
+        if (displayTroubleshootingValues && wheel_ID == 2) {
             g2d.setColor(Color.RED);
-            xDisplay = xDisplayBase+10;
-            yDisplay = yDisplayBase+148;
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
+            g2d.drawString("RearLeft  speedRatioT[3] " + String.format("%.4f", speedRatioTarget[3]), xDisplay, yDisplay);
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 15;
+            g2d.drawString("RearRight speedRatioT[4] " + String.format("%.4f", speedRatioTarget[4]), xDisplay, yDisplay);
+        }
+
+        if (displayTroubleshootingValues && wheel_ID == 3) {
+            g2d.setColor(Color.RED);
+            xDisplay = xDisplayBase + 10;
+            yDisplay = yDisplayBase + 148;
             g2d.drawString("Press Keys(1-4) for additional info:", xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
             g2d.drawString("  1 = Front Wheels", xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
             g2d.drawString("  2 = Rear Wheels", xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
             g2d.drawString("  3 = This screen", xDisplay, yDisplay);
-            xDisplay = xDisplay+0;
-            yDisplay = yDisplay+25;
+            xDisplay = xDisplay + 0;
+            yDisplay = yDisplay + 25;
             g2d.drawString("  4 = Misc", xDisplay, yDisplay);
         }
-        
+
         //g2d.setColor(Color.ORANGE);
         //g2d.drawOval(200, 200, 20, 20);
-                
-        for (Wheel wheel: mWheels) {
+
+        for (Wheel wheel : mWheels) {
             g2d.setColor(Color.YELLOW);
             //System.out.println("test condition - only some wheels need lines?  "+wheel.getWheelName()+" or "+mWheels[1].getWheelName());
-            
+
             g2d.drawLine(
                     (int) wheel.getDrawLocation().x,
                     (int) wheel.getDrawLocation().y,
                     (int) relMousePos.x,
                     (int) relMousePos.y);
-            
+
             wheel.draw(g2d);
         }
 
@@ -1218,8 +1210,8 @@ double testValue =0;
         //g2d.drawString("mousePos "+String.format("%.1f", mousePos.x)+" "+String.format("%.1f",  mousePos.y), (int) mousePos.x, (int) mousePos.y);
 
         g2d.fillOval(  // dot in center of truck
-                (int)mDrawLocation.x-POINTER_RADIUS/2,
-                (int)mDrawLocation.y-POINTER_RADIUS/2,
+                (int) mDrawLocation.x - POINTER_RADIUS / 2,
+                (int) mDrawLocation.y - POINTER_RADIUS / 2,
                 POINTER_RADIUS, POINTER_RADIUS);
         g2d.setColor(Color.RED);
     }

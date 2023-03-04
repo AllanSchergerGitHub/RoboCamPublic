@@ -1,6 +1,5 @@
 package PhiDevice;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
 
 public enum ChannelType {
@@ -11,7 +10,7 @@ public enum ChannelType {
     String mChannelName;
     EnumSet<ChannelParamType> mParamTypes;
 
-    ChannelType (String channelName, EnumSet<ChannelParamType> paramTypes) {
+    ChannelType(String channelName, EnumSet<ChannelParamType> paramTypes) {
         mChannelName = channelName;
         mParamTypes = paramTypes;
     }
@@ -26,7 +25,7 @@ public enum ChannelType {
     }
 
     public ChannelParamType getChannelParamTypeByName(String channelParamTypeName) {
-        for(ChannelParamType cpType: mParamTypes) {
+        for (ChannelParamType cpType : mParamTypes) {
             if (cpType.toString().equals(channelParamTypeName)) {
                 return cpType;
             }
@@ -35,7 +34,7 @@ public enum ChannelType {
     }
 
     public static ChannelType getChannelTypeByName(String channelName) {
-        for(ChannelType channelType: ChannelType.values()) {
+        for (ChannelType channelType : ChannelType.values()) {
             if (channelType.mChannelName.equals(channelName)) return channelType;
         }
         return null;

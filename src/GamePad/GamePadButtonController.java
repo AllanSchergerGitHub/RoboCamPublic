@@ -7,9 +7,9 @@ import com.studiohartman.jamepad.ControllerUnpluggedException;
  * This class wraps a button controller in GamePad
  */
 public class GamePadButtonController extends GamePadController {
-    
+
     private final ControllerButton mJamepadButton;
-    
+
     public GamePadButtonController(
             GamePadControllerActionEnum idValue, Character subCommand,
             ControllerButton jamepadButton) {
@@ -19,14 +19,15 @@ public class GamePadButtonController extends GamePadController {
 
     /**
      * Gives descent name of the button controller
-     * @return 
+     *
+     * @return
      */
     @Override
     public String getFormattedName() {
         return String.format("%s -[%s]", mId, mJamepadButton.name());
     }
 
-    
+
     /**
      * Read the button press status and update mValue
      * and/or sends command to socket.

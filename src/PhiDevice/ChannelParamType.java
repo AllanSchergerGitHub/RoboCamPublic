@@ -6,7 +6,6 @@
 package PhiDevice;
 
 /**
- *
  * @author sujoy
  */
 public enum ChannelParamType {

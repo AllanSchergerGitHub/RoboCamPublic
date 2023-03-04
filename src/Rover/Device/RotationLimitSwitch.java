@@ -7,6 +7,7 @@ import com.phidget22.DigitalInput;
 import com.phidget22.DigitalInputStateChangeEvent;
 import com.phidget22.DigitalInputStateChangeListener;
 import com.phidget22.PhidgetException;
+
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,25 +17,26 @@ public class RotationLimitSwitch {
     private String mSwitchDeviceName;
     private DeviceChannel mSwitchDeviceChannel;
     private DigitalInput mSwitchDigitalInput;
-    
+
     public interface StateChangeListener {
         public void onStateChange(RotationLimitSwitch source, boolean state);
     }
+
     private StateChangeListener mStateChangeListener;
-    
+
     public RotationLimitSwitch(
             DeviceManager deviceManager, StateChangeListener stateChangeListener) {
         mDeviceManager = deviceManager;
         mStateChangeListener = stateChangeListener;
     }
-    
+
     public boolean isDetected() {
         if (mSwitchDeviceChannel == null) return false;
         if (mSwitchDigitalInput == null) return false;
         //System.out.println(String.format("%s is detected as Limit Switch", mSwitchDeviceChannel.getName()));
         return true;
     }
-    
+
     private void fireStateChangeListener() {
         if (mStateChangeListener == null) return;
         try {
@@ -43,7 +45,7 @@ public class RotationLimitSwitch {
             Logger.getLogger(RotationLimitSwitch.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public String getSwitchDeviceName() {
         return mSwitchDeviceName;
     }
@@ -64,7 +66,7 @@ public class RotationLimitSwitch {
                 }
                 if (mSwitchDeviceChannel != null) {
                     mSwitchDigitalInput = mSwitchDeviceChannel.getDigitalInput();
-                                        mSwitchDigitalInput = mSwitchDeviceChannel.getDigitalInput();
+                    mSwitchDigitalInput = mSwitchDeviceChannel.getDigitalInput();
                     try {
                         mSwitchDigitalInput.open();
                     } catch (PhidgetException ex) {
@@ -73,7 +75,7 @@ public class RotationLimitSwitch {
                 }
                 return false;
             }
-            
+
             @Override
             public void runInBackground() {
                 //System.out.println("runInBakground: " + mSwitchDeviceName);
@@ -84,7 +86,7 @@ public class RotationLimitSwitch {
                             fireStateChangeListener();
                         }
                     });
-                    System.out.println(String.format("addStateChangeListener is added on %s", mSwitchDeviceChannel.getChannelName()));                    
+                    System.out.println(String.format("addStateChangeListener is added on %s", mSwitchDeviceChannel.getChannelName()));
                 }
             }
         };

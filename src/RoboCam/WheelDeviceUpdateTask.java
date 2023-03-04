@@ -7,7 +7,7 @@ public class WheelDeviceUpdateTask implements Runnable {
     public WheelDeviceUpdateTask(WheelDevice wheelDevice) {
         mWheelDevice = wheelDevice;
     }
-    
+
     public WheelDeviceUpdateTask(WheelDevice wheelDevice, String paramName) {
         mWheelDevice = wheelDevice;
         mParamName = paramName;

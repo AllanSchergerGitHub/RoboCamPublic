@@ -1,6 +1,5 @@
 package mySQL;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -14,7 +13,7 @@ public class MysqlLogger {
     public static void put(Type logType, Object... args) {
         EXECUTOR.submit(new Task(logType, args));
     }
-    
+
     public static class Task implements Runnable {
         Type mLogType;
         Object[] mArgs;
@@ -26,12 +25,12 @@ public class MysqlLogger {
 
         @Override
         public void run() {
-            switch(mLogType) {
+            switch (mLogType) {
                 case BETTER:
                     //System.out.println(String.format("MusqlLogging Better %s ", mArgs[1]));
                     MySQL_Better mysqlBetter = new MySQL_Better();
                     mysqlBetter.MySQL_BetterInsert(
-                            (float)mArgs[0],
+                            (float) mArgs[0],
                             (String) mArgs[1],
                             (String) mArgs[2],
                             (String) mArgs[3],
@@ -43,7 +42,7 @@ public class MysqlLogger {
                     ///System.out.println(String.format("MusqlLogging Insert %s ", mArgs[1]));
                     MySQL_Insert mysqlInsert = new MySQL_Insert();
                     mysqlInsert.MySQL_Insert2(
-                            (String)mArgs[0],
+                            (String) mArgs[0],
                             (String) mArgs[1],
                             (String) mArgs[2],
                             (String) mArgs[3]
@@ -51,12 +50,12 @@ public class MysqlLogger {
                     break;
                 case DUTYCYCLE:
                     //System.out.println("MusqlLogging Insert BEFORE %s "+ mArgs.length+" "+mArgs[15]+" "+mArgs[16]);
-                    
+
                     // mysql coding is very specific about data types - double check to make sure they are all exactly right.
-                    
+
                     MySQL_dutycycle_etc mysqlDutyCycle = new MySQL_dutycycle_etc();
                     mysqlDutyCycle.MySQL_dutycycle_etcInsert(
-                            (float)mArgs[0],
+                            (float) mArgs[0],
                             (String) mArgs[1],
                             (String) mArgs[2],
                             (String) mArgs[3],
@@ -73,10 +72,10 @@ public class MysqlLogger {
                             (double) mArgs[14],
                             (double) mArgs[15],
                             (double) mArgs[16]
-                            
+
                     );
                     //System.out.println(String.format("MusqlLogging Insert AFTER %s ", mArgs[1]));       
-                      
+
                     break;
             }
         }

@@ -5,12 +5,11 @@
  */
 package PhiDevice;
 
+import javax.swing.*;
 import java.util.ArrayList;
-import javax.swing.SwingWorker;
 
 
 /**
- *
  * @author sujoy
  */
 public abstract class BackgroundJob {
@@ -30,11 +29,23 @@ public abstract class BackgroundJob {
     }
 
     public abstract boolean isReady();
+
     public abstract void runInBackground();
 
-    public void cleanUp() {};
-    public void updateGUI() {};
-    public void onTimeOut() {};
+    public void cleanUp() {
+    }
+
+    ;
+
+    public void updateGUI() {
+    }
+
+    ;
+
+    public void onTimeOut() {
+    }
+
+    ;
 
     private void removeThisJob() {
         cleanUp();
@@ -45,7 +56,7 @@ public abstract class BackgroundJob {
         @Override
         protected Void doInBackground() throws InterruptedException {
             long startedAt = System.currentTimeMillis();
-            while(!isReady()) {
+            while (!isReady()) {
                 if ((System.currentTimeMillis() - startedAt) > mTimeOutPeriod) {
                     mTimedOut = true;
                     break;
@@ -67,5 +78,5 @@ public abstract class BackgroundJob {
             updateGUI();
             if (!mFinished) removeThisJob();
         }
-   }
+    }
 }

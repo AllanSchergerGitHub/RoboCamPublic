@@ -4,33 +4,22 @@
  * and open the template in the editor.
  */
 package RoboCam;
-import PhiDevice.DeviceManager;
+
 import DB.ConfigDB;
-import PhiDevice.DeviceChannel;
+import PhiDevice.DeviceManager;
+import RoverUI.DeviceCheckBoxList;
 import RoverUI.DeviceListComboBoxModel;
-import RoverUI.DeviceChannelListModel;
-import RoverUI.DeviceListCellRenderer;
-import java.awt.Dimension;
+
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import static java.lang.Thread.sleep;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JTextField;
-import javax.swing.ListModel;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import RoverUI.DeviceCheckBoxList;
+
 /**
- *
  * @author sujoy
  */
 public class WheelConfigPanel extends javax.swing.JPanel {
@@ -48,12 +37,13 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     private String mPatternStepperMotor;
     private String mPatternBLDCPositionController;
     private String mPatternLimitSwitch;
-    
-    private WheelDevice mWheelDevice;      
+
+    private WheelDevice mWheelDevice;
 
     public static interface ChangeListener {
         public void onChange(int wheelIndex, String paramName);
     }
+
     private final ArrayList<ChangeListener> mChangeListeners = new ArrayList<>();
 
     class WidgetParamChangeListener implements
@@ -65,7 +55,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
             mConfigName = configName;
             mIsNumber = isNumber;
         }
-        
+
         public void saveChange(Object source) {
             if (source instanceof JComboBox) {
                 JComboBox comboBox = (JComboBox) source;
@@ -79,14 +69,14 @@ public class WheelConfigPanel extends javax.swing.JPanel {
                 );
                 if (selectedItems[1].length > 0) {
                     setConfigValue(
-                        WheelDevice.BLDC_1_POSITION_MULTIPLIER,
-                        selectedItems[1][0]
+                            WheelDevice.BLDC_1_POSITION_MULTIPLIER,
+                            selectedItems[1][0]
                     );
                 }
                 if (selectedItems[1].length > 1) {
                     setConfigValue(
-                        WheelDevice.BLDC_2_POSITION_MULTIPLIER,
-                        selectedItems[1][1]
+                            WheelDevice.BLDC_2_POSITION_MULTIPLIER,
+                            selectedItems[1][1]
                     );
                 }
             } else {
@@ -110,7 +100,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
             javax.swing.JList<Object> jList = (javax.swing.JList<Object>) lse.getSource();
             Object[] selectedValues = jList.getSelectedValuesList().toArray();
             String[] stringValues = new String[selectedValues.length];
-            for(int i = 0; i <selectedValues.length; i++) {
+            for (int i = 0; i < selectedValues.length; i++) {
                 stringValues[i] = selectedValues[i].toString();
                 /*//Multiple selection is allowed since there is two BLDC motors per wheel.
                 if(selectedValues.length>1){
@@ -146,7 +136,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
             saveChange(source);
         }
     }
-    
+
     private void addActionFocusListener(
             JTextField component, WidgetParamChangeListener listener) {
         component.addFocusListener(listener);
@@ -159,24 +149,24 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     public WheelConfigPanel() {
         initComponents();
         mComboBoxDCMotor.addActionListener(new WidgetParamChangeListener(
-            WheelDevice.DCMOTOR_NAME, Boolean.FALSE)
+                WheelDevice.DCMOTOR_NAME, Boolean.FALSE)
         );
         mComboBoxEncoder.addActionListener(new WidgetParamChangeListener(
-            WheelDevice.ENCODER_NAME, Boolean.FALSE)
+                WheelDevice.ENCODER_NAME, Boolean.FALSE)
         );
-        
+
         mCmbLeftLimitSwitch.addActionListener(new WidgetParamChangeListener(
-            WheelDevice.LIMIT_SWITCH_LEFT_NAME, Boolean.FALSE)
+                WheelDevice.LIMIT_SWITCH_LEFT_NAME, Boolean.FALSE)
         );
         mCmbRightLimitSwitch.addActionListener(new WidgetParamChangeListener(
-            WheelDevice.LIMIT_SWITCH_RIGHT_NAME, Boolean.FALSE)
+                WheelDevice.LIMIT_SWITCH_RIGHT_NAME, Boolean.FALSE)
         );
-        
+
         mDeviceCheckBoxList.addActionListener(new WidgetParamChangeListener(
-            WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES, Boolean.FALSE));
+                WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES, Boolean.FALSE));
 
         addActionFocusListener(mTextFieldDCMotorSpeedMult, new WidgetParamChangeListener(
-                        WheelDevice.DCMOTOR_SPEED_MULTIPLIER, Boolean.TRUE));
+                WheelDevice.DCMOTOR_SPEED_MULTIPLIER, Boolean.TRUE));
     }
 
     public void setWheelName(String wheelName) {
@@ -232,11 +222,11 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         mPatternBLDCPositionController = config.getPhidgetPatternFor("BLDCPositionController");
         populateData();
     }
-    
+
     public void setWheelDevice(WheelDevice wheelDevice) {
         mWheelDevice = wheelDevice;
-    } 
-    
+    }
+
     public void updateWheelDeviceStatus() {
         mLabelEncoderStatusValue.setText(mWheelDevice.getEncoderStatus());
         mLabelBLDCPosControllerStatusValue.setText(mWheelDevice.getBLDCPositionControllerStatus());
@@ -246,7 +236,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     public synchronized void populateData() {
         if (mDataPopulated) return;
         if (mDeviceManager != null && mConfig != null &&
-                !(mComboBoxDCMotor.getModel() instanceof DeviceListComboBoxModel)  ) {
+                !(mComboBoxDCMotor.getModel() instanceof DeviceListComboBoxModel)) {
             /*Build Combo Box lists*/
             mComboBoxDCMotor.setModel(new DeviceListComboBoxModel(
                     mDeviceManager, mPatternDCMotor));
@@ -265,47 +255,47 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         /*Show values in combo boxes.*/
         if (mConfigDB != null) {
             mComboBoxDCMotor.setSelectedItem(mConfigDB.getValue(
-                    getConfigName(WheelDevice.DCMOTOR_NAME), ""
-                )
+                            getConfigName(WheelDevice.DCMOTOR_NAME), ""
+                    )
             );
             mComboBoxEncoder.setSelectedItem(mConfigDB.getValue(
-                    getConfigName(WheelDevice.ENCODER_NAME), ""
-                )
+                            getConfigName(WheelDevice.ENCODER_NAME), ""
+                    )
             );
             mCmbLeftLimitSwitch.setSelectedItem(mConfigDB.getValue(
-                    getConfigName(WheelDevice.LIMIT_SWITCH_LEFT_NAME), ""
-                )
+                            getConfigName(WheelDevice.LIMIT_SWITCH_LEFT_NAME), ""
+                    )
             );
             mCmbRightLimitSwitch.setSelectedItem(mConfigDB.getValue(
-                    getConfigName(WheelDevice.LIMIT_SWITCH_RIGHT_NAME), ""
-                )
+                            getConfigName(WheelDevice.LIMIT_SWITCH_RIGHT_NAME), ""
+                    )
             );
-            
+
             String[] controllerNames = mConfigDB.getValue(
-                getConfigName(WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES), ""
+                    getConfigName(WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES), ""
             ).split(",");
-            
+
             //System.out.println("controllerNames "  + mWheelName + " '" + controllerNames.length + "' " + String.join(",",  controllerNames));
             mDeviceCheckBoxList.selectDevices(
-                controllerNames, new String[]{
-                    mConfigDB.getValue(
-                        getConfigName(
-                            WheelDevice.BLDC_1_POSITION_MULTIPLIER
-                        ), "1"
-                    ), mConfigDB.getValue(
-                        getConfigName(
-                            WheelDevice.BLDC_2_POSITION_MULTIPLIER
-                        ), "1"
+                    controllerNames, new String[]{
+                            mConfigDB.getValue(
+                                    getConfigName(
+                                            WheelDevice.BLDC_1_POSITION_MULTIPLIER
+                                    ), "1"
+                            ), mConfigDB.getValue(
+                            getConfigName(
+                                    WheelDevice.BLDC_2_POSITION_MULTIPLIER
+                            ), "1"
                     )
-                }
+                    }
             );
 
             /* Show values in text boxes */
             mTextFieldDCMotorSpeedMult.setText(
                     mConfigDB.getValue(
-                        getConfigName(
-                            WheelDevice.DCMOTOR_SPEED_MULTIPLIER
-                        ), "1"
+                            getConfigName(
+                                    WheelDevice.DCMOTOR_SPEED_MULTIPLIER
+                            ), "1"
                     )
             );
         }
@@ -320,7 +310,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     private void setConfigValue(String configName, Object value) {
         if (mConfigDB == null) return;
         mConfigDB.setValue(getConfigName(configName), (String) value);
-        for (ChangeListener listener: mChangeListeners) {
+        for (ChangeListener listener : mChangeListeners) {
             listener.onChange(mWheelIndex, configName);
         }
     }
@@ -381,17 +371,17 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         mLabelSterpperMotor.setText("Stepper Motor");
         add(mLabelSterpperMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 23, -1, -1));
 
-        mComboBoxDCMotor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        mComboBoxDCMotor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
         add(mComboBoxDCMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 0, 560, -1));
 
-        mComboBoxStepperMotor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        mComboBoxStepperMotor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
         add(mComboBoxStepperMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 20, 560, -1));
 
         mLabelEncoder.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         mLabelEncoder.setText("Encoder");
         add(mLabelEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 43, -1, -1));
 
-        mComboBoxEncoder.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        mComboBoxEncoder.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
         add(mComboBoxEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 40, 560, -1));
 
         mLabelStepperCurrent.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
@@ -479,14 +469,14 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         mLabelDCMotorSpeedMult.setText("DC Motor Speed Multiplier");
         add(mLabelDCMotorSpeedMult, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 143, -1, -1));
 
-        mCmbLeftLimitSwitch.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        mCmbLeftLimitSwitch.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
         add(mCmbLeftLimitSwitch, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 170, 560, -1));
 
         mLblLimitSwitchRight.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         mLblLimitSwitchRight.setText("Right Limit Switch");
         add(mLblLimitSwitchRight, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 200, -1, -1));
 
-        mCmbRightLimitSwitch.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        mCmbRightLimitSwitch.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
         add(mCmbRightLimitSwitch, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 200, 560, -1));
     }// </editor-fold>//GEN-END:initComponents
 

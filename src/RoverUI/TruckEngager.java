@@ -5,18 +5,19 @@ import RoverUI.Vehicle.Wheel;
 
 public class TruckEngager extends javax.swing.JPanel {
     Truck mTruck;
+
     /**
      * Creates new form TruckEngager
      */
     public TruckEngager() {
         initComponents();
     }
-    
+
     public void setTruck(Truck truck) {
         mTruck = truck;
-        WheelEngager[] enagers = new WheelEngager[] {
-            mWheelEngager1, mWheelEngager2,
-            mWheelEngager3, mWheelEngager4
+        WheelEngager[] enagers = new WheelEngager[]{
+                mWheelEngager1, mWheelEngager2,
+                mWheelEngager3, mWheelEngager4
         };
         Wheel[] wheels = mTruck.getWheels();
 

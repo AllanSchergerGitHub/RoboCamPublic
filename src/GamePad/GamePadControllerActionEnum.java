@@ -12,7 +12,7 @@ public enum GamePadControllerActionEnum {
     ROTATE_RIGHT("Rotate Right"),
     VEHICLE_POINTER_HALT("Vehicle Pointer Halt"),
     VEHICLE_POINTER_LEFT_RIGHT("Vehicle Pointer Left/Right");
-    
+
     private final String name;
 
     GamePadControllerActionEnum(final String name) {

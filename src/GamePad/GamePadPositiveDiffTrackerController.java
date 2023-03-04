@@ -9,29 +9,30 @@ import com.studiohartman.jamepad.ControllerAxis;
  */
 public class GamePadPositiveDiffTrackerController extends GamePadTrackerController {
     private Double mLastValueForSocket;
-    
+
     public GamePadPositiveDiffTrackerController(
-            GamePadControllerActionEnum idValue, 
-            Character subCommad, 
-            ControllerAxis jamepadAxis, 
+            GamePadControllerActionEnum idValue,
+            Character subCommad,
+            ControllerAxis jamepadAxis,
             double outMutliplier) {
         super(idValue, subCommad, jamepadAxis, outMutliplier);
     }
-    
+
     private boolean mSocketHandlerRet = false; // for optimization
-    
+
     /**
      * Sets the value of mValue to command of socket handler.
+     *
      * @return true if the change value is beyond tolerance
      */
     @Override
     public boolean setSocketHandlerValue() {
-        if (mLastValueForSocket == null || 
-                mChangeTolerance < Math.abs(mValue-mLastValueForSocket)) {
-            if (mLastValueForSocket == null || 
-                    mChangeTolerance < mValue-mLastValueForSocket) {
+        if (mLastValueForSocket == null ||
+                mChangeTolerance < Math.abs(mValue - mLastValueForSocket)) {
+            if (mLastValueForSocket == null ||
+                    mChangeTolerance < mValue - mLastValueForSocket) {
                 mSocketCommandHandler.setValue(
-                        mValue-(mLastValueForSocket==null ? 0 : mLastValueForSocket)
+                        mValue - (mLastValueForSocket == null ? 0 : mLastValueForSocket)
                 );
                 mSocketHandlerRet = true;
             } else {
@@ -41,5 +42,5 @@ public class GamePadPositiveDiffTrackerController extends GamePadTrackerControll
             return mSocketHandlerRet;
         }
         return false;
-    }     
+    }
 }

@@ -18,6 +18,6 @@ public class IPCamSetting {
     }
 
     public String getPictureUrl() {
-        return  mPictureUrl;
+        return mPictureUrl;
     }
 }
