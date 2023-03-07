@@ -5,38 +5,29 @@
  */
 package RoboCam;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Point;
-import java.awt.image.BufferedImage;
-import java.awt.geom.Line2D;
+import Utility.UiLine;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
-
 import java.io.IOException;
 import java.io.InputStream;
-import static java.lang.Thread.sleep;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import javax.swing.SwingWorker;
-import Utility.UiLine;
-import java.awt.geom.Point2D;
 
 public class IPCamPanel extends javax.swing.JPanel
         implements MouseMotionListener, MouseListener {
@@ -45,13 +36,15 @@ public class IPCamPanel extends javax.swing.JPanel
     private UiLine.Line mActiveLine = null;
     private Color mLineColor = Color.BLACK;
     private int mLineThickness = 1;
-            
+
     public interface ConnectionListener {
         void onConnect();
+
         void onDisconnect();
+
         void onImageUpdate();
     }
-    
+
     public interface LineListener {
         void onSelect(UiLine.Line line);
     }
@@ -59,12 +52,12 @@ public class IPCamPanel extends javax.swing.JPanel
     static final boolean SAVE_IMAGE = true;
 
     private int mImageSaveLag = 1000;//
-    private int mImageSaveLagTime = 1*10000;//milliseconds
+    private int mImageSaveLagTime = 1 * 10000;//milliseconds
     private int mFps = 300;
     private static int imageCount = 0; // counts each image so we can save every x images - saving all of them is too much data
-               // flag to capture each image stream only once
+    // flag to capture each image stream only once
     private static String[] ImageID = new String[5];
-    
+
     private String mUrlAddress;
     private URL mURL;
     private final ImageLoader mImageLoader = new ImageLoader();
@@ -74,7 +67,7 @@ public class IPCamPanel extends javax.swing.JPanel
 
     private final ArrayList<ConnectionListener> mConnListeners = new ArrayList<>();
     private final ArrayList<LineListener> mLineListeners = new ArrayList<>();
-    
+
 
     /**
      * Creates new form IPCamPanel
@@ -86,7 +79,7 @@ public class IPCamPanel extends javax.swing.JPanel
         mImageScale = 1;
         mImageLoader.execute();
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -99,38 +92,38 @@ public class IPCamPanel extends javax.swing.JPanel
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 400, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 300, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
-    
+
     String ts = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS").format(new Date());
-    private static  int oldCounter;
+    private static int oldCounter;
     private static String tsStatic = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS").format(new Date());
-    private static  int counter;
+    private static int counter;
     private static long oldLag;
     private static long currLag;
-    private static int CONNECITON_TIMEOUT = 2*1000;
-    
+    private static int CONNECITON_TIMEOUT = 2 * 1000;
+
     final class ImageLoader extends SwingWorker<Void, BufferedImage> {
         @Override
         protected Void doInBackground() {
             //long lastUpdated = System.currentTimeMillis();
             //System.err.println(" lastUpdated "+lastUpdated + " ts:"+ts+" static:"+tsStatic);
-            while(!isCancelled()) {
+            while (!isCancelled()) {
                 BufferedImage image = null;
                 //
                 if (mURL != null) {
                     try {
-                        URLConnection conn =  mURL.openConnection();
+                        URLConnection conn = mURL.openConnection();
                         conn.setConnectTimeout(CONNECITON_TIMEOUT);
                         conn.setReadTimeout(CONNECITON_TIMEOUT);
                         InputStream inStream = conn.getInputStream();
@@ -157,24 +150,24 @@ public class IPCamPanel extends javax.swing.JPanel
                 //}
                 //ts =  new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS").format(new Date());
                 //counter++;
-                
+
                 //if (counter> oldCounter){
                 //    oldCounter++;
                 //}
-                
+
                 //System.out.println(oldCounter+" "+counter+" static:"+tsStatic+" ts:"+ts+" "+String.format("IP Cam Actual FPS %f", 1000./(currentTime-lastUpdated))+"  "+String.format("IP Cam Delay %d ms", (currentTime-lastUpdated))+" "+mURL);                                
                 //currLag = currentTime-lastUpdated;
-                
+
                 //if(currLag > oldLag){
                 //    oldLag=currLag;
                 //    System.out.println("oldLag:"+oldLag);
                 //}
-                
+
                 //System.out.println("mFps set to : "+mFps);
                 //lastUpdated = currentTime;
-                
+
                 try {
-                    Thread.sleep(1000/mFps);
+                    Thread.sleep(1000 / mFps);
                     //System.out.println("mFps "+mFps);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(IPCamPanel.class.getName()).log(Level.SEVERE, null, ex);
@@ -187,16 +180,16 @@ public class IPCamPanel extends javax.swing.JPanel
         protected void process(List<BufferedImage> list) {
             mImage = list.get(0);
             repaint();
-            for(ConnectionListener connListener: mConnListeners) {
+            for (ConnectionListener connListener : mConnListeners) {
                 connListener.onImageUpdate();
             }
         }
     }
- 
+
     public void setFps(int fps) {
         //this.mFps = fps; removed Jan 9 2019 by Allan - this appears to be hard coded in UIFrontend.java at 20 fps so removing this.
     }
-    
+
     /**
      * image save lag is set on the UIFrontEnd.java GUI in a slider.
      * it is used to increase/decrease the time between when images are saved to disk.
@@ -205,8 +198,8 @@ public class IPCamPanel extends javax.swing.JPanel
         mImageSaveLag = ImageSaveLag;
     }
 
-    public void setUrlAddrress(String  urlPath) {
-        if(urlPath == null || urlPath.trim().length() == 0) return;
+    public void setUrlAddrress(String urlPath) {
+        if (urlPath == null || urlPath.trim().length() == 0) return;
         mUrlAddress = urlPath;
         try {
             mURL = new URL(mUrlAddress);
@@ -228,8 +221,8 @@ public class IPCamPanel extends javax.swing.JPanel
     }
 
     private void notifyConnectionListeners(boolean connected) {
-        for(ConnectionListener connListener: mConnListeners) {
-            if(connected) {
+        for (ConnectionListener connListener : mConnListeners) {
+            if (connected) {
                 connListener.onConnect();
             } else {
                 connListener.onDisconnect();
@@ -240,11 +233,11 @@ public class IPCamPanel extends javax.swing.JPanel
     public void addConnectionListener(ConnectionListener connListener) {
         mConnListeners.add(connListener);
     }
-    
+
     public void addLineListener(LineListener lineListener) {
         mLineListeners.add(lineListener);
     }
-    
+
     private String mImageFolder = null;
     private Executor mImageSaveService;
     private String mImageId;
@@ -255,7 +248,7 @@ public class IPCamPanel extends javax.swing.JPanel
     private class ImageSaveTask implements Runnable {
         private final BufferedImage mImageToSave;
         private final Date mTimestamp;
-        
+
         public ImageSaveTask(BufferedImage image, Date timestamp) {
             mImageToSave = image;
             mTimestamp = timestamp;
@@ -266,30 +259,32 @@ public class IPCamPanel extends javax.swing.JPanel
             File outputFile;
             String filePath = String.format(
                     "%s%s%d_saved_%s_%s_%s.jpg",
-                    mImageFolder, 
+                    mImageFolder,
                     File.separator,
                     mImageCount,
                     new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS").format(mTimestamp),
                     mImageId, mURL.getPort()
             );
             try {
-                outputFile=new File(filePath);
+                outputFile = new File(filePath);
                 ImageIO.write(mImageToSave, "jpg", outputFile);
                 System.out.println(String.format(
                         "saving %d done %d", mURL.getPort(), mImageCount));
             } catch (IOException ex) {
                 Logger.getLogger(IPCamPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }        
-    };
-    
+        }
+    }
+
+    ;
+
     public void setImageFolder(String imageId, String path) {
         mImageFolder = path;
         mImageId = imageId;
-        System.err.println("Images for "+mImageId+" will be saved here: "+mImageFolder);
+        System.err.println("Images for " + mImageId + " will be saved here: " + mImageFolder);
         mImageSaveService = Executors.newFixedThreadPool(1);
     }
-    
+
     public void setLineColor(Color color) {
         mLineColor = color;
         if (mActiveLine != null) {
@@ -298,7 +293,7 @@ public class IPCamPanel extends javax.swing.JPanel
             repaint();
         }
     }
-    
+
     public void setLineThickness(int value) {
         mLineThickness = value;
         if (mActiveLine != null) {
@@ -316,34 +311,34 @@ public class IPCamPanel extends javax.swing.JPanel
         }
 
         mImageScale = Float.min(
-                getWidth()/(float) mImage.getWidth(),
-                getHeight()/(float) mImage.getHeight());
-        int scaledWidth = (int) (mImageScale*mImage.getWidth());
-        int scaledHeight = (int) (mImageScale*mImage.getHeight());
-        mImageOffset.x = (int)((getWidth()-scaledWidth)*0.5);
-        mImageOffset.y = (int)((getHeight()-scaledHeight)*0.5);
-        
-        
-        String mURL_TEST = mURL+"";
+                getWidth() / (float) mImage.getWidth(),
+                getHeight() / (float) mImage.getHeight());
+        int scaledWidth = (int) (mImageScale * mImage.getWidth());
+        int scaledHeight = (int) (mImageScale * mImage.getHeight());
+        mImageOffset.x = (int) ((getWidth() - scaledWidth) * 0.5);
+        mImageOffset.y = (int) ((getHeight() - scaledHeight) * 0.5);
+
+
+        String mURL_TEST = mURL + "";
         //System.out.println(mURL_TEST+" + "+ mURL_TEST.contains("8080"));
 //        Graphics g = mImage.createGraphics();
 //        
 //        g.setColor(Color.yellow);
 //        g.drawLine(96, 127, 200, 127);
-        
+
         Graphics2D g2 = mImage.createGraphics();// with this line of code i can add a grapics line to the saved image
         //Graphics2D g2 = (Graphics2D) grphcs;  // with this line of code the graphics line is only on the image on screen
         //g2.setStroke(new BasicStroke(6));
         g2.setColor(Color.green);
-                    
-                    
+
+
         //if(mURL_TEST.contains("8080") ){
         //    g2.setColor(Color.red);
-            //grphcs.drawLine(280, 500, 375, 50); // bottom over, bottom down,  top over, top down
+        //grphcs.drawLine(280, 500, 375, 50); // bottom over, bottom down,  top over, top down
         //}
         //g2.drawLine((int) (mImage.getWidth()*.53),(int) (mImage.getHeight()*.8), (int) (mImage.getWidth()*.517), (int) (mImage.getHeight()*.36)); // bottom over, bottom down,  top over, top down 
         //g2.drawLine(600,200, 600,100); // bottom over, bottom down,  top over, top down // if this line is uncommented the line will show up on screen
-                   
+
         grphcs.drawImage(mImage,
                 mImageOffset.x, mImageOffset.y,
                 mImageOffset.x + scaledWidth, mImageOffset.y + scaledHeight,
@@ -354,8 +349,8 @@ public class IPCamPanel extends javax.swing.JPanel
                 getWidth(), getHeight(), this);*/
 
         if (mImageFolder != null && SAVE_IMAGE) {
-            mCurrentTimestamp = new Date();        
-            if ((mCurrentTimestamp.getTime()-mLastImageSavedAt) > mImageSaveLagTime) {
+            mCurrentTimestamp = new Date();
+            if ((mCurrentTimestamp.getTime() - mLastImageSavedAt) > mImageSaveLagTime) {
                 mLastImageSavedAt = mCurrentTimestamp.getTime();
                 mImageCount++;
                 mImageSaveService.execute(new ImageSaveTask(mImage, mCurrentTimestamp));
@@ -443,9 +438,9 @@ public class IPCamPanel extends javax.swing.JPanel
             mActiveLine.setThickness(mLineThickness);
             mActiveLine.setStart(me.getX(), me.getY(), getWidth(), getHeight());
         }
-        
-                                
-        for(LineListener listener: mLineListeners) {
+
+
+        for (LineListener listener : mLineListeners) {
             listener.onSelect(mActiveLine);
         }
         repaint();
@@ -462,10 +457,12 @@ public class IPCamPanel extends javax.swing.JPanel
     }
 
     @Override
-    public void mouseEntered(MouseEvent me) {}
+    public void mouseEntered(MouseEvent me) {
+    }
 
     @Override
-    public void mouseExited(MouseEvent me) {}
+    public void mouseExited(MouseEvent me) {
+    }
 
     @Override
     public void mouseDragged(MouseEvent me) {
@@ -476,8 +473,9 @@ public class IPCamPanel extends javax.swing.JPanel
     }
 
     @Override
-    public void mouseMoved(MouseEvent me) {}
-    
+    public void mouseMoved(MouseEvent me) {
+    }
+
     public UiLine.Collection getUiLineCollection() {
         return mLineCollection;
     }

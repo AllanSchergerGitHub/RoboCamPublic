@@ -1,18 +1,14 @@
 package Utility;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.geom.Point2D;
 
 public class Drawing {
     public static final Color TRANS_WHITE = new Color(1f, 1f, 1f, 0.8f);
-    
+
     public static Point2D.Double drawString(Color textColor, Color backgroundColor, int mFontSetting, int mFontSize,
-            Graphics2D g2d, String text, double x, double y,
-            boolean reversed) {
+                                            Graphics2D g2d, String text, double x, double y,
+                                            boolean reversed) {
         g2d.setRenderingHint(
                 RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
@@ -23,9 +19,9 @@ public class Drawing {
 
         FontMetrics metrics = g2d.getFontMetrics();
         int textHeight = metrics.getHeight();
-        
+
         int textWidth = 0;
-        for(String line: text.split("\n")) {
+        for (String line : text.split("\n")) {
             textWidth = metrics.stringWidth(line);
 
             g2d.setColor(backgroundColor);
@@ -33,16 +29,16 @@ public class Drawing {
                     (int) (x - (reversed ? textWidth : 0)),
                     (int) y - textHeight,
                     textWidth,
-                    (int) (textHeight*1.5));
+                    (int) (textHeight * 1.5));
 
             g2d.setColor(textColor);
 
             g2d.drawString(
                     line,
                     (int) (x - (reversed ? textWidth : 0)),
-                    (int)y);
-            y += textHeight*1.5;
+                    (int) y);
+            y += textHeight * 1.5;
         }
-        return new Point2D.Double(x+textWidth, y);
+        return new Point2D.Double(x + textWidth, y);
     }
 }

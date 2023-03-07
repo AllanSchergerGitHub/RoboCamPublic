@@ -1,96 +1,88 @@
 package RoboCam;
 
 import Utility.GpsReader;
-import java.awt.Button;
-import java.awt.Canvas;
-import java.awt.Graphics;
-import java.awt.Panel;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.BoxLayout;
-import net.sf.marineapi.nmea.util.Position;
 import Utility.Waypointer;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.event.MouseAdapter;
+import net.sf.marineapi.nmea.util.GpsFixQuality;
+import net.sf.marineapi.nmea.util.Position;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.concurrent.Executor;
+import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import net.sf.marineapi.nmea.util.GpsFixQuality;
-import net.sf.marineapi.nmea.util.Waypoint; // jar available here -> https://github.com/ktuukkan/marine-api/releases 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GpsReaderFrame extends javax.swing.JFrame {
     static final int CANVAS_PAD = 20;
-    
+
     GpsReader mGpsReader;
     PrintWriter mCsvWriter;
     String mCsvFilePath;
     Boolean mCanWriteGps = true;
     int SequenceNumber = 0;
-    
+
     Position mLastPosition;
 
     Position mWaypointCurrent = new Position(0, 0);
     Waypointer mWaypointer = new Waypointer();
     final Canvas mCanvasWaypoint;
     Waypointer.Tracker mWaypointTracker;
-    
+
     ScheduledExecutorService mWaypoitUpdater = Executors.newScheduledThreadPool(1);
     ScheduledFuture mWaypointFuture = null;
-    
-    
+
+
     String mPositonPickType = "";
-    
+
     RoverUI.TruckSteerPanel mTruckSteerPanel = null;
+
     /**
      * Creates new form GpsReaderFrame
      */
     public GpsReaderFrame() {
         initComponents();
         mGpsReader = new GpsReader();
-        mGpsReader.addListener(new GpsReader.GpsListener () {
+        mGpsReader.addListener(new GpsReader.GpsListener() {
             @Override
             public void onRead(Position position, GpsFixQuality fixQuality) {
                 mLblGpsFixQuality.setText(String.format(
-                    "Quality: %s", fixQuality.name()));
-                if (mLastPosition !=null &&
+                        "Quality: %s", fixQuality.name()));
+                if (mLastPosition != null &&
                         mLastPosition.equals(position)) {
                     return;
                 }
                 mLastPosition = position;
-                
+
                 mTxtGpsPosition.setText(String.format(
-                    "Lat: %.8f, Long: %.8f, Alt:%.2f",
-                    position.getLatitude(),
-                    position.getLongitude(),                    
-                    position.getAltitude()
+                        "Lat: %.8f, Long: %.8f, Alt:%.2f",
+                        position.getLatitude(),
+                        position.getLongitude(),
+                        position.getAltitude()
                 ));
                 textFeet.setText(String.format(
-                    "LatFeet: %.2f, LongFeet: %.2f", 
-                    (position.getLatitude()-43.6678417)*(10000/90)*3280.4, // convert lat into KM and then into Feet (3280.4 feet per KM)
-                    (position.getLongitude()+91.0064575)*(10000/90)*3280.4 // convert long into KM and then into Feet (3280.4 feet per KM)
+                        "LatFeet: %.2f, LongFeet: %.2f",
+                        (position.getLatitude() - 43.6678417) * (10000 / 90) * 3280.4, // convert lat into KM and then into Feet (3280.4 feet per KM)
+                        (position.getLongitude() + 91.0064575) * (10000 / 90) * 3280.4 // convert long into KM and then into Feet (3280.4 feet per KM)
                 ));
                 textMeters.setText(String.format(
-                    "LatMeters: %.2f, LongMeters: %.2f", 
-                    (position.getLatitude()-43.6678417)*(10000/90)*1000, // 1000 meters per KM
-                    (position.getLongitude()+91.0064575)*(10000/90)*1000 // 1000 meters per KM
+                        "LatMeters: %.2f, LongMeters: %.2f",
+                        (position.getLatitude() - 43.6678417) * (10000 / 90) * 1000, // 1000 meters per KM
+                        (position.getLongitude() + 91.0064575) * (10000 / 90) * 1000 // 1000 meters per KM
                 ));
                 DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 String mTimeNow = String.format(LocalDateTime.now().format(fmt));
-            
+
                 if (mCsvWriter != null && mCanWriteGps) {
                     SequenceNumber++;
                     StringBuilder sb = new StringBuilder();
@@ -102,23 +94,23 @@ public class GpsReaderFrame extends javax.swing.JFrame {
                     sb.append(',');
                     sb.append(position.getAltitude());
                     sb.append(',');
-                    sb.append((position.getLatitude()-43.6678417)*(10000/90)*3280.4);
+                    sb.append((position.getLatitude() - 43.6678417) * (10000 / 90) * 3280.4);
                     sb.append(',');
-                    sb.append((position.getLongitude()+91.0064575)*(10000/90)*3280.4);
+                    sb.append((position.getLongitude() + 91.0064575) * (10000 / 90) * 3280.4);
                     sb.append(',');
-                    sb.append((position.getLatitude()-43.6678417)*(10000/90)*1000);
+                    sb.append((position.getLatitude() - 43.6678417) * (10000 / 90) * 1000);
                     sb.append(',');
-                    sb.append((position.getLongitude()+91.0064575)*(10000/90)*1000);
+                    sb.append((position.getLongitude() + 91.0064575) * (10000 / 90) * 1000);
                     sb.append(',');
                     sb.append(fixQuality.name());
                     sb.append(',');
                     sb.append(mTimeNow);
                     sb.append('\n');
-                    
+
                     mCsvWriter.write(sb.toString());
                 }
             }
-            
+
         });
         //mGpsReader.connectToFile("<filepath>");
         mGpsReader.connectToCommPort("GNSS");
@@ -138,52 +130,52 @@ public class GpsReaderFrame extends javax.swing.JFrame {
             @Override
             public void paint(Graphics grphcs) {
                 super.paint(grphcs);
-                
+
                 int pad = CANVAS_PAD;
-                int w = this.getWidth()-2*pad;
-                int h = this.getHeight()-2*pad;
-                int[][] polyPoints= mWaypointer.getPolylinePoints(pad, w, h);
+                int w = this.getWidth() - 2 * pad;
+                int h = this.getHeight() - 2 * pad;
+                int[][] polyPoints = mWaypointer.getPolylinePoints(pad, w, h);
                 grphcs.drawPolyline(
-                    polyPoints[0], polyPoints[1], polyPoints[0].length);
-                for (int i = 0; i < polyPoints[0].length; i++ ) {
+                        polyPoints[0], polyPoints[1], polyPoints[0].length);
+                for (int i = 0; i < polyPoints[0].length; i++) {
                     grphcs.drawOval(
-                            polyPoints[0][i]-3,
-                            polyPoints[1][i]-3, 6, 6);
+                            polyPoints[0][i] - 3,
+                            polyPoints[1][i] - 3, 6, 6);
                 }
                 Point2D.Double pos = mWaypointer.getPosition2Fraction(mWaypointCurrent);
                 grphcs.fillOval(
-                        pad + (int)(pos.x*w)-3,
-                        pad + (int)(pos.y*h)-3, 6, 6);
+                        pad + (int) (pos.x * w) - 3,
+                        pad + (int) (pos.y * h) - 3, 6, 6);
 
                 if (mWaypointTracker != null) {
                     pos = mWaypointTracker.getCurrentPositionFraction();
                     Graphics2D g2d = (Graphics2D) grphcs.create();
                     g2d.translate(pad, pad);
-                    g2d.translate((int)(pos.x*w), (int)(pos.y*h));
+                    g2d.translate((int) (pos.x * w), (int) (pos.y * h));
                     g2d.setColor(Color.black);
                     g2d.drawLine(0, 0, 40, 0);
                     g2d.drawLine(0, 0, 0, 20);
                     g2d.rotate(-mWaypointTracker.getCurrentAngle());
-                    
+
                     g2d.setColor(Color.red);
                     g2d.drawLine(0, 0, 20, 0);
                     g2d.drawLine(0, 0, 0, 10);
                     g2d.drawRect(-3, -3, 20, 6);
                     g2d.fillOval(-2, -2, 4, 4);
-                    
+
                     grphcs.setColor(Color.green);
                     pos = mWaypointTracker.getTargetPositionFraction();
                     grphcs.fillOval(
-                        pad + (int)(pos.x*w)-3,
-                        pad + (int)(pos.y*h)-3, 6, 6);
+                            pad + (int) (pos.x * w) - 3,
+                            pad + (int) (pos.y * h) - 3, 6, 6);
                     grphcs.setColor(Color.blue);
                     pos = mWaypointTracker.getFinalPositionFraction();
                     grphcs.fillOval(
-                        pad + (int)(pos.x*w)-3,
-                        pad + (int)(pos.y*h)-3, 6, 6);
-                    }
+                            pad + (int) (pos.x * w) - 3,
+                            pad + (int) (pos.y * h) - 3, 6, 6);
+                }
             }
-            
+
         };
         mCanvasWaypoint.addMouseListener(new MouseListener() {
             @Override
@@ -191,13 +183,13 @@ public class GpsReaderFrame extends javax.swing.JFrame {
                 if (!mPositonPickType.isEmpty()) {
                     Position position = mWaypointer.getFraction2Position(
                             new Point2D.Double(
-                                    (me.getX()-CANVAS_PAD)*1f/(mCanvasWaypoint.getWidth()-2*CANVAS_PAD),
-                                    (me.getY()-CANVAS_PAD)*1f/(mCanvasWaypoint.getHeight()-2*CANVAS_PAD)
+                                    (me.getX() - CANVAS_PAD) * 1f / (mCanvasWaypoint.getWidth() - 2 * CANVAS_PAD),
+                                    (me.getY() - CANVAS_PAD) * 1f / (mCanvasWaypoint.getHeight() - 2 * CANVAS_PAD)
                             )
                     );
                     String posString = String.format(
-                        "%f, %f", position.getLatitude(), position.getLongitude());
-                    if (mPositonPickType == "Current") {       
+                            "%f, %f", position.getLatitude(), position.getLongitude());
+                    if (mPositonPickType == "Current") {
                         mTxtWaypointCurrent.setText(posString);
                         mBtnPickWaypointCurrent.setSelected(false);
                     } else if (mPositonPickType == "Final") {
@@ -212,32 +204,33 @@ public class GpsReaderFrame extends javax.swing.JFrame {
             }
 
             @Override
-            public void mousePressed(MouseEvent me) {}
+            public void mousePressed(MouseEvent me) {
+            }
 
             @Override
-            public void mouseReleased(MouseEvent me) {                
+            public void mouseReleased(MouseEvent me) {
             }
 
             @Override
             public void mouseEntered(MouseEvent me) {
-                
+
             }
 
             @Override
             public void mouseExited(MouseEvent me) {
-                
+
             }
         });
         mPanelWaypoint.add(mCanvasWaypoint, BoxLayout.X_AXIS);
     }
-    
+
     public void setTruckSteerPanel(RoverUI.TruckSteerPanel truck) {
         mTruckSteerPanel = truck;
     }
-    
+
     public void setTrackerValues() {
         mWaypointTracker = mWaypointer.createTracker();
-         String[] arr;
+        String[] arr;
         if (mLastPosition != null) {
             mWaypointTracker.setCurrentPosition(
                     mLastPosition.getLatitude(), mLastPosition.getLongitude()
@@ -250,8 +243,8 @@ public class GpsReaderFrame extends javax.swing.JFrame {
         arr = mTxtWaypointFinal.getText().split(",");
         mWaypointTracker.setFinalPosition(
                 Double.parseDouble(arr[0]), Double.parseDouble(arr[1]));
-        
-        
+
+
     }
 
     /**
@@ -338,84 +331,84 @@ public class GpsReaderFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addGap(74, 74, 74)
-                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(mLblCsvFolder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(labelFeet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(22, 22, 22))))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addContainerGap()
-                                .addComponent(labelFeet1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(mTxtCsvFolder, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                        .addComponent(textFeet, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 354, Short.MAX_VALUE)
-                                        .addComponent(textMeters, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                    .addGroup(jPanel1Layout.createSequentialGroup()
-                                        .addComponent(mTxtGpsPosition, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(mLblGpsFixQuality, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(0, 0, Short.MAX_VALUE))))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                                .addGap(74, 74, 74)
+                                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                                        .addComponent(mLblCsvFolder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                                                .addComponent(labelFeet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                                .addGap(22, 22, 22))))
+                                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                                .addContainerGap()
+                                                                .addComponent(labelFeet1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(mTxtCsvFolder, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                                                                .addComponent(textFeet, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 354, Short.MAX_VALUE)
+                                                                                .addComponent(textMeters, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                                                .addComponent(mTxtGpsPosition, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                                .addComponent(mLblGpsFixQuality, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                                .addGap(0, 0, Short.MAX_VALUE))))
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                                .addComponent(mBtnRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(68, 68, 68)
+                                                                .addComponent(mBtnPauseRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(0, 124, Short.MAX_VALUE))
+                                                        .addComponent(mLblCsvFilePath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addContainerGap())
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(mBtnRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(68, 68, 68)
-                                .addComponent(mBtnPauseRecord, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 124, Short.MAX_VALUE))
-                            .addComponent(mLblCsvFilePath, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap())
-            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel1Layout.createSequentialGroup()
-                    .addGap(47, 47, 47)
-                    .addComponent(label3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(476, Short.MAX_VALUE)))
+                                .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addGap(47, 47, 47)
+                                        .addComponent(label3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addContainerGap(476, Short.MAX_VALUE)))
         );
         jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(mLblGpsFixQuality, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(mTxtGpsPosition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(textFeet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                        .addGap(4, 4, 4)
-                        .addComponent(labelFeet, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(labelFeet1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(textMeters, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(mLblCsvFolder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(mTxtCsvFolder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(mBtnRecord)
-                    .addComponent(mBtnPauseRecord))
-                .addGap(18, 18, 18)
-                .addComponent(mLblCsvFilePath)
-                .addContainerGap(191, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel1Layout.createSequentialGroup()
-                    .addGap(20, 20, 20)
-                    .addComponent(label3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(338, Short.MAX_VALUE)))
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(mLblGpsFixQuality, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mTxtGpsPosition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(textFeet, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                                                .addGap(4, 4, 4)
+                                                .addComponent(labelFeet, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(labelFeet1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(textMeters, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(mLblCsvFolder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mTxtCsvFolder, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(mBtnRecord)
+                                        .addComponent(mBtnPauseRecord))
+                                .addGap(18, 18, 18)
+                                .addComponent(mLblCsvFilePath)
+                                .addContainerGap(191, Short.MAX_VALUE))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addGroup(jPanel1Layout.createSequentialGroup()
+                                        .addGap(20, 20, 20)
+                                        .addComponent(label3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addContainerGap(338, Short.MAX_VALUE)))
         );
 
         jTabbedPane1.addTab("Gsp Recording", jPanel1);
@@ -475,74 +468,74 @@ public class GpsReaderFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(91, 91, 91)
-                .addComponent(mLblWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(81, 81, 81)
-                .addComponent(mTxtWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, 277, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
-                .addComponent(mBtnWaypointLoad, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(12, 12, 12))
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(mTxtWaypointCurrent, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(mBtnPickWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(mTxtWaypointFinal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(mBtnPickWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(26, 26, 26))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(mToggleBtnMoveTracker, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(mChkMoveRover, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addComponent(mlblWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(mlblWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addComponent(mPanelWaypoint, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(34, 34, 34))
+                jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGap(91, 91, 91)
+                                .addComponent(mLblWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(81, 81, 81)
+                                .addComponent(mTxtWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, 277, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
+                                .addComponent(mBtnWaypointLoad, javax.swing.GroupLayout.PREFERRED_SIZE, 69, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(12, 12, 12))
+                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                                .addComponent(mTxtWaypointCurrent, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(mBtnPickWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                                .addComponent(mTxtWaypointFinal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(mBtnPickWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                .addGap(26, 26, 26))
+                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(mToggleBtnMoveTracker, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                                .addComponent(mChkMoveRover, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addComponent(mlblWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                        .addComponent(mlblWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                .addComponent(mPanelWaypoint, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(34, 34, 34))
         );
         jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(20, 20, 20)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(mLblWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mTxtWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(mBtnWaypointLoad)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(mlblWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(mTxtWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mBtnPickWaypointCurrent))
-                        .addGap(20, 20, 20)
-                        .addComponent(mlblWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(mTxtWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mBtnPickWaypointFinal))
-                        .addGap(42, 42, 42)
-                        .addComponent(mChkMoveRover)
-                        .addGap(18, 18, 18)
-                        .addComponent(mToggleBtnMoveTracker))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(9, 9, 9)
-                        .addComponent(mPanelWaypoint, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addGap(20, 20, 20)
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                        .addComponent(mLblWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mTxtWaypointCsvFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addComponent(mBtnWaypointLoad)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addComponent(mlblWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                        .addComponent(mTxtWaypointCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mBtnPickWaypointCurrent))
+                                                .addGap(20, 20, 20)
+                                                .addComponent(mlblWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                        .addComponent(mTxtWaypointFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mBtnPickWaypointFinal))
+                                                .addGap(42, 42, 42)
+                                                .addComponent(mChkMoveRover)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(mToggleBtnMoveTracker))
+                                        .addGroup(jPanel2Layout.createSequentialGroup()
+                                                .addGap(9, 9, 9)
+                                                .addComponent(mPanelWaypoint, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Waypoint", jPanel2);
@@ -552,12 +545,12 @@ public class GpsReaderFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 614, Short.MAX_VALUE)
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 614, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 412, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -574,19 +567,19 @@ public class GpsReaderFrame extends javax.swing.JFrame {
             try {
                 mCsvWriter = new PrintWriter(new File(mCsvFilePath));
                 StringBuilder sb = new StringBuilder();
-                    sb.append("Sequence_Num,");
-                    sb.append("Latitude,");
-                    sb.append("Longitude,");
-                    sb.append("Altitude,");
-                    sb.append("X-Feet,");
-                    sb.append("Y-Feet,");
-                    sb.append("X-Meter,");
-                    sb.append("Y-Meter,");
-                    sb.append("GPS_Quality,");
-                    sb.append("TimeStamp");
-                    sb.append('\n');
-                 mCsvWriter.write(sb.toString());
-      
+                sb.append("Sequence_Num,");
+                sb.append("Latitude,");
+                sb.append("Longitude,");
+                sb.append("Altitude,");
+                sb.append("X-Feet,");
+                sb.append("Y-Feet,");
+                sb.append("X-Meter,");
+                sb.append("Y-Meter,");
+                sb.append("GPS_Quality,");
+                sb.append("TimeStamp");
+                sb.append('\n');
+                mCsvWriter.write(sb.toString());
+
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(GpsReaderFrame.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -622,7 +615,7 @@ public class GpsReaderFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_mBtnPickWaypointCurrentActionPerformed
 
     private void mBtnPickWaypointFinalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mBtnPickWaypointFinalActionPerformed
-        mPositonPickType =  mBtnPickWaypointFinal.isSelected() ? "Final" : "";
+        mPositonPickType = mBtnPickWaypointFinal.isSelected() ? "Final" : "";
     }//GEN-LAST:event_mBtnPickWaypointFinalActionPerformed
 
     private void mToggleBtnMoveTrackerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mToggleBtnMoveTrackerActionPerformed
@@ -633,25 +626,25 @@ public class GpsReaderFrame extends javax.swing.JFrame {
             }
             return;
         }
-        
+
         mWaypointFuture = mWaypoitUpdater.scheduleAtFixedRate(new Runnable() {
             long mLastGuiUpdatedAt = System.currentTimeMillis();
-            
+
             @Override
             public void run() {
-                if (mWaypointTracker.update() ) {
+                if (mWaypointTracker.update()) {
                     if (mChkMoveRover.isSelected()) {
                         if (mTruckSteerPanel != null) {
                             mTruckSteerPanel.addForwardAngle(1);
                             mTruckSteerPanel.setMousePosAngle(
-                                mWaypointTracker.getTargetAngle()
-                                -
-                                mWaypointTracker.getCurrentAngle()
+                                    mWaypointTracker.getTargetAngle()
+                                            -
+                                            mWaypointTracker.getCurrentAngle()
                             );
                         }
                         if (mLastPosition != null) {
                             mWaypointTracker.setCurrentPosition(
-                                    mLastPosition.getLatitude(), 
+                                    mLastPosition.getLatitude(),
                                     mLastPosition.getLongitude()
                             );
                         } else {
@@ -661,7 +654,7 @@ public class GpsReaderFrame extends javax.swing.JFrame {
                     } else {
                         mWaypointTracker.move(mWaypointTracker.getDistanceThreshold());
                     }
-                    if ( (System.currentTimeMillis() - mLastGuiUpdatedAt ) > 100) {
+                    if ((System.currentTimeMillis() - mLastGuiUpdatedAt) > 100) {
                         mCanvasWaypoint.repaint();
                         mLastGuiUpdatedAt = System.currentTimeMillis();
                         //System.out.println(mWaypointTracker.getTargetAngle());
@@ -674,7 +667,7 @@ public class GpsReaderFrame extends javax.swing.JFrame {
                 }
                 // System.out.println(String.format("angle=%f", mWaypointTracker.getTargetAngle()));
             }
-        }, 0, 50,TimeUnit.MILLISECONDS);
+        }, 0, 50, TimeUnit.MILLISECONDS);
     }//GEN-LAST:event_mToggleBtnMoveTrackerActionPerformed
 
     /**
@@ -684,7 +677,7 @@ public class GpsReaderFrame extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {

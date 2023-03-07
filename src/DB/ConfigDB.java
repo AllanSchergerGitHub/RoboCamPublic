@@ -1,32 +1,33 @@
 package DB;
 
+import org.sqlite.SQLiteException;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.sqlite.SQLiteException;
 
 public class ConfigDB {
     private static final String PARAM_SELECT_QUERY =
-        "SELECT value, value_type FROM parameters  WHERE name = '%s';";
+            "SELECT value, value_type FROM parameters  WHERE name = '%s';";
     private static final String PARAM_INSERT_QUERY =
-        "INSERT OR IGNORE INTO parameters " +
-            "(value, value_type, name) " +
-            "VALUES ('%s', '%s', '%s');";
+            "INSERT OR IGNORE INTO parameters " +
+                    "(value, value_type, name) " +
+                    "VALUES ('%s', '%s', '%s');";
     private static final String PARAM_UPDATE_QUERY =
-        "UPDATE parameters SET value"
-            + " = '%s', value_type='%s' " +
-            "WHERE name = '%s';";
+            "UPDATE parameters SET value"
+                    + " = '%s', value_type='%s' " +
+                    "WHERE name = '%s';";
     Connection mConnection;
     ArrayList<ParamValueListener> mParamValueListeners = new ArrayList<>();
     HashMap<String, String> mCachedValues = new HashMap<>();
     private final ReentrantLock mOpLock = new ReentrantLock();
 
     public ConfigDB(String filePath) throws SQLException {
-        mConnection =  DriverManager.getConnection(
-                    String.format("jdbc:sqlite:%s", filePath));
+        mConnection = DriverManager.getConnection(
+                String.format("jdbc:sqlite:%s", filePath));
         if (mConnection == null) return;
         createTables();
     }
@@ -50,7 +51,7 @@ public class ConfigDB {
 
     public double getValue(String paramName, double defaultValue) {
         double finalValue = defaultValue;
-        synchronized(mOpLock) {
+        synchronized (mOpLock) {
             String value = mCachedValues.get(paramName);
             if (value == null) {
                 try {
@@ -65,7 +66,7 @@ public class ConfigDB {
                     resultSet.close();
                 } catch (SQLException ex) {
                     Logger.getLogger(ConfigDB.class.getName()).log(Level.SEVERE, null, ex);
-                    value =  null;
+                    value = null;
                 }
             }
             if (value != null && !value.isEmpty()) {
@@ -82,7 +83,7 @@ public class ConfigDB {
 
     public int getValue(String paramName, int defaultValue) {
         int finalValue = defaultValue;
-        synchronized(mOpLock) {
+        synchronized (mOpLock) {
             String value = mCachedValues.get(paramName);
             if (value == null) {
                 try {
@@ -114,7 +115,7 @@ public class ConfigDB {
 
     public String getValue(String paramName, String defaultValue) {
         String finalValue = defaultValue;
-        synchronized(mOpLock) {
+        synchronized (mOpLock) {
             String value = mCachedValues.get(paramName);
             if (value == null) {
                 try {
@@ -122,11 +123,10 @@ public class ConfigDB {
                     statement = mConnection.createStatement();
                     String sql = String.format(PARAM_SELECT_QUERY, paramName);
                     ResultSet resultSet = null;
-                    try{
-                    resultSet = statement.executeQuery(sql);
-                    }
-                    catch( SQLiteException e) {
-                         System.err.println("SQLiteException - check into this if it keeps happening");
+                    try {
+                        resultSet = statement.executeQuery(sql);
+                    } catch (SQLiteException e) {
+                        System.err.println("SQLiteException - check into this if it keeps happening");
                     }
                     if (resultSet.next()) {
                         value = resultSet.getString("value");
@@ -148,7 +148,7 @@ public class ConfigDB {
 
     public void setValue(String paramName, Object value) {
         if (value == null) return;
-        synchronized(mOpLock) {
+        synchronized (mOpLock) {
             String valueType = value.getClass().getSimpleName();
             setValue(paramName, value, valueType);
             //System.out.println("setValue2 param value: "+value);
@@ -156,7 +156,7 @@ public class ConfigDB {
     }
 
     public void setValue(String paramName, Object value, String valueType) {
-        synchronized(mOpLock) {
+        synchronized (mOpLock) {
             try {
                 Statement statement;
                 statement = mConnection.createStatement();
@@ -169,10 +169,10 @@ public class ConfigDB {
                 Logger.getLogger(ConfigDB.class.getName()).log(Level.SEVERE, null, ex);
                 return;
             }
-            for (ParamValueListener listener: mParamValueListeners) {
+            for (ParamValueListener listener : mParamValueListeners) {
                 listener.onUpdate(paramName);
-                System.out.println("paramNameSetValue: "+paramName);
-                }
+                System.out.println("paramNameSetValue: " + paramName);
+            }
             mCachedValues.put(paramName, value.toString());
         }
     }

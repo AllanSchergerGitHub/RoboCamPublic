@@ -1,50 +1,47 @@
 package RoverUI;
 
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.util.ArrayList;
 
 public class DeviceListItem extends javax.swing.JPanel {
-    public static abstract class ListItemActionListener 
-            implements  ActionListener, FocusListener {
+    public static abstract class ListItemActionListener
+            implements ActionListener, FocusListener {
 
     }
-    
+
     private String mChannelName;
-    
+
     public DeviceListItem() {
         initComponents();
     }
-    
+
     public DeviceListItem(String channelName) {
         initComponents();
         mCheckBox.setText(channelName);
     }
-    
+
     public void addActionListener(ListItemActionListener al) {
         mCheckBox.addActionListener(al);
         mTextMultiplier.addActionListener(al);
         mTextMultiplier.addFocusListener(al);
     }
-    
+
     public boolean isSelected() {
         return mCheckBox.isSelected();
     }
-    
+
     public void setSelected(boolean value) {
         mCheckBox.setSelected(value);
     }
-    
+
     public double getMultiplier() {
         return Double.parseDouble(mTextMultiplier.getText());
     }
-    
+
     public void setMultiplier(double multiplier) {
         mTextMultiplier.setText(String.format("%.3f", multiplier));
     }
-    
+
     public void setStatus(String status) {
         mLableStatus.setText(status);
     }

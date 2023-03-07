@@ -6,11 +6,13 @@
 package PhiDevice;
 
 /**
- *
  * @author pc
  */
 public class ParamRunnable {
-    public static abstract class Reader  {
-        public void onRead(double value) {};
+    public static abstract class Reader {
+        public void onRead(double value) {
+        }
+
+        ;
     }
- }
+}

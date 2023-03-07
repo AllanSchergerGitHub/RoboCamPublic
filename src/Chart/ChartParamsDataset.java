@@ -1,13 +1,11 @@
 package Chart;
 
-import java.util.Date;
-import java.util.HashMap;
-import static java.util.Objects.isNull;
-
-import org.jfree.chart.axis.ValueAxis;
-
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+
+import java.util.HashMap;
+
+import static java.util.Objects.isNull;
 
 public class ChartParamsDataset {
     private int mMaxXItem = 100; // how many data points are on the chart before data points start to drop off the chart
@@ -25,14 +23,10 @@ public class ChartParamsDataset {
 
         mParamsXYSeries = new HashMap<>();
         mXYSerisCollection = new XYSeriesCollection();
-        for (ChartParamType paramType: paramTypes) {
+        for (ChartParamType paramType : paramTypes) {
             XYSeries series = new XYSeries(paramType.getName());
             mParamsXYSeries.put(paramType.getName(), series);
-            
-//            ValueAxis axis = xyplot.getDomainAxis();
-//            axis = xyplot.getRangeAxis();
-//            axis.setRange(0,11);
-            
+
             mXYSerisCollection.addSeries(series);
         }
     }
@@ -47,17 +41,15 @@ public class ChartParamsDataset {
 
     public void addValue(ChartParamType paramType, double value) {
         XYSeries series = mParamsXYSeries.get(paramType.getName());
-        if (isNull(series)){
-            if (!flagTripped){
-                System.err.println(paramType.getName() +" : "+mParamsXYSeries.get(paramType.getName()));
+        if (isNull(series)) {
+            if (!flagTripped) {
+                System.err.println(paramType.getName() + " : " + mParamsXYSeries.get(paramType.getName()));
             }
             flagTripped = true; // allows the error message to be printed one time per run as a warning; but since it seems harmless i don't need a warning every time.
-        }
-        else {
-            series.add(System.currentTimeMillis(),value);
-            if (series.getItemCount()> mMaxXItem) {
-                series.delete(0, series.getItemCount()-mMaxXItem);
-                //System.out.println(String.format("value=%f, name=%s", value, paramType.getName()));
+        } else {
+            series.add(System.currentTimeMillis(), value);
+            if (series.getItemCount() > mMaxXItem) {
+                series.delete(0, series.getItemCount() - mMaxXItem);
             }
         }
     }

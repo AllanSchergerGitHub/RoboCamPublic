@@ -7,13 +7,13 @@ public enum EngageStatus {
     REENGAGING("reEngaging"),
     DISENGAGING("disEngaging"),
     ENGAGING("Engaging");
-        
+
     String mName;
-    
+
     EngageStatus(String name) {
         mName = name;
     }
-    
+
     public String getName() {
         return mName;
     }

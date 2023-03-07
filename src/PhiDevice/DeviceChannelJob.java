@@ -6,12 +6,12 @@
 package PhiDevice;
 
 /**
- *
  * @author sujoy
  */
 public class DeviceChannelJob extends BackgroundJob {
     interface JobAction {
         public void doAction(DeviceChannel channel);
+
         public void afterAction();
     }
 

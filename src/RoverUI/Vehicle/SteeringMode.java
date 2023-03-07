@@ -9,7 +9,7 @@ public enum SteeringMode {
     PIVOT("Pivot"),
     FRONT_STEER("Front Steer"),
     MOUSE_FREE("Mouse Free");
-    
+
     private final String mName;
 
     SteeringMode(String name) {
@@ -23,7 +23,7 @@ public enum SteeringMode {
 
     public static SteeringMode getByName(String name) {
         //System.out.println("getByName from SteeringMode.java: "+name);
-        for(SteeringMode steeringMode: SteeringMode.values()) {
+        for (SteeringMode steeringMode : SteeringMode.values()) {
             if (steeringMode.mName.equals(name)) return steeringMode;
         }
         return null;

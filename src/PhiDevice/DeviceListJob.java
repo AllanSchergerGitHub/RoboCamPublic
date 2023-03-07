@@ -5,13 +5,10 @@
  */
 package PhiDevice;
 
-import PhiDevice.DeviceManager;
+import javax.swing.*;
 import java.util.List;
-import javax.swing.JComboBox;
-import javax.swing.SwingWorker;
 
 /**
- *
  * @author sujoy
  */
 public class DeviceListJob extends SwingWorker<List<String>, String> {
@@ -20,9 +17,9 @@ public class DeviceListJob extends SwingWorker<List<String>, String> {
     private String mDefaultDeviceName = null;
 
     public DeviceListJob(DeviceManager deviceManager,
-            JComboBox<String> deviceListComboBox) {
-       mDeviceManager = deviceManager;
-       mDeviceListComboBox = deviceListComboBox;
+                         JComboBox<String> deviceListComboBox) {
+        mDeviceManager = deviceManager;
+        mDeviceListComboBox = deviceListComboBox;
     }
 
     public void setSelectedDevice(String deviceName) {

@@ -5,29 +5,15 @@
  */
 package PhiDevice;
 
-import com.phidget22.AttachEvent;
-import com.phidget22.AttachListener;
-import com.phidget22.DCMotor;
-import com.phidget22.BLDCMotor;
-import com.phidget22.DetachEvent;
-import com.phidget22.DetachListener;
-import com.phidget22.DigitalInput;
-import com.phidget22.Encoder;
-import com.phidget22.ErrorEvent;
-import com.phidget22.ErrorListener;
-import com.phidget22.MotorPositionController;
-import com.phidget22.Phidget;
-import com.phidget22.PhidgetException;
-import com.phidget22.PropertyChangeEvent;
-import com.phidget22.PropertyChangeListener;
-import com.phidget22.Stepper;
-import static java.lang.Thread.sleep;
+import com.phidget22.*;
+
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.lang.Thread.sleep;
+
 /**
- *
  * @author pc
  */
 public class DeviceChannel {
@@ -36,22 +22,23 @@ public class DeviceChannel {
     private boolean mIsOpenning = false;
     private String mLabel;//it is a easy non-unique indentification marker
     private String mName;
-    
+
     public static abstract class ChannelListener {
         public abstract void onPropertyChange(DeviceChannel dc, String propertyName, Object value);
     }
-    
+
     private ArrayList<ChannelListener> mChannelListeners = new ArrayList<>();
 
     public DeviceChannel(Phidget phidget) {
         mPhidget = phidget;
         try {
             mName = String.format("%d - %s - %s - %s - %sHub Port %d",
-                    mPhidget.getDeviceSerialNumber(),mPhidget.getDeviceSKU(), 
+                    mPhidget.getDeviceSerialNumber(), mPhidget.getDeviceSKU(),
                     mPhidget.getDeviceName(), mPhidget.getChannelName(),
                     mPhidget.getChannel() > 0 ? String.format("Channel-%d - ", mPhidget.getChannel()) : "",
                     mPhidget.getHubPort());
-        } catch (PhidgetException ex) {}
+        } catch (PhidgetException ex) {
+        }
         /*mPhidget.addPropertyChangeListener(new PropertyChangeListener() {
             @Override
             public void onPropertyChange(PropertyChangeEvent pce) {
@@ -89,23 +76,23 @@ public class DeviceChannel {
             }
         });
     }
-    
+
     public void setLabel(String label) {
         mLabel = label;
     }
-    
+
     public String getLabel() {
         return mLabel;
     }
-    
+
     public void addChannelListener(ChannelListener listenr) {
         if (mChannelListeners.indexOf(listenr) < 0) {
             mChannelListeners.add(listenr);
         }
     }
-    
+
     public void fireChannelListenersForProperty(String propertyName, Object value) {
-        for (ChannelListener listener: mChannelListeners) {
+        for (ChannelListener listener : mChannelListeners) {
             listener.onPropertyChange(this, propertyName, value);
         }
     }
@@ -163,7 +150,7 @@ public class DeviceChannel {
         return null;
     }
 
-    
+
     public Encoder getEncoder() {
         if (mPhidget instanceof Encoder) {
             return (Encoder) mPhidget;
@@ -187,11 +174,11 @@ public class DeviceChannel {
 
     public Stepper getStepper() {
         if (mPhidget instanceof Stepper) {
-            return(Stepper) mPhidget;
+            return (Stepper) mPhidget;
         }
         return null;
     }
-    
+
     public DigitalInput getDigitalInput() {
         if (mPhidget instanceof DigitalInput) {
             return (DigitalInput) mPhidget;

@@ -1,14 +1,12 @@
 package RoverUI;
 
 import PhiDevice.DeviceManager;
-import static java.lang.Thread.sleep;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import javax.swing.ComboBoxModel;
-import javax.swing.event.ListDataListener;
 
-public class DeviceListComboBoxModel implements ComboBoxModel<String>{
+import javax.swing.*;
+import javax.swing.event.ListDataListener;
+import java.util.regex.Pattern;
+
+public class DeviceListComboBoxModel implements ComboBoxModel<String> {
     private DeviceManager mDeviceManager;
     private String mSelectedChannelName;
     private Pattern mMatchPattern;

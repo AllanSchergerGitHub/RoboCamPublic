@@ -5,7 +5,7 @@ import com.phidget22.MotorPositionController;
 import com.phidget22.MotorPositionControllerDutyCycleUpdateEvent;
 import com.phidget22.MotorPositionControllerDutyCycleUpdateListener;
 import com.phidget22.PhidgetException;
-import java.util.HashMap;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,27 +14,27 @@ public class MotorPositioner {
     private DeviceChannel mDeviceChannel;
     private boolean mCanEngage = true;
     private MinMax mTargetLimit;
-    
+
     public static interface DutyCycleListener {
         public void onUpdate(MotorPositioner positioner,
-                MotorPositionControllerDutyCycleUpdateEvent mpcdc);
+                             MotorPositionControllerDutyCycleUpdateEvent mpcdc);
     }
-    
+
     public MotorPositioner(MotorPositionController controller, DeviceChannel deviceChannel) {
         mMotorPositionController = controller;
         mDeviceChannel = deviceChannel;
     }
-    
+
     public MotorPositionController getController() {
         return mMotorPositionController;
     }
-    
+
     public DeviceChannel getDeviceChannel() {
         return mDeviceChannel;
     }
-    
+
     public String getTargetPositionLimit() {
-        if (mTargetLimit  == null) {
+        if (mTargetLimit == null) {
             return "";
         }
         return String.format(
@@ -44,7 +44,7 @@ public class MotorPositioner {
     }
 
     public void copyTargetPositionAsLimit() {
-        if (mTargetLimit  == null) {
+        if (mTargetLimit == null) {
             mTargetLimit = new MinMax();
         }
         try {
@@ -53,7 +53,7 @@ public class MotorPositioner {
             Logger.getLogger(MotorPositioner.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void setTargetPosition(double position) {
         if (mTargetLimit != null) {
             if (position > mTargetLimit.getMaxValue()) {
@@ -75,22 +75,22 @@ public class MotorPositioner {
 //            //Logger.getLogger(MotorPositioner.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void setCanEngage(boolean value) {
         mCanEngage = value;
     }
-    
+
     public void setEngaged(boolean value) {
-        if(!mCanEngage) return;
+        if (!mCanEngage) return;
         try {
             mMotorPositionController.setEngaged(value);
         } catch (PhidgetException ex) {
-                System.err.println("trying '_s_etEngaged'; there may be a problem with the physical device - check the connections and fuses ");
-                Logger.getLogger(MotorPositionControllerList.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            System.err.println("trying '_s_etEngaged'; there may be a problem with the physical device - check the connections and fuses ");
+            Logger.getLogger(MotorPositionControllerList.class.getName()).log(Level.SEVERE, null, ex);
+        }
         mDeviceChannel.fireChannelListenersForProperty("engaged", value);
     }
-    
+
     public void setEngagedForced(boolean value) {
         try {
             mMotorPositionController.setEngaged(value);
@@ -99,12 +99,12 @@ public class MotorPositioner {
         }
         mDeviceChannel.fireChannelListenersForProperty("engaged", value);
     }
-    
+
     private void fireDutryCycleListener(DutyCycleListener listener,
-            MotorPositionControllerDutyCycleUpdateEvent mpcdc) {
+                                        MotorPositionControllerDutyCycleUpdateEvent mpcdc) {
         listener.onUpdate(this, mpcdc);
     }
-    
+
     public void addDutyCycleListener(DutyCycleListener listener) {
         mMotorPositionController.addDutyCycleUpdateListener(new MotorPositionControllerDutyCycleUpdateListener() {
             @Override

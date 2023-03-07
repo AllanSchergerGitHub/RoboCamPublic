@@ -1,10 +1,9 @@
 package RoboCam;
 
-import java.awt.Color;
-import java.awt.Point;
 import Utility.UiLine;
+
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import java.awt.*;
 
 public class IPCamFrame extends javax.swing.JFrame {
 
@@ -26,9 +25,10 @@ public class IPCamFrame extends javax.swing.JFrame {
             }
 
             @Override
-            public void onImageUpdate() {}
+            public void onImageUpdate() {
+            }
         });
-        
+
         mIPCamPanel.addLineListener(new IPCamPanel.LineListener() {
             @Override
             public void onSelect(UiLine.Line line) {
@@ -40,24 +40,24 @@ public class IPCamFrame extends javax.swing.JFrame {
         mBtnColorChooser.addColorChangeListener((Color newColor) -> {
             mIPCamPanel.setLineColor(newColor);
         });
-        
+
         mSpnLineThickness.addChangeListener((ChangeEvent ce) -> {
             mIPCamPanel.setLineThickness((int) mSpnLineThickness.getValue());
         });
     }
-    
+
     public IPCamPanel getIPCamPanel() {
         return mIPCamPanel;
     }
 
-    private String getXYString(Point point){
-       return String.format("(x, y) = (%d, %d)", point.x, point.y);
+    private String getXYString(Point point) {
+        return String.format("(x, y) = (%d, %d)", point.x, point.y);
     }
 
     public void setUrl(String url) {
         mIPCamPanel.setUrlAddrress(url);
     }
-    
+
     public UiLine.Collection getUiLineCollection() {
         return mIPCamPanel.getUiLineCollection();
     }
@@ -121,12 +121,12 @@ public class IPCamFrame extends javax.swing.JFrame {
         javax.swing.GroupLayout mIPCamPanelLayout = new javax.swing.GroupLayout(mIPCamPanel);
         mIPCamPanel.setLayout(mIPCamPanelLayout);
         mIPCamPanelLayout.setHorizontalGroup(
-            mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 539, Short.MAX_VALUE)
+                mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 539, Short.MAX_VALUE)
         );
         mIPCamPanelLayout.setVerticalGroup(
-            mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 270, Short.MAX_VALUE)
+                mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 270, Short.MAX_VALUE)
         );
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -174,7 +174,7 @@ public class IPCamFrame extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {

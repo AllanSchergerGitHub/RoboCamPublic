@@ -4,20 +4,17 @@ import RoboCam.Config;
 import RoboCam.IPCamPanel;
 import RoverUI.Vehicle.SteeringMode;
 import RoverUI.Vehicle.Truck;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Point;
+import mySQL.MysqlLogger;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.Timer;
-import mySQL.MysqlLogger;
 
-public class TruckSteerPanel extends javax.swing.JPanel{
+public class TruckSteerPanel extends javax.swing.JPanel {
     double mForwardAngleMult = 3;
     private String mMachineName = "init";
     private final ArrayList<StringListener> mSteeringListeners = new ArrayList<>();
@@ -36,10 +33,10 @@ public class TruckSteerPanel extends javax.swing.JPanel{
     Timer mScreenUpdateTimer = null;
     double mWheelVerticalAngleIncrement = 10;
     double mWheelVerticalAngleMultiple = 1;
-    
+
     private int mouseHypotheticalX = 395; // 390 on UI and 318 on Rover (see btnRotateStraightActionPerformed)
     private int mousePosHypotheticalIncrement = 5;
-    
+
     private double mVelocityLimitIncrement = 5;
     private double mPrivVelocityLimit = 150;
     private boolean mAllowMySqlLogging = false;
@@ -66,19 +63,21 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         setSteeringMode("Stopped");
     }
 
-    public void loadFromConfig(Config config){
+    public void loadFromConfig(Config config) {
         mAllowMySqlLogging = config.hasMySQL();
-        System.out.println("mAllowMySqlLogging?..."+mAllowMySqlLogging);
+        System.out.println("mAllowMySqlLogging?..." + mAllowMySqlLogging);
         mWheelVerticalAngleIncrement = config.getWheelVerticalAngleIncrement();
         mGroundPanel.getTruck().setDrawScale(config.getTruckDrawingScale());
         if (config.hasIPCam("Ground")) {
             mGroundPanel.setGroundImageUrl(config.getIPCamUrl("Ground"));
             mGroundPanel.getGroundIPCam().addConnectionListener(new IPCamPanel.ConnectionListener() {
                 @Override
-                public void onConnect() {}
+                public void onConnect() {
+                }
 
                 @Override
-                public void onDisconnect() {}
+                public void onDisconnect() {
+                }
 
                 @Override
                 public void onImageUpdate() {
@@ -90,10 +89,10 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         updateVelocityLimitLabel();
     }
 
-    public void setMachineName(String MachineName){
+    public void setMachineName(String MachineName) {
         mMachineName = MachineName;
     }
-    
+
     public void startPeriodicScreenUpdate(int delay) {
         mScreenUpdateTimer = new Timer(delay, mScreenUpdateTask);
         mScreenUpdateTimer.start();
@@ -101,7 +100,7 @@ public class TruckSteerPanel extends javax.swing.JPanel{
 
     public boolean onKeyPressed(KeyEvent e) {
         boolean handled = false;
-        switch(e.getKeyChar()){
+        switch (e.getKeyChar()) {
             case 'q':
                 rdStreerModeStopped.doClick();
                 handled = true;
@@ -122,7 +121,7 @@ public class TruckSteerPanel extends javax.swing.JPanel{
             case 'e':
                 rdStreerModeMouseFree.doClick();
                 handled = true;
-            break;
+                break;
             case 'p':
                 rdStreerModePivot.doClick();
                 handled = true;
@@ -194,7 +193,7 @@ public class TruckSteerPanel extends javax.swing.JPanel{
     public Truck getTruck() {
         return mGroundPanel.getTruck();
     }
-    
+
     public GroundPanel getGroundPanel() {
         return mGroundPanel;
     }
@@ -202,36 +201,36 @@ public class TruckSteerPanel extends javax.swing.JPanel{
     public void setTruckSpeed(double speed) {
         getTruck().setSpeed(speed);
     }
-    
+
     public void setVelocityLimit(double velocityLimit) {
         mPrivVelocityLimit = velocityLimit;
         updateVelocityLimitLabel();
         mGroundPanel.setVelocityLimit(mPrivVelocityLimit);
     }
-    
+
     public void setVelocityIncrement(double velocityIncrement) {
         mVelocityLimitIncrement = velocityIncrement;
-        mVelocityLimitIncrementScrollBar.setValue((int)velocityIncrement);
+        mVelocityLimitIncrementScrollBar.setValue((int) velocityIncrement);
         updateVelocityIncrementLabel();
     }
 
     private void changeTroubleshootingDisplay(int wheel_ID) {
         mGroundPanel.getTruck().changeTroubleshootingDisplay(wheel_ID);
     }
-    
+
     public void addForwardAngle(double angle) {
         getTruck().addForwardAngleRaw(angle); // for GUI display, cumulative
         getTruck().addForwardAngle(angle);
         onForwardAngleChange(angle);
     }
-    
+
     public void rotateForward(int direction) {
-        addForwardAngle(direction*FORWARD_ANGLE_STEP*mForwardAngleMult);
+        addForwardAngle(direction * FORWARD_ANGLE_STEP * mForwardAngleMult);
     }
-    
+
     public void setForwardAngleMultiplier(double angleMultiplier) {
         mForwardAngleMult = angleMultiplier;
-        mScrbForwardAngleMult.setValue((int)angleMultiplier);
+        mScrbForwardAngleMult.setValue((int) angleMultiplier);
     }
 
     public void setGroundPanelMousePosRelToTruck(Point.Double pos) {
@@ -243,41 +242,41 @@ public class TruckSteerPanel extends javax.swing.JPanel{
     }
 
     public void addSteeringModeListener(StringListener listener) {
-        if (mSteeringListeners.indexOf(listener) < 0 ) {
+        if (mSteeringListeners.indexOf(listener) < 0) {
             mSteeringListeners.add(listener);
         }
     }
 
     public void addSteerDirectionListener(StringListener listener) {
-        if (mSteerDirectionListeners.indexOf(listener) < 0 ) {
+        if (mSteerDirectionListeners.indexOf(listener) < 0) {
             mSteerDirectionListeners.add(listener);
         }
     }
 
     public void addForwardDistanceListener(DoubleVarArgListener listener) {
-        if (mForwardAngleListeners.indexOf(listener) < 0 ) {
+        if (mForwardAngleListeners.indexOf(listener) < 0) {
             mForwardAngleListeners.add(listener);
         }
     }
 
     public void addSpeedListener(DoubleVarArgListener listener) {
-        if (mSpeedListeners.indexOf(listener) < 0 ) {
+        if (mSpeedListeners.indexOf(listener) < 0) {
             mSpeedListeners.add(listener);
         }
     }
 
     public void addMouseHandednessListener(StringListener listener) {
-        if (mMouseHandednessListeners.indexOf(listener) < 0 ) {
+        if (mMouseHandednessListeners.indexOf(listener) < 0) {
             mMouseHandednessListeners.add(listener);
         }
     }
 
     public void addTruckScaleListener(DoubleListener listener) {
-        if (mTruckScaleListeners.indexOf(listener) < 0 ) {
+        if (mTruckScaleListeners.indexOf(listener) < 0) {
             mTruckScaleListeners.add(listener);
         }
     }
-    
+
     public void setTruckScale(double scale) {
         mGroundPanel.setDrawScale(scale);
         mGroundPanel.repaint();
@@ -286,10 +285,10 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         //        "Rover Scale Setting (%.2f)", getTruck().getDrawScale()));
     }
 
-    
+
     public void setDirectionMode(String directionMode) {
         System.err.println(directionMode);
-        switch(directionMode) {
+        switch (directionMode) {
             case "lft":
                 btnRotateLeft.doClick();
                 break;
@@ -301,20 +300,20 @@ public class TruckSteerPanel extends javax.swing.JPanel{
                 break;
         }
     }
-    
+
     /**
      * This function is used to act as if user clicks
      * steering radio options;
-    */
+     */
     public void setSteeringMode(String steeringMode) {
         //System.err.println("steeringMode= "+steeringMode);//+" ; this was fixed in 2019?? lft and rgt (o and i) come into here incorrectly and cause error - coming in from UI commands headed toward rover - also rover doesn't respond to these commands where it should");
-        switch(SteeringMode.getByName(steeringMode)) {
+        switch (SteeringMode.getByName(steeringMode)) {
             case NONE:
                 rdStreerModeStopped.doClick();
                 break;
             case STOPPED:
                 rdStreerModeStopped.doClick();
-                break;            
+                break;
             case MOUSE_FREE:
                 rdStreerModeMouseFree.doClick();
                 break;
@@ -348,33 +347,33 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         });
     }
 
-    public void setBatchTime(String Batch_time_stamp_into_mysql){
+    public void setBatchTime(String Batch_time_stamp_into_mysql) {
         mBatch_time_stamp_into_mysql = Batch_time_stamp_into_mysql;
         //System.out.println("mBatch_time_stamp_into_mysql "+mBatch_time_stamp_into_mysql);
     }
 
-    public void updateLagProgress(long lag)  {
+    public void updateLagProgress(long lag) {
         int lagInt;
 //            try {
 //                lagInt = Math.toIntExact(lag);
 //            } catch (ArithmeticException ex) {
 //                lagInt = mBarHeartBeatLag.getMaximum();
 //            }
-            
-        if (lag>1200) {
+
+        if (lag > 1200) {
             try {
                 lagInt = Math.toIntExact(lag);
             } catch (ArithmeticException ex) {
                 lagInt = mBarHeartBeatLag.getMaximum();
             }
-            mBarHeartBeatLag.setValue(lagInt+1);
-            mLblHeatBeat.setText(""+lagInt);
+            mBarHeartBeatLag.setValue(lagInt + 1);
+            mLblHeatBeat.setText("" + lagInt);
             if (mAllowMySqlLogging) {
-                MysqlLogger.put(MysqlLogger.Type.INSERT, lag,  "lagTimeFromUI_to_Rover", mBatch_time_stamp_into_mysql, "lagTime");
+                MysqlLogger.put(MysqlLogger.Type.INSERT, lag, "lagTimeFromUI_to_Rover", mBatch_time_stamp_into_mysql, "lagTime");
             }
         } else {
-            mBarHeartBeatLag.setValue((int)500);
-            mLblHeatBeat.setText(""+(int)500);
+            mBarHeartBeatLag.setValue((int) 500);
+            mLblHeatBeat.setText("" + (int) 500);
 //            mBarHeartBeatLag.setValue(lagInt+1);
 //            mLblHeatBeat.setText(""+lagInt);
         }
@@ -405,81 +404,81 @@ public class TruckSteerPanel extends javax.swing.JPanel{
                     mPrivVelocityLimit, mVelocityLimitIncrement);
         });
     }
-    
+
     public void updateVelocityLimitLabel() {
         // this is the manually set velocity limit to set max velocity
         mLblVelocityLimitValue.setText(
-                String.format("%.1f", mPrivVelocityLimit)); 
+                String.format("%.1f", mPrivVelocityLimit));
     }
-    
+
     public void updateVelocityIncrementLabel() {
         // this is the manually set velocity limit to set max velocity
         mLblVelocityIncreValue.setText(
-                String.format("%.1f", mVelocityLimitIncrement)); 
+                String.format("%.1f", mVelocityLimitIncrement));
     }
 
     public void setLabel_mLblForwardAngleValue(double value) {
         mLblForwardAngleValue.setText(String.format("%.1f", value)); // this is the incremented value 10, 20, 30, etc
     }
-    
-    
+
+
     private void updateForwardAngleMultiplier() {
-        mTxtForwardAngleMult.setText(mForwardAngleMult+"");
+        mTxtForwardAngleMult.setText(mForwardAngleMult + "");
     }
-    
+
     public void setMousePosFromCenter(double xPos, double yPos) {
         mGroundPanel.setMousePosFromCenter(xPos, yPos);
     }
-    
+
     public void setMousePosAngle(double angleRad) {
         mGroundPanel.setMousePosAngle(angleRad);
     }
 
-    public void setLabel_LeftPotentiameterANDmaxDutyCycle(double potValue, double newAngleLeftBasedOnPot, double maxDutyCycle){
-        jTextFieldLeftPot.setText(String.format("%.3f", potValue*100));
+    public void setLabel_LeftPotentiameterANDmaxDutyCycle(double potValue, double newAngleLeftBasedOnPot, double maxDutyCycle) {
+        jTextFieldLeftPot.setText(String.format("%.3f", potValue * 100));
         jTextFieldLeftPot.setOpaque(true);
         jTextFieldLeftPot.setBackground(Color.green);
 
         angleLeftBasedOnPot = newAngleLeftBasedOnPot;
-        jTextFieldAngleBasedOnLeftPot.setText(String.format("%02.1f",(angleLeftBasedOnPot))+"");
+        jTextFieldAngleBasedOnLeftPot.setText(String.format("%02.1f", (angleLeftBasedOnPot)) + "");
         jTextFieldAngleBasedOnLeftPot.setOpaque(true);
 
-        jTextFieldLeftSteeringMaxDutyCycle.setText(maxDutyCycle+"");
+        jTextFieldLeftSteeringMaxDutyCycle.setText(maxDutyCycle + "");
         jTextFieldLeftSteeringMaxDutyCycle.setOpaque(true);
         jTextFieldLeftSteeringMaxDutyCycle.setBackground(Color.green);
-        if(maxDutyCycle>750){
-            jTextFieldLeftSteeringMaxDutyCycle.setBackground(Color.red);        
+        if (maxDutyCycle > 750) {
+            jTextFieldLeftSteeringMaxDutyCycle.setBackground(Color.red);
         }
     }
-    
-    public void setLabel_RightPotentiameterANDmaxDutyCycle(double potValue, double newAngleRightBasedOnPot, double maxDutyCycle){
-        jTextFieldRightPot.setText(String.format("%.3f", potValue*100));
+
+    public void setLabel_RightPotentiameterANDmaxDutyCycle(double potValue, double newAngleRightBasedOnPot, double maxDutyCycle) {
+        jTextFieldRightPot.setText(String.format("%.3f", potValue * 100));
         jTextFieldRightPot.setOpaque(true);
         jTextFieldRightPot.setBackground(Color.green);
 
         angleRightBasedOnPot = newAngleRightBasedOnPot;
-        jTextFieldAngleBasedOnRightPot.setText(String.format("%02.1f",(angleRightBasedOnPot))+"");
+        jTextFieldAngleBasedOnRightPot.setText(String.format("%02.1f", (angleRightBasedOnPot)) + "");
         jTextFieldAngleBasedOnRightPot.setOpaque(true);
 
-        jTextFieldRightSteeringMaxDutyCycle.setText(maxDutyCycle+"");
+        jTextFieldRightSteeringMaxDutyCycle.setText(maxDutyCycle + "");
         jTextFieldRightSteeringMaxDutyCycle.setOpaque(true);
         jTextFieldRightSteeringMaxDutyCycle.setBackground(Color.green);
-        if(maxDutyCycle>750){
-            jTextFieldRightSteeringMaxDutyCycle.setBackground(Color.red);        
+        if (maxDutyCycle > 750) {
+            jTextFieldRightSteeringMaxDutyCycle.setBackground(Color.red);
         }
     }
-    
-    public void setLabel_jLabel_ElectricalCurrent(double value){
+
+    public void setLabel_jLabel_ElectricalCurrent(double value) {
         jLabel_electicalCurrent.setText(String.format("%.2f", value));
     }
-    
+
     private void onDirectionChange(String dir) {
         setLabel_mLblForwardAngleValue(getTruck().getForwardAngleRaw());
         mSteerDirectionListeners.forEach((listener) -> {
             listener.onChange(dir);
         });
     }
-    
+
     private void onForwardAngleChange(double angleChange) {
         setLabel_mLblForwardAngleValue(getTruck().getForwardAngleRaw());
         //mLblForwardAngleValue.setText(String.format("%.5f", getTruck().getForwardAngle())); // this is the incremented value 10, 20, 30, etc
@@ -500,95 +499,97 @@ public class TruckSteerPanel extends javax.swing.JPanel{
     }
 
     public void listenX() {
-                JFrame frame = new JFrame();
-                JPanel panel = new JPanel();
-                frame.setTitle("key listener frame & panel - click in the panel below and press a key");
-                panel.setToolTipText("s = 'Straight'; a = 'TurnAround'; d = 'SideToSide';  e = 'Pivot'; r = 'RearSteer' ");
+        JFrame frame = new JFrame();
+        JPanel panel = new JPanel();
+        frame.setTitle("key listener frame & panel - click in the panel below and press a key");
+        panel.setToolTipText("s = 'Straight'; a = 'TurnAround'; d = 'SideToSide';  e = 'Pivot'; r = 'RearSteer' ");
 
 //  using one of these options should be better than tooltiptext - want the user to be able to see which letters to push to switch modes                
 //                JTextArea keyCodes = new JTextArea(10,50);
 //                keyCodes.append("s = 'Straight'; a = 'TurnAround'; d = 'SideToSide';  e = 'Pivot'; r = 'RearSteer' ");
 //                keyCodes.setVisible(true);
 //                keyCodes.setText("s = 'Straight'; a = 'TurnAround'; d = 'SideToSide';  e = 'Pivot'; r = 'RearSteer' ");
-                
-                frame.setLocation(800, 20);
 
-                frame.getContentPane().add(panel);
+        frame.setLocation(800, 20);
 
-                panel.addKeyListener(new KeyListener() {
+        frame.getContentPane().add(panel);
 
-                    @Override
-                    public void keyTyped(KeyEvent e) {}
+        panel.addKeyListener(new KeyListener() {
 
-                    @Override
-                    public void keyReleased(KeyEvent e) {}
-
-                    @Override
-                    public void keyPressed(KeyEvent e) {
-                        System.out.println("Pressed " + e.getKeyChar());
-                        switch(e.getKeyChar()){
-                            case 'a':
-                                System.out.println("define steering mode: a = 'TurnAround' ");
-                                rdStreerModeTurnAround.doClick();
-                                break;
-
-                            case 's':
-                                System.out.println("define steering mode: s = 'Straight' ");
-                                mGroundPanel.setTruckStreeMode("Straight");
-                                rdStreerModeStraight.doClick();
-                                break;
-
-                            case 'w':
-                                System.out.println("define steering mode: w = 'SideToSide' ");
-                                rdStreerModeSideToSide.doClick();
-                                break;
-
-                            case 'e':
-                                System.out.println("define steering mode: e = 'MouseFree' ");
-                                rdStreerModeMouseFree.doClick();
-                                break;
-
-                            case 'r':
-                                System.out.println("define steering mode: r = 'FrontSteer' ");
-                                rdStreerModeFrontStear.doClick();
-                                break;
-
-                            case 'p':
-                                System.out.println("define steering mode: p = 'Pivot' ");
-                                rdStreerModePivot.doClick();
-                                break;
-                        }
-                    }
-                });
-
-                panel.setFocusable(true);
-                panel.requestFocusInWindow();
-
-                frame.setSize(new Dimension(700, 300));
-                frame.setVisible(true);
+            @Override
+            public void keyTyped(KeyEvent e) {
             }
-    
-    
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                System.out.println("Pressed " + e.getKeyChar());
+                switch (e.getKeyChar()) {
+                    case 'a':
+                        System.out.println("define steering mode: a = 'TurnAround' ");
+                        rdStreerModeTurnAround.doClick();
+                        break;
+
+                    case 's':
+                        System.out.println("define steering mode: s = 'Straight' ");
+                        mGroundPanel.setTruckStreeMode("Straight");
+                        rdStreerModeStraight.doClick();
+                        break;
+
+                    case 'w':
+                        System.out.println("define steering mode: w = 'SideToSide' ");
+                        rdStreerModeSideToSide.doClick();
+                        break;
+
+                    case 'e':
+                        System.out.println("define steering mode: e = 'MouseFree' ");
+                        rdStreerModeMouseFree.doClick();
+                        break;
+
+                    case 'r':
+                        System.out.println("define steering mode: r = 'FrontSteer' ");
+                        rdStreerModeFrontStear.doClick();
+                        break;
+
+                    case 'p':
+                        System.out.println("define steering mode: p = 'Pivot' ");
+                        rdStreerModePivot.doClick();
+                        break;
+                }
+            }
+        });
+
+        panel.setFocusable(true);
+        panel.requestFocusInWindow();
+
+        frame.setSize(new Dimension(700, 300));
+        frame.setVisible(true);
+    }
+
+
     public void clickRotateLeftButton() {
         btnRotateLeft.doClick();
     }
-    
+
     public void clickRotateRightButton() {
         btnRotateRight.doClick();
     }
-    
+
     public void clickRotateForwardButton() {
         btnRotateForward.doClick();
     }
-    
+
     public void clickRotateBackwardButton() {
         btnRotateBackward.doClick();
     }
-    
+
     public void clickSpeedFasterButton() {
         mBtnSpeedFaster.doClick();
     }
-    
+
     public void clickSpeedSlowerButton() {
         mBtnSpeedSlower.doClick();
     }
@@ -817,62 +818,62 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         javax.swing.GroupLayout mWheelMoverPanelLayout = new javax.swing.GroupLayout(mWheelMoverPanel);
         mWheelMoverPanel.setLayout(mWheelMoverPanelLayout);
         mWheelMoverPanelLayout.setHorizontalGroup(
-            mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, mWheelMoverPanelLayout.createSequentialGroup()
-                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(btnRotateLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnRotateStraight, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnRotateRight, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                        .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                                .addGap(31, 31, 31)
+                mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, mWheelMoverPanelLayout.createSequentialGroup()
                                 .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(mLblForwardAngleName1)
-                                    .addComponent(mLblForwardAngleName))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(mLblForwardAngleValue, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(mTxtForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mWheelMoverPanelLayout.createSequentialGroup()
-                                .addComponent(btnRotateForward, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnRotateBackward, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(18, 18, 18)
-                        .addComponent(mScrbForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(20, 20, 20))
+                                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addComponent(btnRotateLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(btnRotateStraight, javax.swing.GroupLayout.PREFERRED_SIZE, 78, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(btnRotateRight, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                                                .addGap(31, 31, 31)
+                                                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                                        .addComponent(mLblForwardAngleName1)
+                                                                        .addComponent(mLblForwardAngleName))
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                                        .addComponent(mLblForwardAngleValue, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addComponent(mTxtForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mWheelMoverPanelLayout.createSequentialGroup()
+                                                                .addComponent(btnRotateForward, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(btnRotateBackward, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                .addGap(18, 18, 18)
+                                                .addComponent(mScrbForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(20, 20, 20))
         );
         mWheelMoverPanelLayout.setVerticalGroup(
-            mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnRotateLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnRotateStraight, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnRotateRight, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                        .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(btnRotateBackward, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnRotateForward, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                                .addComponent(mLblForwardAngleName, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(mLblForwardAngleName1, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                                .addComponent(mLblForwardAngleValue, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(mTxtForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(32, 32, 32))
-                    .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
-                        .addGap(33, 33, 33)
-                        .addComponent(mScrbForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(btnRotateLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(btnRotateStraight, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(btnRotateRight, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(btnRotateBackward, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(btnRotateForward, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(mWheelMoverPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                                                .addComponent(mLblForwardAngleName, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                .addComponent(mLblForwardAngleName1, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                                                .addComponent(mLblForwardAngleValue, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                .addComponent(mTxtForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                                .addGap(32, 32, 32))
+                                        .addGroup(mWheelMoverPanelLayout.createSequentialGroup()
+                                                .addGap(33, 33, 33)
+                                                .addComponent(mScrbForwardAngleMult, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -934,46 +935,46 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         javax.swing.GroupLayout mVelocityControllerPanelLayout = new javax.swing.GroupLayout(mVelocityControllerPanel);
         mVelocityControllerPanel.setLayout(mVelocityControllerPanelLayout);
         mVelocityControllerPanelLayout.setHorizontalGroup(
-            mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
-                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
-                        .addComponent(mBtnSpeedFaster, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(mBtnSpeedSlower, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(mLblVelocityIncreName, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mLblVelocityLimitName, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(mLblVelocityLimitValue, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mLblVelocityIncreValue, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
-                        .addComponent(mVelocityLimitIncrementScrollBar, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(20, 20, 20))
+                mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
+                                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
+                                                .addComponent(mBtnSpeedFaster, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(mBtnSpeedSlower, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                        .addComponent(mLblVelocityIncreName, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mLblVelocityLimitName, javax.swing.GroupLayout.PREFERRED_SIZE, 87, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(mLblVelocityLimitValue, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mLblVelocityIncreValue, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGap(18, 18, 18)
+                                                .addComponent(mVelocityLimitIncrementScrollBar, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(20, 20, 20))
         );
         mVelocityControllerPanelLayout.setVerticalGroup(
-            mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
-                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(mBtnSpeedFaster, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(mBtnSpeedSlower, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(mLblVelocityLimitName)
-                            .addComponent(mLblVelocityLimitValue))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(mLblVelocityIncreValue, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mLblVelocityIncreName)))
-                    .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
-                        .addGap(32, 32, 32)
-                        .addComponent(mVelocityLimitIncrementScrollBar, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE))))
+                mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
+                                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(mBtnSpeedFaster, javax.swing.GroupLayout.PREFERRED_SIZE, 54, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(mBtnSpeedSlower, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(mLblVelocityLimitName)
+                                                        .addComponent(mLblVelocityLimitValue))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(mVelocityControllerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(mLblVelocityIncreValue, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mLblVelocityIncreName)))
+                                        .addGroup(mVelocityControllerPanelLayout.createSequentialGroup()
+                                                .addGap(32, 32, 32)
+                                                .addComponent(mVelocityLimitIncrementScrollBar, javax.swing.GroupLayout.PREFERRED_SIZE, 112, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(0, 0, Short.MAX_VALUE))))
         );
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -1033,61 +1034,61 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         javax.swing.GroupLayout mGroundPanelLayout = new javax.swing.GroupLayout(mGroundPanel);
         mGroundPanel.setLayout(mGroundPanelLayout);
         mGroundPanelLayout.setHorizontalGroup(
-            mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mGroundPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mGroundPanelLayout.createSequentialGroup()
-                        .addGap(2, 2, 2)
-                        .addComponent(mLblCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(26, 26, 26)
-                        .addComponent(jTextFieldLeftSteeringMaxDutyCycle, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(mGroundPanelLayout.createSequentialGroup()
-                        .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(mBarHeartBeatLag, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mLblAverage, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(mLblHeatBeat, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel_electicalCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(10, 10, 10)
-                        .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jTextFieldAngleBasedOnLeftPot, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
-                            .addComponent(jTextFieldLeftPot, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE))))
-                .addGap(300, 300, 300)
-                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jTextFieldRightPot, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE)
-                    .addComponent(jTextFieldAngleBasedOnRightPot, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jTextFieldRightSteeringMaxDutyCycle, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(233, Short.MAX_VALUE))
+                mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mGroundPanelLayout.createSequentialGroup()
+                                .addContainerGap()
+                                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(mGroundPanelLayout.createSequentialGroup()
+                                                .addGap(2, 2, 2)
+                                                .addComponent(mLblCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(26, 26, 26)
+                                                .addComponent(jTextFieldLeftSteeringMaxDutyCycle, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(mGroundPanelLayout.createSequentialGroup()
+                                                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(mBarHeartBeatLag, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mLblAverage, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(mLblHeatBeat, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jLabel_electicalCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGap(10, 10, 10)
+                                                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                        .addComponent(jTextFieldAngleBasedOnLeftPot, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)
+                                                        .addComponent(jTextFieldLeftPot, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE))))
+                                .addGap(300, 300, 300)
+                                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                        .addComponent(jTextFieldRightPot, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE)
+                                        .addComponent(jTextFieldAngleBasedOnRightPot, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jTextFieldRightSteeringMaxDutyCycle, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addContainerGap(233, Short.MAX_VALUE))
         );
         mGroundPanelLayout.setVerticalGroup(
-            mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mGroundPanelLayout.createSequentialGroup()
-                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, mGroundPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(mLblCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jTextFieldLeftSteeringMaxDutyCycle, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jTextFieldLeftPot, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jTextFieldRightSteeringMaxDutyCycle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jTextFieldRightPot, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mGroundPanelLayout.createSequentialGroup()
-                        .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jTextFieldAngleBasedOnLeftPot, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextFieldAngleBasedOnRightPot, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(mGroundPanelLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel_electicalCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(57, 57, 57)
-                        .addComponent(mBarHeartBeatLag, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(mLblHeatBeat, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(mLblAverage, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(97, 97, 97))))
+                mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mGroundPanelLayout.createSequentialGroup()
+                                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, mGroundPanelLayout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addComponent(mLblCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(jTextFieldLeftSteeringMaxDutyCycle, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jTextFieldLeftPot, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                .addComponent(jTextFieldRightSteeringMaxDutyCycle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(jTextFieldRightPot, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(mGroundPanelLayout.createSequentialGroup()
+                                                .addGroup(mGroundPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jTextFieldAngleBasedOnLeftPot, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jTextFieldAngleBasedOnRightPot, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addGroup(mGroundPanelLayout.createSequentialGroup()
+                                                .addGap(0, 0, Short.MAX_VALUE)
+                                                .addComponent(jLabel_electicalCurrent, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(57, 57, 57)
+                                                .addComponent(mBarHeartBeatLag, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(mLblHeatBeat, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(mLblAverage, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(97, 97, 97))))
         );
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -1104,12 +1105,12 @@ public class TruckSteerPanel extends javax.swing.JPanel{
 
     private void rdStreerModeStoppedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdStreerModeStoppedActionPerformed
         onSteeringModeChange(rdStreerModeStopped.getText());
-        StoppedFlag="Stopped";
+        StoppedFlag = "Stopped";
     }//GEN-LAST:event_rdStreerModeStoppedActionPerformed
 
     private void rdStreerModeStraightActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdStreerModeStraightActionPerformed
-       onSteeringModeChange(rdStreerModeStraight.getText());
-       StoppedFlag="NotStopped";
+        onSteeringModeChange(rdStreerModeStraight.getText());
+        StoppedFlag = "NotStopped";
 //        repaint();
     }//GEN-LAST:event_rdStreerModeStraightActionPerformed
 
@@ -1119,17 +1120,17 @@ public class TruckSteerPanel extends javax.swing.JPanel{
 
     private void rdStreerModeSideToSideActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdStreerModeSideToSideActionPerformed
         onSteeringModeChange(rdStreerModeSideToSide.getText());
-        StoppedFlag="NotStopped";
+        StoppedFlag = "NotStopped";
     }//GEN-LAST:event_rdStreerModeSideToSideActionPerformed
 
     private void rdStreerModePivotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdStreerModePivotActionPerformed
         onSteeringModeChange(rdStreerModePivot.getText());
-        StoppedFlag="NotStopped";
+        StoppedFlag = "NotStopped";
     }//GEN-LAST:event_rdStreerModePivotActionPerformed
 
     private void rdStreerModeFrontStearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdStreerModeFrontStearActionPerformed
         onSteeringModeChange(rdStreerModeFrontStear.getText());
-        StoppedFlag="NotStopped";
+        StoppedFlag = "NotStopped";
     }//GEN-LAST:event_rdStreerModeFrontStearActionPerformed
 
     private void btnRotateRightActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRotateRightActionPerformed
@@ -1148,7 +1149,7 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         ); // this will allow us to use the button as a proxy for the mouse - need to set it up for increments
         repaint();
     }
-    
+
     private void btnRotateLeftActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRotateLeftActionPerformed
         doRotateLeft();
     }//GEN-LAST:event_btnRotateLeftActionPerformed
@@ -1163,14 +1164,16 @@ public class TruckSteerPanel extends javax.swing.JPanel{
                 mGroundPanel.getMousePosX() - mousePosHypotheticalIncrement,
                 mGroundPanel.getSteerCircleEdgeY()
         ); // this will allow us to use the button as a proxy for the mouse - need to set it up for increments
-        repaint();;
+        repaint();
+        ;
     }
+
     /**
      * sets the rotation (left / right) position of the front wheels to straight
      * forward by moving the HypotheticalMousePos to an appropriate point
      * wrt the computer monitor being used ("UI" computer or other computer).
      */
-    public void setRotateToStraight(){
+    public void setRotateToStraight() {
         getTruck().setWheelsAngle(0);
         String dir = "str";
         onDirectionChange(dir);
@@ -1182,25 +1185,26 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         ); // this will allow us to use the button as a proxy for the mouse - need to set it up for increments
         repaint();
     }
-    
+
     private void btnRotateStraightActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRotateStraightActionPerformed
         setRotateToStraight();
     }//GEN-LAST:event_btnRotateStraightActionPerformed
+
     static private final double FORWARD_ANGLE_STEP = 25;
-    
+
     private void btnRotateForwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRotateForwardActionPerformed
         //String timeS = new SimpleDateFormat("HH.mm.ss.SSS").format(new Date()); 
         //System.out.println( "timestamp - forward button pushed "+timeS);
-        addForwardAngle(FORWARD_ANGLE_STEP*mForwardAngleMult);
+        addForwardAngle(FORWARD_ANGLE_STEP * mForwardAngleMult);
     }//GEN-LAST:event_btnRotateForwardActionPerformed
 
     private void btnRotateBackwardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRotateBackwardActionPerformed
-        addForwardAngle(-FORWARD_ANGLE_STEP*mForwardAngleMult);
+        addForwardAngle(-FORWARD_ANGLE_STEP * mForwardAngleMult);
     }//GEN-LAST:event_btnRotateBackwardActionPerformed
 
     private void rdStreerModeMouseFreeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rdStreerModeMouseFreeActionPerformed
         onSteeringModeChange(rdStreerModeMouseFree.getText());
-        StoppedFlag="NotStopped";
+        StoppedFlag = "NotStopped";
     }//GEN-LAST:event_rdStreerModeMouseFreeActionPerformed
 
     private void mScrbForwardAngleMultAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {//GEN-FIRST:event_mScrbForwardAngleMultAdjustmentValueChanged
@@ -1220,12 +1224,12 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         mVelocityLimitIncrement = mVelocityLimitIncrementScrollBar.getValue();
         if (multiplier > 0) {
             mGroundPanel.addSpeed();
-            mPrivVelocityLimit = mPrivVelocityLimit+mVelocityLimitIncrement;
+            mPrivVelocityLimit = mPrivVelocityLimit + mVelocityLimitIncrement;
         } else {
             mGroundPanel.reduceSpeed();
-            mPrivVelocityLimit = mPrivVelocityLimit-mVelocityLimitIncrement;            
+            mPrivVelocityLimit = mPrivVelocityLimit - mVelocityLimitIncrement;
         }
-        
+
         //System.err.println("new privVelocityLimit "+privVelocityLimit);
         mGroundPanel.setVelocityLimit(mPrivVelocityLimit);
 
@@ -1236,21 +1240,19 @@ public class TruckSteerPanel extends javax.swing.JPanel{
         updateVelocityLimitLabel();
         onSpeedChange();
     }
-    
+
     private void mBtnSpeedSlowerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mBtnSpeedSlowerActionPerformed
-        if(StoppedFlag.equals("Stopped")){
+        if (StoppedFlag.equals("Stopped")) {
             System.err.println("not doing this since stopped button is pushed");
-        }
-        else{
+        } else {
             increaseSpeed(-1);
         }
     }//GEN-LAST:event_mBtnSpeedSlowerActionPerformed
 
     private void mBtnSpeedFasterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mBtnSpeedFasterActionPerformed
-        if(StoppedFlag.equals("Stopped")){
+        if (StoppedFlag.equals("Stopped")) {
             System.err.println("not doing this since stopped button is pushed");
-        }
-        else{
+        } else {
             increaseSpeed(1);
         }
     }//GEN-LAST:event_mBtnSpeedFasterActionPerformed

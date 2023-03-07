@@ -1,7 +1,6 @@
 package RoverUI;
 
 /**
- *
  * @author sujoy
  */
 public interface XYDoubleListener {

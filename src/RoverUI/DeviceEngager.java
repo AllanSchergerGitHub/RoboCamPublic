@@ -1,12 +1,13 @@
 package RoverUI;
 
 import RoverUI.Vehicle.DeviceInfo;
-import javax.swing.SwingUtilities;
+
+import javax.swing.*;
 
 public class DeviceEngager extends javax.swing.JPanel implements DeviceInfo.ChangeListener {
     private DeviceInfo mDeviceInfo;
     private Boolean mEngaged = null;
-    
+
     /**
      * Creates new form DevicelEngager
      */
@@ -14,13 +15,13 @@ public class DeviceEngager extends javax.swing.JPanel implements DeviceInfo.Chan
         initComponents();
         clearStatus();
     }
-    
+
     public void setDeviceInfo(DeviceInfo deviceInfo) {
         mDeviceInfo = deviceInfo;
         mDeviceInfo.addChangeListener(this);
         updateInfoLater();
     }
-    
+
     public void updateInfoLater() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -29,10 +30,10 @@ public class DeviceEngager extends javax.swing.JPanel implements DeviceInfo.Chan
             }
         });
     }
-    
+
     public void updateInfo() {
-        mLblHeading.setText("<html><b>"+mDeviceInfo.getName()+"</b></html>");
-        mLblInfo.setText("<html><div style=\"width:100px\">"+mDeviceInfo.getParamsInfoString().replace("\n", "<br>")+ "</div></html>");
+        mLblHeading.setText("<html><b>" + mDeviceInfo.getName() + "</b></html>");
+        mLblInfo.setText("<html><div style=\"width:100px\">" + mDeviceInfo.getParamsInfoString().replace("\n", "<br>") + "</div></html>");
         mEngaged = mDeviceInfo.getEngaged();
         mLblStatus.setText("Status: " + mDeviceInfo.getEngageStatus().getName());
         if (mEngaged != null) {
@@ -49,32 +50,32 @@ public class DeviceEngager extends javax.swing.JPanel implements DeviceInfo.Chan
             clearStatus();
         }
     }
-    
+
     public final void clearStatus() {
         mBtnEngager.setText("(Dis/-)engage");
         mBtnEngager.setEnabled(false);
         mBtnReEngage.setEnabled(false);
         mLblStatus.setText("Status: Unknown");
     }
-    
+
     @Override
     public void onEngage(DeviceInfo deviceInfo, boolean engaged) {
         mEngaged = engaged;
         updateInfoLater();
     }
 
-    
+
     @Override
     public void onParamChange(DeviceInfo deviceInfo, String paramName) {
         updateInfoLater();
     }
-    
+
     public void setEngaged(boolean value) {
         mBtnEngager.setText(!value ? "Disenging" : "Engaging");
         mBtnEngager.setEnabled(false);
-        mDeviceInfo.requestToSetEngaged(value);        
+        mDeviceInfo.requestToSetEngaged(value);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always

@@ -9,53 +9,54 @@ public class MinMax {
     private boolean mMaxSet = false;
     private double mMidFraction = 0.42; // higher number means center (straight) is more to the left
 
-    public MinMax() {}
-    
+    public MinMax() {
+    }
+
     public double getMaxValue() {
         return mMax;
     }
-    
+
     public double getMinValue() {
         return mMin;
     }
-    
+
     public double getMidValue() {
         if (!mMaxSet || !mMinSet) return 0;
-        return mMin + (mMax-mMin)*mMidFraction;
+        return mMin + (mMax - mMin) * mMidFraction;
     }
-    
+
     /*
-    * once both MinMax ranges are are set it is ok to use higher velocity on steppers since we know they will stop appropriately.
-    */
+     * once both MinMax ranges are are set it is ok to use higher velocity on steppers since we know they will stop appropriately.
+     */
     public boolean bothMinMaxSet() {
-        if( mMaxSet && mMinSet){
+        if (mMaxSet && mMinSet) {
             return true;
         }
         return false;
     }
-    
+
     public void setMidFraction(double value) {
         mMidFraction = value;
     }
-    
+
     public double getTrimmedValue(double value) {
         if (mMaxSet && value > mMax) return mMax;
         if (mMinSet && value < mMin) return mMin;
         return value;
     }
-    
+
     public void setValue(double value) {
         if (value < mMin) {
-            mMin = value*LIMIT_FRACTION;
+            mMin = value * LIMIT_FRACTION;
             mMinSet = true;
-            System.out.println("limit set to: "+mMin);
+            System.out.println("limit set to: " + mMin);
         } else if (value > mMax) {
-            mMax = value*LIMIT_FRACTION;
+            mMax = value * LIMIT_FRACTION;
             mMaxSet = true;
-            System.out.println("limit set to: "+mMax);
+            System.out.println("limit set to: " + mMax);
         }
     }
-    
+
     public String toString() {
         return String.format("Min:%.2f, Max:%.2f", mMin, mMax);
     }

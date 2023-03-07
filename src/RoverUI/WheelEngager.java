@@ -1,23 +1,24 @@
 package RoverUI;
 
-import RoverUI.Vehicle.Wheel;
 import RoverUI.Vehicle.DeviceInfo;
+import RoverUI.Vehicle.Wheel;
 
 public class WheelEngager extends javax.swing.JPanel {
     private Wheel mWheel;
+
     /**
      * Creates new form WheelEngager
      */
     public WheelEngager() {
         initComponents();
     }
-    
+
     public DeviceEngager[] getEngagerList() {
         return new DeviceEngager[]{
-            mEngager1, mEngager2
+                mEngager1, mEngager2
         };
     }
-    
+
     Wheel.DeviceInfoListChangeListener mDeviceListInfoListListener = new Wheel.DeviceInfoListChangeListener() {
         @Override
         public void onChange() {
@@ -31,11 +32,11 @@ public class WheelEngager extends javax.swing.JPanel {
         mLblWheelName.setText("<html><b>" + wheel.getWheelName() + "</b></html>");
         connectEngagersToWheelDeviceInfos();
     }
-    
+
     public void connectEngagersToWheelDeviceInfos() {
         DeviceEngager[] engagerList = getEngagerList();
         int deviceIndex = 0;
-        for (DeviceInfo deviceInfo: mWheel.getDeviceInfoList()) {
+        for (DeviceInfo deviceInfo : mWheel.getDeviceInfoList()) {
             if (deviceIndex < engagerList.length) {
                 engagerList[deviceIndex].setDeviceInfo(deviceInfo);
             }
@@ -59,7 +60,7 @@ public class WheelEngager extends javax.swing.JPanel {
         mEngager2 = new RoverUI.DeviceEngager();
 
         java.awt.GridBagLayout layout = new java.awt.GridBagLayout();
-        layout.columnWeights = new double[] {0.0};
+        layout.columnWeights = new double[]{0.0};
         setLayout(layout);
 
         mLblWheelName.setText("<Wheel Name>");

@@ -5,62 +5,52 @@
  */
 package RoboCam;
 
+import Chart.ChartParamsDataset;
 import DB.ConfigDB;
-import com.robocam.Socket.*;
-import PhiDevice.DeviceListJob;
+import GamePad.GamePadManager;
 import PhiDevice.ChannelType;
-import PhiDevice.DeviceManager;
 import PhiDevice.DeviceChannel;
+import PhiDevice.DeviceListJob;
+import PhiDevice.DeviceManager;
 import RoverUI.DoubleListener;
 import RoverUI.DoubleVarArgListener;
 import RoverUI.StringListener;
+import RoverUI.Vehicle.Wheel;
 import RoverUI.XYDoubleListener;
+import Utility.CameraHelper;
 import com.phidget22.PhidgetException;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.KeyEventDispatcher;
-import java.awt.KeyboardFocusManager;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
-import java.io.IOException;
-import static java.lang.Thread.sleep;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.SwingWorker;
-import Chart.ChartParamsDataset;
-import GamePad.GamePadManager;
+import com.robocam.Socket.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import RoverUI.Vehicle.Wheel;
-import Utility.CameraHelper;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+
+import static java.lang.Thread.sleep;
 
 /**
- *
  * @author sujoy
  */
 public class UIFrontEnd extends javax.swing.JFrame {
-    private final SocketClient mSocketClient;    
+    private final SocketClient mSocketClient;
     private ComPipe mComPipe;
     private final Thread mSocketClientThread;
     private final ComParser mComParser = new ComParser();
@@ -68,8 +58,8 @@ public class UIFrontEnd extends javax.swing.JFrame {
     DeviceListJob mDeviceListJob;
 
     private String mMachineName = "init";
-    
-    String targetValue;    
+
+    String targetValue;
     int targetValue_int;
 
     private final MousePosCommand mMousePosCommand = new MousePosCommand();
@@ -83,32 +73,32 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private final CommonSensorCommand mCommonSensorCommand = new CommonSensorCommand();
 
     int imageSaveTimeLag = 1000;
-    
+
     ArrayList<IPCamFrame> mIpCamFrames = new ArrayList<>();
     ConfigDB mConfigDB;
     Config mConfig;
     DynamicConfig mDyanmicConfig;
     ChartParamsDataset[] mChartParamsDatasets;
-    
+
     private double grandTotalLagTime1000Instances = 0;
     private final ArrayList<Double> avgLagTime = new ArrayList<Double>();
-    private long mLagTime  = 1;
+    private long mLagTime = 1;
     private Double priorMax = 0.0;
     int doInBackgroundCounter = 0;
-    
+
     Timer mUpdaterTimer;
-    
+
     private HashMap<String, IPCamSetting> mCamSettingMap = new HashMap<>();
-    
+
     private final GamePadManager mGamePadManager = new GamePadManager();
     private GamePadUpdater mGamePadUpdater;
-    
-     ExecutorService mCameraExecutor = Executors.newFixedThreadPool(1);
+
+    ExecutorService mCameraExecutor = Executors.newFixedThreadPool(1);
 
     /**
      * Creates new form RoboFrontEnd
      */
-    public UIFrontEnd(){
+    public UIFrontEnd() {
         initComponents();
         initMoreComponents();
         mSocketClientThread = null;
@@ -116,23 +106,23 @@ public class UIFrontEnd extends javax.swing.JFrame {
     }
 
     public UIFrontEnd(String roverHost, int roverPort) throws IOException, PhidgetException {
-        System.out.println("UI Machine: (poor variables name) roverHost and roverPort "+roverHost+" "+roverPort);
+        System.out.println("UI Machine: (poor variables name) roverHost and roverPort " + roverHost + " " + roverPort);
         initComponents();
         initMoreComponents();
         mSocketClient = new SocketClient(roverHost, roverPort, mComPipe);
         mSocketClientThread = new Thread(mSocketClient);
         mSocketClientThread.start();
-        
+
         //mSocketWriteClient = new SocketWriteClient(roverHost, roverPort, mComPipe);
         //mSocketWriteClientThread = new Thread(mSocketWriteClient);
         //mSocketWriteClientThread.start();
-        
+
         mComParser.execute();
-        
+
         mDeviceManager = new DeviceManager();
         mDeviceListJob = new DeviceListJob(mDeviceManager, cmbPhidgetChannels);
         mDeviceListJob.execute();
-        
+
         //start GamePadController
         mGamePadManager.connectToControllers();
         mGamePadUpdater = new GamePadUpdater(
@@ -144,14 +134,14 @@ public class UIFrontEnd extends javax.swing.JFrame {
         mMachineName = machineName;
         mTruckSteerPanel.setMachineName(mMachineName);
     }
-        
+
     private void initMoreComponents() {
         /* Four Commands for four wheels */
-        mWheelDeviceParamCommands = new WheelDeviceParamCommand[] {
-            new WheelDeviceParamCommand(0),
-            new WheelDeviceParamCommand(1),
-            new WheelDeviceParamCommand(2),
-            new WheelDeviceParamCommand(3)
+        mWheelDeviceParamCommands = new WheelDeviceParamCommand[]{
+                new WheelDeviceParamCommand(0),
+                new WheelDeviceParamCommand(1),
+                new WheelDeviceParamCommand(2),
+                new WheelDeviceParamCommand(3)
         };
 
         mComPipe = new ComPipe();
@@ -171,19 +161,20 @@ public class UIFrontEnd extends javax.swing.JFrame {
             }
 
             @Override
-            public void onImageUpdate() {}
+            public void onImageUpdate() {
+            }
         });
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
                 .addKeyEventDispatcher(new KeyEventDispatcher() {
-            @Override
-            public boolean dispatchKeyEvent(KeyEvent e) {
-                if (e.getID() == KeyEvent.KEY_PRESSED && mMainTabbedPane.getSelectedIndex() == 2) {
-                    return mTruckSteerPanel.onKeyPressed(e);
-                }
-                return false;
-            }
-        });
+                    @Override
+                    public boolean dispatchKeyEvent(KeyEvent e) {
+                        if (e.getID() == KeyEvent.KEY_PRESSED && mMainTabbedPane.getSelectedIndex() == 2) {
+                            return mTruckSteerPanel.onKeyPressed(e);
+                        }
+                        return false;
+                    }
+                });
 
         mTruckSteerPanel.addGroudPanelMousePosListener(new XYDoubleListener() {
             @Override
@@ -242,7 +233,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
         mChartParamsDatasets = mTruckSteerPanel.getTruck()
                 .getChartParamsDatasets();
-        for (ChartParamsDataset chartParamsDataset: mChartParamsDatasets) {
+        for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
             JFreeChart chart = ChartFactory.createXYLineChart(
                     chartParamsDataset.getChartName(),
                     "Time",
@@ -252,7 +243,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
             ChartPanel chartPanel = new ChartPanel(chart);
             mPanelCharts.add(chartPanel);
         }
-        
+
         mUpdaterTimer = new Timer(200, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -260,8 +251,8 @@ public class UIFrontEnd extends javax.swing.JFrame {
             }
         });
         mUpdaterTimer.start();
-        
-        addWindowListener(new  WindowAdapter() {
+
+        addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 cleanUpOnClose();
@@ -274,7 +265,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
         int x = imageSaveTimeLag;
         return x;
     }
-    
+
     public void loadFromConfig(Config config) { // there is also a loadFromConfig for the Rover UI
         mConfig = config;
         try {
@@ -283,15 +274,15 @@ public class UIFrontEnd extends javax.swing.JFrame {
             Logger.getLogger(UIFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
         }
         mDyanmicConfig = new DynamicConfig();
-        
+
         mDeviceListJob.setSelectedDevice(config.getDefaultDevice());
         mTruckSteerPanel.loadFromConfig(config);
-        
+
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         /* Place this window at center and on top */
         setLocation(
-            (int) ((screenSize.getWidth()-getWidth())/2-100), // updated to move window to lower right of my screen via '+200'. temp -120 allows me to see output window
-            (int) ((screenSize.getHeight()-getHeight())/2-115));  // updated to move window to lower right of my screen via '+116'.  temp -175 allows me to see output window
+                (int) ((screenSize.getWidth() - getWidth()) / 2 - 100), // updated to move window to lower right of my screen via '+200'. temp -120 allows me to see output window
+                (int) ((screenSize.getHeight() - getHeight()) / 2 - 115));  // updated to move window to lower right of my screen via '+116'.  temp -175 allows me to see output window
         //setAlwaysOnTop(true); // brings screen to top for initial launch
         //setAlwaysOnTop(false); // don't always need this on top (after initial positioning)
         this.setName("UIFrontEnd");
@@ -301,15 +292,15 @@ public class UIFrontEnd extends javax.swing.JFrame {
         String[] camNames = config.getIPCamNames();
         //HasMap<String, 
 
-        double evenCamCount = Math.ceil(Math.sqrt(camNames.length)+1); // note - only cameras that are shown on screen are currently capable of being saved to disk... edited formula by adding '+1' to make images smaller (only showing 3 smaller images now)
+        double evenCamCount = Math.ceil(Math.sqrt(camNames.length) + 1); // note - only cameras that are shown on screen are currently capable of being saved to disk... edited formula by adding '+1' to make images smaller (only showing 3 smaller images now)
 
         Dimension frameDimension = new Dimension(
-                (int) (screenSize.getWidth()/evenCamCount),
-                (int) (screenSize.getHeight()/evenCamCount));
+                (int) (screenSize.getWidth() / evenCamCount),
+                (int) (screenSize.getHeight() / evenCamCount));
 
         int row = 0;
         int col = 0;
-        
+
         for (String camName : camNames) {
             if (camName.length() == 0) continue;
             IPCamFrame ipCamFrame = new IPCamFrame();
@@ -322,16 +313,16 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
             ipCamFrame.setSize(frameDimension);
             ipCamFrame.setLocation(
-                    (int) (col*frameDimension.getWidth()),
-                    (int) (row*frameDimension.getHeight()));
+                    (int) (col * frameDimension.getWidth()),
+                    (int) (row * frameDimension.getHeight()));
             ipCamFrame.getIPCamPanel().setImageFolder(camName, config.getImageFolder());
             mIpCamFrames.add(ipCamFrame);
             mDyanmicConfig.addComponent(ipCamFrame);
             mDyanmicConfig.addUiCollection(
-                String.format("_uiLine_%s", ipCamFrame.getName()),
-                ipCamFrame.getUiLineCollection());
+                    String.format("_uiLine_%s", ipCamFrame.getName()),
+                    ipCamFrame.getUiLineCollection());
 
-            
+
             mCamSettingMap.put(camName, new IPCamSetting(camName, config));
             mCameraListBox.add(camName);
             //mCameraListBox.add(""+config.getIPCamAddress(camName));
@@ -346,93 +337,93 @@ public class UIFrontEnd extends javax.swing.JFrame {
             mIPCamPanel.setUrlAddrress(mCamSettingMap.get(camNames[0]).getPictureUrl());
         }
         mCameraListBox.select(0);
-        
+
         mGamePadManager.loadFromConfig(config);
 
     }
 
-    public void moveMotor(int targetValue_int)    {
-        targetValue_int=this.targetValue_int;//targetValue_intINCREMENT+
+    public void moveMotor(int targetValue_int) {
+        targetValue_int = this.targetValue_int;//targetValue_intINCREMENT+
         String channelName = cmbPhidgetChannels.getSelectedItem().toString();
         String paramName = cmbPhidgetParamNames.getSelectedItem().toString();
-        targetValue = (String)(targetValue_int+"");
-        System.out.println("targetValue - "+targetValue);
+        targetValue = (String) (targetValue_int + "");
+        System.out.println("targetValue - " + targetValue);
         mDeviceManager.setChannelParam(
                 channelName,
                 paramName,
                 Float.parseFloat(targetValue)
         );
     }
-    
-    private void IPCameraPTZ_goto_preset(){
-        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem()+"").getIpAddress();
+
+    private void IPCameraPTZ_goto_preset() {
+        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
         URL url_presets = null;
         String presetName = jTextField10GoToPreset.getText();
         presetName = list1_ip_cam_presets.getSelectedItem();
-                
+
         try {
-            url_presets = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzGotoPresetPoint&name="+presetName+"&usr=allanscherger&pwd=password");
-             
+            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzGotoPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=password");
+
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
         BufferedReader bin = null;
         try {
-            bin = new BufferedReader ( 
-                    new InputStreamReader( url_presets.openStream( ) ));
-        } catch (IOException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    private void IPCameraPTZ_add_preset(){
-        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem()+"").getIpAddress();
-        URL url_presets = null;
-        String presetName = jTextField_presetName.getText();
-        try {
-            url_presets = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzAddPresetPoint&name="+presetName+"&usr=allanscherger&pwd=password");
-             
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        BufferedReader bin = null;
-        try {
-            bin = new BufferedReader ( 
-                    new InputStreamReader( url_presets.openStream( ) ));
-        } catch (IOException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    private void IPCameraPTZ_delete_preset(){
-        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem()+"").getIpAddress();
-        URL url_presets = null;
-        String presetName = jTextFieldDeletePreset.getText();
-        try {
-            url_presets = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzDeletePresetPoint&name="+presetName+"&usr=allanscherger&pwd=password");
-             
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        BufferedReader bin = null;
-        try {
-            bin = new BufferedReader ( 
-                    new InputStreamReader( url_presets.openStream( ) ));
+            bin = new BufferedReader(
+                    new InputStreamReader(url_presets.openStream()));
         } catch (IOException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void IPCameraPTZ_get_presets(){
-        final String camName = mCamSettingMap.get(mCameraListBox.getSelectedItem()+"").getIpAddress();
+    private void IPCameraPTZ_add_preset() {
+        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
+        URL url_presets = null;
+        String presetName = jTextField_presetName.getText();
+        try {
+            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzAddPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=password");
+
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        BufferedReader bin = null;
+        try {
+            bin = new BufferedReader(
+                    new InputStreamReader(url_presets.openStream()));
+        } catch (IOException ex) {
+            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void IPCameraPTZ_delete_preset() {
+        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
+        URL url_presets = null;
+        String presetName = jTextFieldDeletePreset.getText();
+        try {
+            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzDeletePresetPoint&name=" + presetName + "&usr=allanscherger&pwd=password");
+
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        BufferedReader bin = null;
+        try {
+            bin = new BufferedReader(
+                    new InputStreamReader(url_presets.openStream()));
+        } catch (IOException ex) {
+            Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void IPCameraPTZ_get_presets() {
+        final String camName = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
         list1_ip_cam_presets.removeAll();
         mCameraExecutor.submit(() -> {
             final String[] presets = CameraHelper.getPresets(
-                "http://"+camName+"/cgi-bin/CGIProxy.fcgi?cmd=getPTZPresetPointList&usr=allanscherger&pwd=password"
+                    "http://" + camName + "/cgi-bin/CGIProxy.fcgi?cmd=getPTZPresetPointList&usr=allanscherger&pwd=password"
             );
             SwingUtilities.invokeLater(() -> {
                 list1_ip_cam_presets.removeAll();
-                for(String preset: presets) {
+                for (String preset : presets) {
                     list1_ip_cam_presets.add(preset);
                 }
             });
@@ -443,7 +434,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     // Deprecated
     class IPCameraPTZPresetLoader extends SwingWorker<Void, String> {
         private String mCamName;
-        
+
         public IPCameraPTZPresetLoader(String camName) {
             mCamName = camName;
         }
@@ -451,28 +442,28 @@ public class UIFrontEnd extends javax.swing.JFrame {
         @Override
         protected Void doInBackground() throws Exception {
             URL url_presets = null;
-            String urlString = "http://"+mCamName+"//cgi-bin/CGIProxy.fcgi?cmd=getPTZPresetPointList&usr=allanscherger&pwd=password";
+            String urlString = "http://" + mCamName + "//cgi-bin/CGIProxy.fcgi?cmd=getPTZPresetPointList&usr=allanscherger&pwd=password";
             try {
                 url_presets = new URL(urlString);
-                 
+
             } catch (MalformedURLException ex) {
                 Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
                 return null;
             }
-            String str= null;
+            String str = null;
             ArrayList<String> lines = new ArrayList<String>();
             BufferedReader bin = null;
             try {
-                bin = new BufferedReader (
-                new InputStreamReader( url_presets.openStream()));
-                while((str = bin.readLine()) != null){
+                bin = new BufferedReader(
+                        new InputStreamReader(url_presets.openStream()));
+                while ((str = bin.readLine()) != null) {
                     lines.add(str);
                 }
             } catch (IOException ex) {
-                System.err.println("ip cam not selected? - IOException: "+url_presets);
+                System.err.println("ip cam not selected? - IOException: " + url_presets);
                 //Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NullPointerException ex){
-                System.err.println("ip cam not selected? - NullPointerException: "+url_presets);
+            } catch (NullPointerException ex) {
+                System.err.println("ip cam not selected? - NullPointerException: " + url_presets);
             }
 
             //BufferedReader in = new BufferedReader(new FileReader("path/of/text"));
@@ -508,148 +499,146 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
         @Override
         protected void process(List<String> lines) {
-            for (int linesPrint = 0; linesPrint < lines.size(); linesPrint++){
-                if(lines.get(linesPrint) != "0"){
-                     String s = lines.get(linesPrint);
-                     Pattern p = Pattern.compile(">.*?<");
-                     Matcher m = p.matcher(s);
-                     if(m.find()){
-                        String preset_detail = String.valueOf(m.group().subSequence(1, m.group().length()-1));
+            for (int linesPrint = 0; linesPrint < lines.size(); linesPrint++) {
+                if (lines.get(linesPrint) != "0") {
+                    String s = lines.get(linesPrint);
+                    Pattern p = Pattern.compile(">.*?<");
+                    Matcher m = p.matcher(s);
+                    if (m.find()) {
+                        String preset_detail = String.valueOf(m.group().subSequence(1, m.group().length() - 1));
                         list1_ip_cam_presets.add(preset_detail);
-                        System.out.println(m.group().subSequence(1, m.group().length()-1)+" "+linesPrint+ " --preset_detail "+preset_detail);
-                     }
+                        System.out.println(m.group().subSequence(1, m.group().length() - 1) + " " + linesPrint + " --preset_detail " + preset_detail);
+                    }
 
                     //System.out.println("first item in array: "+linesArray[linesPrint]+" "+linesPrint);
                 }
             }
         }
-        
+
     }
 
-    private void updateIPCameraPOS_Settings(int moveDuration, String moveDirection){
+    private void updateIPCameraPOS_Settings(int moveDuration, String moveDirection) {
         URL url = null;
-        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem()+"").getIpAddress();
+        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
         try {
-            switch(moveDirection)
-            {
+            switch (moveDirection) {
                 case "Right":
-                    url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveRight&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveRight&usr=allanscherger&pwd=password");
                     break;
                 case "Left":
-                    url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveLeft&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveLeft&usr=allanscherger&pwd=password");
                     break;
                 case "Up":
-                    url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveUp&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveUp&usr=allanscherger&pwd=password");
                     break;
                 case "Down":
-                    url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveDown&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveDown&usr=allanscherger&pwd=password");
                     break;
                 default: //shouldn't need this - but just in case we'll stop if no cases apply
-                    url = new URL("http:/"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzRunStop&usr=allanscherger&pwd=password");
+                    url = new URL("http:/" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzRunStop&usr=allanscherger&pwd=password");
             }
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
         BufferedReader bin = null;
         try {
-            bin = new BufferedReader ( 
-                    new InputStreamReader( url.openStream( ) ));
+            bin = new BufferedReader(
+                    new InputStreamReader(url.openStream()));
         } catch (IOException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         try {
             sleep(moveDuration);
         } catch (InterruptedException ex) {
             Logger.getLogger(UIFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         try {
-            url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=ptzStopRun&usr=allanscherger&pwd=password");
+            url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzStopRun&usr=allanscherger&pwd=password");
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
         bin = null;
         try {
-            bin = new BufferedReader ( 
-                    new InputStreamReader( url.openStream( ) ));
+            bin = new BufferedReader(
+                    new InputStreamReader(url.openStream()));
         } catch (IOException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     private void zoomInOut(int moveDuration, String moveDirection) {
         URL url = null;
-        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem()+"").getIpAddress();
+        String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
         try {
-            switch(moveDirection)
-            {
+            switch (moveDirection) {
                 case "ZoomIn":
-                    url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=zoomIn&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomIn&usr=allanscherger&pwd=password");
                     break;
                 case "ZoomOut":
-                    url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=zoomOut&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomOut&usr=allanscherger&pwd=password");
                     break;
                 case "ZoomStop":
-                    url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
                     break;
                 default: //shouldn't need this - but just in case we'll stop if no cases apply
-                    url = new URL("http:/"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
+                    url = new URL("http:/" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
             }
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
         BufferedReader bin = null;
         try {
-            bin = new BufferedReader ( 
-                    new InputStreamReader( url.openStream( ) ));
+            bin = new BufferedReader(
+                    new InputStreamReader(url.openStream()));
         } catch (IOException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         try {
-            System.err.println("moveDuration "+moveDuration);
+            System.err.println("moveDuration " + moveDuration);
             sleep(moveDuration);
         } catch (InterruptedException ex) {
             Logger.getLogger(UIFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         try {
-            url = new URL("http://"+jComboBox1_camName2+"//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
+            url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
         bin = null;
         try {
-            bin = new BufferedReader ( 
-                    new InputStreamReader( url.openStream( ) ));
+            bin = new BufferedReader(
+                    new InputStreamReader(url.openStream()));
         } catch (IOException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-     
+
     final class ComParser extends SwingWorker<Void, String> {
         @Override
         protected Void doInBackground() throws Exception {
             long maxEstimateTime = 0;
             long lastUpdatedAt = 0;
-            while(true) {
+            while (true) {
                 String line = mComPipe.getIn();
                 if (line != null) {
                     publish(line);
                 }
 
-                if (System.currentTimeMillis()-lastUpdatedAt > 200) {
+                if (System.currentTimeMillis() - lastUpdatedAt > 200) {
                     lastUpdatedAt = System.currentTimeMillis();
                     publish("");
                 }
-                
+
                 long startTime = System.nanoTime();
                 //mTruckSteerPanel.updateLagProgress(lag); // Allan modified this Jan 15 2019
-                
+
                 long estimatedTime = System.nanoTime() - startTime;
                 estimatedTime = System.nanoTime() - startTime;
-                if(estimatedTime>maxEstimateTime){
+                if (estimatedTime > maxEstimateTime) {
                     //System.err.println(" new Max loop time: "+estimatedTime);
                     maxEstimateTime = estimatedTime;
                 }
@@ -657,26 +646,26 @@ public class UIFrontEnd extends javax.swing.JFrame {
 //                        System.err.print(" Max: "+maxEstimateTime);
 //                        //System.err.println("; avg lag:"+averageValue+" max lag:"+priorMax);
 //                    }//+" .....  "+removeFromTotal+" .... "+(double)(avgLagTime.get(500)));
-                
+
                 //estimatedTime = estimatedTime-1000000;
 
-                Double addThis = (double)estimatedTime;
-                avgLagTime.add(0,addThis);
+                Double addThis = (double) estimatedTime;
+                avgLagTime.add(0, addThis);
                 grandTotalLagTime1000Instances = grandTotalLagTime1000Instances + addThis;
-                if(addThis>priorMax){
+                if (addThis > priorMax) {
                     priorMax = addThis;
                 }
-                if ((avgLagTime.size())>1000){
-                    double removeFromTotal = (double)(avgLagTime.get(1000));
+                if ((avgLagTime.size()) > 1000) {
+                    double removeFromTotal = (double) (avgLagTime.get(1000));
                     grandTotalLagTime1000Instances = grandTotalLagTime1000Instances - removeFromTotal;
-                    double averageValue = (double)(grandTotalLagTime1000Instances/1000);
-                    if(doInBackgroundCounter % 500 == 0){
-                        System.err.println("avg lag: "+averageValue+" max lag: "+priorMax+" nanoseconds");
+                    double averageValue = (double) (grandTotalLagTime1000Instances / 1000);
+                    if (doInBackgroundCounter % 500 == 0) {
+                        System.err.println("avg lag: " + averageValue + " max lag: " + priorMax + " nanoseconds");
                     }//+" .....  "+removeFromTotal+" .... "+(double)(avgLagTime.get(500)));
                     avgLagTime.remove(1000);
-                    
-                }                
-                doInBackgroundCounter++; 
+
+                }
+                doInBackgroundCounter++;
                 //mTruckSteerPanel.getTruck().executeNextCueTask();
                 //System.out.println("sleeping for 5");
                 Thread.sleep(5);
@@ -685,7 +674,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
         @Override
         protected void process(List<String> list) {
-            for (String command: list) {
+            for (String command : list) {
                 //mTxtAreaLog.append(command + "\n");
                 //System.out.println("command " + command);
                 if (command.length() == 0) {//update other gui widgets
@@ -699,19 +688,19 @@ public class UIFrontEnd extends javax.swing.JFrame {
                             mCommonSensorCommand.getElectricalCurrent());
                     continue;
                 }
-                for(WheelDeviceParamCommand wdpc: mWheelDeviceParamCommands) {
+                for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) {
                     if (wdpc.canServeCommand(command)) {
                         //System.out.println("comman: " + command);
                         wdpc.parseCommand(command);
                         Wheel wheel = mTruckSteerPanel
                                 .getTruck().getWheels()[wdpc.getWheelIndex()];
                         //wheel.setBLDCmotorReadPosDepreciated(wdpc.getBLDCMotorPosDepreciated());
-                        wheel.setBLDCmotorReadPos(0, wdpc.getBLDCMotorPos(0), (String)"UIFront");
+                        wheel.setBLDCmotorReadPos(0, wdpc.getBLDCMotorPos(0), (String) "UIFront");
                         //System.err.println("???????????????????????????UIFront is setting BLDC MOTOR POS? Maybe this causes errors? "+wdpc.getBLDCMotorPos(0)+" : "+wdpc.getBLDCMotorPos(1));
-                        wheel.setBLDCmotorReadPos(1, wdpc.getBLDCMotorPos(1), (String)"UIFront");
+                        wheel.setBLDCmotorReadPos(1, wdpc.getBLDCMotorPos(1), (String) "UIFront");
                         //wheel.setReadDutyCycle(wdpc.getBLDCMotorDutyCycle());
-                        wheel.setBLCDCDutyCyleAtIndex(0,wdpc.getBLDCMotorDutyCycle(0));
-                        wheel.setBLCDCDutyCyleAtIndex(1,wdpc.getBLDCMotorDutyCycle(1));
+                        wheel.setBLCDCDutyCyleAtIndex(0, wdpc.getBLDCMotorDutyCycle(0));
+                        wheel.setBLCDCDutyCyleAtIndex(1, wdpc.getBLDCMotorDutyCycle(1));
                         break;
                     }
                 }
@@ -719,9 +708,9 @@ public class UIFrontEnd extends javax.swing.JFrame {
         }
     }
 
-    private String getXYString(Point point){
-        moveMotor((int)point.x*20);
-       System.out.println(point.x*20);
+    private String getXYString(Point point) {
+        moveMotor((int) point.x * 20);
+        System.out.println(point.x * 20);
         try {
             sleep(10);
         } catch (InterruptedException ex) {
@@ -730,11 +719,12 @@ public class UIFrontEnd extends javax.swing.JFrame {
         return String.format("(x, y) = (%d, %d)", point.x, point.y);
 
     }
+
     private void cleanUpOnClose() {
         long startTime = System.currentTimeMillis();
         mComPipe.sendCloseMessage();
-        mDyanmicConfig.save();        
-        while ((System.currentTimeMillis()-startTime) < 1000*5) {
+        mDyanmicConfig.save();
+        while ((System.currentTimeMillis() - startTime) < 1000 * 5) {
             //mTruckSteerPanel.getTruck().stopMoving();
             try {
                 TimeUnit.SECONDS.sleep(1);
@@ -909,7 +899,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
         });
 
         mComboBoxCams.setFont(new java.awt.Font("Tahoma", 0, 10)); // NOI18N
-        mComboBoxCams.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        mComboBoxCams.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel1.setText("Camara to adjust:");
@@ -1034,122 +1024,122 @@ public class UIFrontEnd extends javax.swing.JFrame {
         javax.swing.GroupLayout mIPCamPanelLayout = new javax.swing.GroupLayout(mIPCamPanel);
         mIPCamPanel.setLayout(mIPCamPanelLayout);
         mIPCamPanelLayout.setHorizontalGroup(
-            mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addComponent(list1_ip_cam_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jTextField10GoToPreset, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButtonIPCameraPTZ_get_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButtonZoomIn, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButtonZoomOut, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(133, 133, 133)
-                        .addComponent(jButton3_moveIPCamLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
+                mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
+                                .addContainerGap()
                                 .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jButton3_moveIPCamUp, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jButton3_moveIPCamDown, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(115, 115, 115))
-                            .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                                .addGap(34, 34, 34)
-                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(jTextFieldDeletePreset)
-                                    .addComponent(jTextField_presetName, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE)
-                                    .addComponent(jButton2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jButtonDeletePreset, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                                .addComponent(mComboBoxCams, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
-                                .addGap(0, 27, Short.MAX_VALUE)
-                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 230, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(mCameraListBox, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
-                                        .addComponent(jSlider2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))))
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 176, Short.MAX_VALUE)
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                                .addComponent(jButton3_moveIPCamRight, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(187, 187, 187)
-                                .addComponent(jSlider_moveDuration, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addGap(21, 21, 21))
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addComponent(list1_ip_cam_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 159, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(jTextField10GoToPreset, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 248, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jButtonIPCameraPTZ_get_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 179, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                        .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(jButtonZoomIn, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jButtonZoomOut, javax.swing.GroupLayout.PREFERRED_SIZE, 153, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGap(133, 133, 133)
+                                                .addComponent(jButton3_moveIPCamLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
+                                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                                        .addComponent(jButton3_moveIPCamUp, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addComponent(jButton3_moveIPCamDown, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                                .addGap(115, 115, 115))
+                                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                                .addGap(34, 34, 34)
+                                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                                                        .addComponent(jTextFieldDeletePreset)
+                                                                        .addComponent(jTextField_presetName, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE)
+                                                                        .addComponent(jButton2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addComponent(jButtonDeletePreset, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                                .addComponent(mComboBoxCams, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(0, 0, Short.MAX_VALUE))
+                                                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mIPCamPanelLayout.createSequentialGroup()
+                                                                .addGap(0, 27, Short.MAX_VALUE)
+                                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                                        .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 230, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                                .addComponent(mCameraListBox, javax.swing.GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE)
+                                                                                .addComponent(jSlider2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))))
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 176, Short.MAX_VALUE)
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                        .addComponent(jTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, 101, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                                .addComponent(jButton3_moveIPCamRight, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(187, 187, 187)
+                                                                .addComponent(jSlider_moveDuration, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                .addGap(21, 21, 21))
         );
         mIPCamPanelLayout.setVerticalGroup(
-            mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(30, 30, 30)
-                        .addComponent(jSlider_moveDuration, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addGap(138, 138, 138)
-                        .addComponent(jButtonZoomIn, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jButtonZoomOut, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addGap(35, 35, 35)
-                        .addComponent(jButton3_moveIPCamUp, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton3_moveIPCamRight, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton3_moveIPCamLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addGap(41, 41, 41)
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                                .addGap(16, 16, 16)
-                                .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jSlider2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(5, 5, 5)
-                                .addComponent(mCameraListBox, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(mComboBoxCams, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(list1_ip_cam_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 348, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 0, Short.MAX_VALUE))))
-                    .addGroup(mIPCamPanelLayout.createSequentialGroup()
-                        .addGap(26, 26, 26)
-                        .addComponent(jButton3_moveIPCamDown, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jTextField10GoToPreset, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextField_presetName, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButtonIPCameraPTZ_get_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jButtonDeletePreset, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextFieldDeletePreset, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addGap(6, 6, 6))
+                mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addContainerGap()
+                                                .addComponent(jTextField9, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(30, 30, 30)
+                                                .addComponent(jSlider_moveDuration, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addGap(138, 138, 138)
+                                                .addComponent(jButtonZoomIn, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(18, 18, 18)
+                                                .addComponent(jButtonZoomOut, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addGap(35, 35, 35)
+                                                .addComponent(jButton3_moveIPCamUp, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jButton3_moveIPCamRight, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jButton3_moveIPCamLeft, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addGap(41, 41, 41)
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                                .addGap(16, 16, 16)
+                                                                .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                                .addComponent(jSlider2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(5, 5, 5)
+                                                                .addComponent(mCameraListBox, javax.swing.GroupLayout.PREFERRED_SIZE, 172, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                                .addComponent(mComboBoxCams, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                                .addComponent(jLabel9, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                                .addComponent(list1_ip_cam_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 348, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(0, 0, Short.MAX_VALUE))))
+                                        .addGroup(mIPCamPanelLayout.createSequentialGroup()
+                                                .addGap(26, 26, 26)
+                                                .addComponent(jButton3_moveIPCamDown, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(jButton3, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jTextField10GoToPreset, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jTextField_presetName, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addGroup(mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jButtonIPCameraPTZ_get_presets, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jButtonDeletePreset, javax.swing.GroupLayout.PREFERRED_SIZE, 47, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldDeletePreset, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(0, 0, Short.MAX_VALUE)))
+                                .addGap(6, 6, 6))
         );
 
         gridBagConstraints = new java.awt.GridBagConstraints();
@@ -1327,73 +1317,73 @@ public class UIFrontEnd extends javax.swing.JFrame {
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 295, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(27, 27, 27)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addGap(27, 27, 27)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE)
-                            .addComponent(jTextField2)
-                            .addComponent(jTextField3)
-                            .addComponent(jTextField4))
-                        .addGap(80, 80, 80)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jTextField5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jTextField6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jTextField7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(0, 110, Short.MAX_VALUE))
-                            .addComponent(jTextField8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addGap(474, 474, 474))
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 295, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addGap(27, 27, 27)
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                        .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(jLabel6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                                .addGap(27, 27, 27)
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                        .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(jTextField1, javax.swing.GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE)
+                                                        .addComponent(jTextField2)
+                                                        .addComponent(jTextField3)
+                                                        .addComponent(jTextField4))
+                                                .addGap(80, 80, 80)
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                        .addComponent(jTextField5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(jTextField6, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(jTextField7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                .addGap(0, 110, Short.MAX_VALUE))
+                                                        .addComponent(jTextField8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addGap(474, 474, 474))
         );
         jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(16, 16, 16)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(43, 43, 43)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(123, 123, 123)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jTextField4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jTextField5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(123, 123, 123)
-                        .addComponent(jTextField7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(298, Short.MAX_VALUE))
+                jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addContainerGap()
+                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(16, 16, 16)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(43, 43, 43)
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addGap(123, 123, 123)
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                                        .addComponent(jTextField4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                        .addGroup(jPanel1Layout.createSequentialGroup()
+                                                .addComponent(jTextField5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addGap(123, 123, 123)
+                                                .addComponent(jTextField7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(jTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addContainerGap(298, Short.MAX_VALUE))
         );
 
         mMainTabbedPane.addTab("Tuning Parameters", jPanel1);
@@ -1432,28 +1422,28 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
 
-        targetValue_int=targetValue_int+300;// = txtPhidgetParamTargetValue.getText();
+        targetValue_int = targetValue_int + 300;// = txtPhidgetParamTargetValue.getText();
         String channelName = cmbPhidgetChannels.getSelectedItem().toString();
         String paramName = cmbPhidgetParamNames.getSelectedItem().toString();
-        targetValue = (String)(targetValue_int+"");
-        System.out.println("targetValue - "+targetValue);
+        targetValue = (String) (targetValue_int + "");
+        System.out.println("targetValue - " + targetValue);
         mDeviceManager.setChannelParam(
-            channelName,
-            paramName,
-            Float.parseFloat(targetValue)
+                channelName,
+                paramName,
+                Float.parseFloat(targetValue)
         );
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jSlider1MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jSlider1MouseReleased
-        targetValue_int=jSlider1.getValue();
+        targetValue_int = jSlider1.getValue();
         String channelName = cmbPhidgetChannels.getSelectedItem().toString();
         String paramName = cmbPhidgetParamNames.getSelectedItem().toString();
-        targetValue = (String)(targetValue_int+"");
-        System.out.println("targetValue - "+targetValue);
+        targetValue = (String) (targetValue_int + "");
+        System.out.println("targetValue - " + targetValue);
         mDeviceManager.setChannelParam(
-            channelName,
-            paramName,
-            Float.parseFloat(targetValue)
+                channelName,
+                paramName,
+                Float.parseFloat(targetValue)
         );
     }//GEN-LAST:event_jSlider1MouseReleased
 
@@ -1464,14 +1454,14 @@ public class UIFrontEnd extends javax.swing.JFrame {
         String paramName = cmbPhidgetParamNames.getSelectedItem().toString();
         String targetValue = txtPhidgetParamTargetValue.getText();
         mDeviceManager.getChannelParam(
-            channelName,
-            paramName,
-            new PhiDevice.ParamRunnable.Reader() {
-                @Override
-                public void onRead(double value) {
-                    txtPhidgetParamTargetValue.setText(Double.toString(value));
+                channelName,
+                paramName,
+                new PhiDevice.ParamRunnable.Reader() {
+                    @Override
+                    public void onRead(double value) {
+                        txtPhidgetParamTargetValue.setText(Double.toString(value));
+                    }
                 }
-            }
         );
     }//GEN-LAST:event_btnGetValueActionPerformed
 
@@ -1482,9 +1472,9 @@ public class UIFrontEnd extends javax.swing.JFrame {
         String paramName = cmbPhidgetParamNames.getSelectedItem().toString();
         String targetValue = txtPhidgetParamTargetValue.getText();
         mDeviceManager.setChannelParam(
-            channelName,
-            paramName,
-            Float.parseFloat(targetValue)
+                channelName,
+                paramName,
+                Float.parseFloat(targetValue)
         );
     }//GEN-LAST:event_btnSetValueActionPerformed
 
@@ -1492,13 +1482,13 @@ public class UIFrontEnd extends javax.swing.JFrame {
         if (cmbPhidgetChannels.getSelectedItem() == null) return;
         String channelName = cmbPhidgetChannels.getSelectedItem().toString();
         DeviceChannel channel = mDeviceManager.getChannelByName(channelName);
-        System.out.println(channelName+"_<- channelName______channel ->__"+channel);
+        System.out.println(channelName + "_<- channelName______channel ->__" + channel);
         if (channel != null) {
             ChannelType channelType = ChannelType.getChannelTypeByName(channel.getChannelName());
             if (channelType != null) {
                 String[] paramNames = channelType.getParamNames();
                 cmbPhidgetParamNames.removeAll();
-                for(String paramName: paramNames) {
+                for (String paramName : paramNames) {
                     cmbPhidgetParamNames.addItem(paramName);
                 }
             }
@@ -1534,7 +1524,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton3_moveIPCamUpActionPerformed
 
     private void jSlider_moveDurationStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSlider_moveDurationStateChanged
-        String sliderValueString = jSlider_moveDuration.getValue()+"";
+        String sliderValueString = jSlider_moveDuration.getValue() + "";
         jTextField9.setText(sliderValueString);
     }//GEN-LAST:event_jSlider_moveDurationStateChanged
 
@@ -1551,7 +1541,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void list1_ip_cam_presetsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_list1_ip_cam_presetsMouseClicked
-        System.out.println("PTZ to: "+list1_ip_cam_presets.getSelectedItem());
+        System.out.println("PTZ to: " + list1_ip_cam_presets.getSelectedItem());
         IPCameraPTZ_goto_preset();
     }//GEN-LAST:event_list1_ip_cam_presetsMouseClicked
 
@@ -1559,22 +1549,22 @@ public class UIFrontEnd extends javax.swing.JFrame {
         int moveDuration = 1;
         String moveDirection = "ZoomIn";
         moveDuration = jSlider_moveDuration.getValue();
-        zoomInOut( moveDuration,  moveDirection);
+        zoomInOut(moveDuration, moveDirection);
     }//GEN-LAST:event_jButtonZoomInActionPerformed
 
     private void jButtonZoomOutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonZoomOutActionPerformed
         int moveDuration = 1;
         String moveDirection = "ZoomOut";
         moveDuration = jSlider_moveDuration.getValue();
-        zoomInOut( moveDuration,  moveDirection);
+        zoomInOut(moveDuration, moveDirection);
     }//GEN-LAST:event_jButtonZoomOutActionPerformed
 
     private void mCameraListBoxMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_mCameraListBoxMouseClicked
-        IPCamSetting camSetting = mCamSettingMap.get(mCameraListBox.getSelectedItem()+"");
+        IPCamSetting camSetting = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "");
         String ipAddr = camSetting.getIpAddress();
         mIPCamPanel.setUrlAddrress(camSetting.getPictureUrl());
         //System.out.println("camera ip slected for movement: "+ ipAddr+"\n"+camSetting.getPictureUrl().substring(0, 30));
-        if (ipAddr!=null && ipAddr != "null"){
+        if (ipAddr != null && ipAddr != "null") {
             IPCameraPTZ_get_presets();
         }
     }//GEN-LAST:event_mCameraListBoxMouseClicked
@@ -1586,7 +1576,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private void jSlider2StateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jSlider2StateChanged
         //String sliderValueString = jSlider2.getValue()+"";
         imageSaveTimeLag = jSlider2.getValue();
-        jLabel10.setText(imageSaveTimeLag+"");
+        jLabel10.setText(imageSaveTimeLag + "");
         mIPCamPanel.setImageSaveLag(imageSaveTimeLag);
     }//GEN-LAST:event_jSlider2StateChanged
 
@@ -1598,14 +1588,14 @@ public class UIFrontEnd extends javax.swing.JFrame {
         int moveDuration = 1;
         String moveDirection = "ZoomIn";
         moveDuration = jSlider_moveDuration.getValue();
-        zoomInOut( moveDuration,  moveDirection);
+        zoomInOut(moveDuration, moveDirection);
     }//GEN-LAST:event_jButtonZoomInMousePressed
 
     private void jButtonZoomOutMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButtonZoomOutMousePressed
         int moveDuration = 1;
         String moveDirection = "ZoomOut";
         moveDuration = jSlider_moveDuration.getValue();
-        zoomInOut( moveDuration,  moveDirection);
+        zoomInOut(moveDuration, moveDirection);
     }//GEN-LAST:event_jButtonZoomOutMousePressed
 
     private void mBtnEnableGamePadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mBtnEnableGamePadActionPerformed

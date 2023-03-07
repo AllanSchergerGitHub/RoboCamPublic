@@ -6,20 +6,19 @@
 package RoverUI.Vehicle;
 
 /**
- *
  * @author pc
  */
 public class SteeringArc {
-    
+
     public void SteeringArc() {
         int[] startX = new int[8];
-                int[] startY = new int[8];
-                int[] endX = new int[8];
-                int[] endY = new int[8];
-                int deviceNumber = 0;
-                double deltaX = 0;
-                double deltaY = 0;
+        int[] startY = new int[8];
+        int[] endX = new int[8];
+        int[] endY = new int[8];
+        int deviceNumber = 0;
+        double deltaX = 0;
+        double deltaY = 0;
     }
-    
-    
+
+
 }
