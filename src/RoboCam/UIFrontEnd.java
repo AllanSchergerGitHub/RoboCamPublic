@@ -290,9 +290,8 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
         /* Open up the IPCam windows and position them */
         String[] camNames = config.getIPCamNames();
-        //HasMap<String, 
 
-        double evenCamCount = Math.ceil(Math.sqrt(camNames.length) + 1); // note - only cameras that are shown on screen are currently capable of being saved to disk... edited formula by adding '+1' to make images smaller (only showing 3 smaller images now)
+        double evenCamCount = Math.ceil(Math.sqrt(camNames.length)); // note - only cameras that are shown on screen are currently capable of being saved to disk... edited formula by adding '+1' to make images smaller (only showing 3 smaller images now)
 
         Dimension frameDimension = new Dimension(
                 (int) (screenSize.getWidth() / evenCamCount),
@@ -362,7 +361,8 @@ public class UIFrontEnd extends javax.swing.JFrame {
         presetName = list1_ip_cam_presets.getSelectedItem();
 
         try {
-            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzGotoPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=password");
+            String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
+            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzGotoPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=" + pwd);
 
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -381,7 +381,8 @@ public class UIFrontEnd extends javax.swing.JFrame {
         URL url_presets = null;
         String presetName = jTextField_presetName.getText();
         try {
-            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzAddPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=password");
+            String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
+            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzAddPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=" + pwd);
 
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -400,7 +401,8 @@ public class UIFrontEnd extends javax.swing.JFrame {
         URL url_presets = null;
         String presetName = jTextFieldDeletePreset.getText();
         try {
-            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzDeletePresetPoint&name=" + presetName + "&usr=allanscherger&pwd=password");
+            String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
+            url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzDeletePresetPoint&name=" + presetName + "&usr=allanscherger&pwd=" + pwd);
 
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -416,10 +418,11 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
     private void IPCameraPTZ_get_presets() {
         final String camName = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
+        String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
         list1_ip_cam_presets.removeAll();
         mCameraExecutor.submit(() -> {
             final String[] presets = CameraHelper.getPresets(
-                    "http://" + camName + "/cgi-bin/CGIProxy.fcgi?cmd=getPTZPresetPointList&usr=allanscherger&pwd=password"
+                    "http://" + camName + "/cgi-bin/CGIProxy.fcgi?cmd=getPTZPresetPointList&usr=allanscherger&pwd=" + pwd
             );
             SwingUtilities.invokeLater(() -> {
                 list1_ip_cam_presets.removeAll();
@@ -428,114 +431,28 @@ public class UIFrontEnd extends javax.swing.JFrame {
                 }
             });
         });
-        //new IPCameraPTZPresetLoader(jComboBox1_camName2).execute();
-    }
-
-    // Deprecated
-    class IPCameraPTZPresetLoader extends SwingWorker<Void, String> {
-        private String mCamName;
-
-        public IPCameraPTZPresetLoader(String camName) {
-            mCamName = camName;
-        }
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            URL url_presets = null;
-            String urlString = "http://" + mCamName + "//cgi-bin/CGIProxy.fcgi?cmd=getPTZPresetPointList&usr=allanscherger&pwd=password";
-            try {
-                url_presets = new URL(urlString);
-
-            } catch (MalformedURLException ex) {
-                Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
-            }
-            String str = null;
-            ArrayList<String> lines = new ArrayList<String>();
-            BufferedReader bin = null;
-            try {
-                bin = new BufferedReader(
-                        new InputStreamReader(url_presets.openStream()));
-                while ((str = bin.readLine()) != null) {
-                    lines.add(str);
-                }
-            } catch (IOException ex) {
-                System.err.println("ip cam not selected? - IOException: " + url_presets);
-                //Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (NullPointerException ex) {
-                System.err.println("ip cam not selected? - NullPointerException: " + url_presets);
-            }
-
-            //BufferedReader in = new BufferedReader(new FileReader("path/of/text"));
-
-            //        try {
-            //            while((str = bin.readLine()) != null){
-            //                lines.add(str);
-            //            }
-            //        } catch (IOException ex) {
-            //            Logger.getLogger(UIFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            //        }
-            //          catch (NullPointerException ex){
-            //            System.err.println("ip cam not selected - warning: "+url_presets);
-            //        }
-            String[] linesArray = lines.toArray(new String[lines.size()]);
-            publish(linesArray);
-            //            String line = "";
-            //            try {
-            //                line = bin.readLine();
-            //            } catch (IOException ex) {
-            //                Logger.getLogger(UIFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            //            }
-            //            while(line!=null){
-            //            System.out.println(line);
-            //                try {
-            //                    line=bin.readLine();
-            //                } catch (IOException ex) {
-            //                    Logger.getLogger(UIFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            //                }
-            //            }
-            return null;
-        }
-
-        @Override
-        protected void process(List<String> lines) {
-            for (int linesPrint = 0; linesPrint < lines.size(); linesPrint++) {
-                if (lines.get(linesPrint) != "0") {
-                    String s = lines.get(linesPrint);
-                    Pattern p = Pattern.compile(">.*?<");
-                    Matcher m = p.matcher(s);
-                    if (m.find()) {
-                        String preset_detail = String.valueOf(m.group().subSequence(1, m.group().length() - 1));
-                        list1_ip_cam_presets.add(preset_detail);
-                        System.out.println(m.group().subSequence(1, m.group().length() - 1) + " " + linesPrint + " --preset_detail " + preset_detail);
-                    }
-
-                    //System.out.println("first item in array: "+linesArray[linesPrint]+" "+linesPrint);
-                }
-            }
-        }
-
     }
 
     private void updateIPCameraPOS_Settings(int moveDuration, String moveDirection) {
         URL url = null;
         String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
+        String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
         try {
             switch (moveDirection) {
                 case "Right":
-                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveRight&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveRight&usr=allanscherger&pwd=" + pwd);
                     break;
                 case "Left":
-                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveLeft&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveLeft&usr=allanscherger&pwd=" + pwd);
                     break;
                 case "Up":
-                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveUp&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveUp&usr=allanscherger&pwd=" + pwd);
                     break;
                 case "Down":
-                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveDown&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzMoveDown&usr=allanscherger&pwd=" + pwd);
                     break;
                 default: //shouldn't need this - but just in case we'll stop if no cases apply
-                    url = new URL("http:/" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzRunStop&usr=allanscherger&pwd=password");
+                    url = new URL("http:/" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzRunStop&usr=allanscherger&pwd=" + pwd);
             }
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -555,7 +472,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
         }
 
         try {
-            url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzStopRun&usr=allanscherger&pwd=password");
+            url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzStopRun&usr=allanscherger&pwd=" + pwd);
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -571,19 +488,20 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private void zoomInOut(int moveDuration, String moveDirection) {
         URL url = null;
         String jComboBox1_camName2 = mCamSettingMap.get(mCameraListBox.getSelectedItem() + "").getIpAddress();
+        String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
         try {
             switch (moveDirection) {
                 case "ZoomIn":
-                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomIn&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomIn&usr=allanscherger&pwd=" + pwd);
                     break;
                 case "ZoomOut":
-                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomOut&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomOut&usr=allanscherger&pwd=" + pwd);
                     break;
                 case "ZoomStop":
-                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
+                    url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=" + pwd);
                     break;
                 default: //shouldn't need this - but just in case we'll stop if no cases apply
-                    url = new URL("http:/" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
+                    url = new URL("http:/" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=" + pwd);
             }
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
@@ -604,7 +522,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
         }
 
         try {
-            url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=password");
+            url = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=zoomStop&usr=allanscherger&pwd=" + pwd);
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
