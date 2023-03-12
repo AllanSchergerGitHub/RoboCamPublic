@@ -165,3 +165,5 @@ phidget22.jar
 .idea/sonarlint/securityhotspotstore/f/4/f4ee74939cf4e1f68d6d7c619ad642c1c2232ba0
 .idea/sonarlint/securityhotspotstore/f/a/fa58137a70be64bd7f98d03234dc1675e176d866
 .idea/sonarlint/securityhotspotstore/f/c/fcbdbde3c3ce70fd93250b9866d3ec8ee3be6048
+/nbproject/
+/target/
