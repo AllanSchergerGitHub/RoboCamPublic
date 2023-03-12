@@ -363,7 +363,6 @@ public class UIFrontEnd extends javax.swing.JFrame {
         try {
             String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
             url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzGotoPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=" + pwd);
-
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -383,7 +382,6 @@ public class UIFrontEnd extends javax.swing.JFrame {
         try {
             String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
             url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzAddPresetPoint&name=" + presetName + "&usr=allanscherger&pwd=" + pwd);
-
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -403,7 +401,6 @@ public class UIFrontEnd extends javax.swing.JFrame {
         try {
             String pwd = mConfig.getIPCamPassword(mCameraListBox.getSelectedItem());
             url_presets = new URL("http://" + jComboBox1_camName2 + "//cgi-bin/CGIProxy.fcgi?cmd=ptzDeletePresetPoint&name=" + presetName + "&usr=allanscherger&pwd=" + pwd);
-
         } catch (MalformedURLException ex) {
             Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
         }

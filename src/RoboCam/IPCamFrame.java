@@ -70,96 +70,101 @@ public class IPCamFrame extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
+        try {
+            java.awt.GridBagConstraints gridBagConstraints;
 
-        mToolBar = new javax.swing.JPanel();
-        mLblLineColor = new javax.swing.JLabel();
-        mBtnColorChooser = new Utility.ColorChooserButton();
-        mLblLineThickness = new javax.swing.JLabel();
-        mSpnLineThickness = new javax.swing.JSpinner();
-        mIPCamPanel = new RoboCam.IPCamPanel();
-        jlbCamXYCoord = new javax.swing.JLabel();
-        lblIPConStatus = new javax.swing.JLabel();
+            mToolBar = new javax.swing.JPanel();
+            mLblLineColor = new javax.swing.JLabel();
+            mBtnColorChooser = new Utility.ColorChooserButton();
+            mLblLineThickness = new javax.swing.JLabel();
+            mSpnLineThickness = new javax.swing.JSpinner();
+            mIPCamPanel = new RoboCam.IPCamPanel();
+            jlbCamXYCoord = new javax.swing.JLabel();
+            lblIPConStatus = new javax.swing.JLabel();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("IPCamera");
-        getContentPane().setLayout(new java.awt.GridBagLayout());
+            setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+            setTitle("IPCamera");
+            getContentPane().setLayout(new java.awt.GridBagLayout());
 
-        mToolBar.setLayout(new java.awt.GridBagLayout());
+            mToolBar.setLayout(new java.awt.GridBagLayout());
 
-        mLblLineColor.setText("Line Color: ");
-        mToolBar.add(mLblLineColor, new java.awt.GridBagConstraints());
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-        mToolBar.add(mBtnColorChooser, gridBagConstraints);
+            mLblLineColor.setText("Line Color: ");
+            mToolBar.add(mLblLineColor, new java.awt.GridBagConstraints());
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+            mToolBar.add(mBtnColorChooser, gridBagConstraints);
 
-        mLblLineThickness.setText("Line Thickness: ");
-        mToolBar.add(mLblLineThickness, new java.awt.GridBagConstraints());
+            mLblLineThickness.setText("Line Thickness: ");
+            mToolBar.add(mLblLineThickness, new java.awt.GridBagConstraints());
 
-        mSpnLineThickness.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
-        mSpnLineThickness.setMinimumSize(new java.awt.Dimension(60, 28));
-        mSpnLineThickness.setPreferredSize(new java.awt.Dimension(60, 28));
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
-        gridBagConstraints.weightx = 1.0;
-        mToolBar.add(mSpnLineThickness, gridBagConstraints);
+            mSpnLineThickness.setModel(new javax.swing.SpinnerNumberModel(1, 1, null, 1));
+            mSpnLineThickness.setMinimumSize(new java.awt.Dimension(60, 28));
+            mSpnLineThickness.setPreferredSize(new java.awt.Dimension(60, 28));
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.SOUTHWEST;
+            gridBagConstraints.weightx = 1.0;
+            mToolBar.add(mSpnLineThickness, gridBagConstraints);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        getContentPane().add(mToolBar, gridBagConstraints);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 0;
+            gridBagConstraints.gridy = 1;
+            gridBagConstraints.gridwidth = 2;
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            getContentPane().add(mToolBar, gridBagConstraints);
 
-        mIPCamPanel.setPreferredSize(new java.awt.Dimension(800, 600));
-        mIPCamPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
-                mIPCamPanelMouseMoved(evt);
-            }
-        });
+            mIPCamPanel.setPreferredSize(new java.awt.Dimension(800, 600));
+            mIPCamPanel.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+                public void mouseMoved(java.awt.event.MouseEvent evt) {
+                    mIPCamPanelMouseMoved(evt);
+                }
+            });
 
-        javax.swing.GroupLayout mIPCamPanelLayout = new javax.swing.GroupLayout(mIPCamPanel);
-        mIPCamPanel.setLayout(mIPCamPanelLayout);
-        mIPCamPanelLayout.setHorizontalGroup(
-                mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 539, Short.MAX_VALUE)
-        );
-        mIPCamPanelLayout.setVerticalGroup(
-                mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGap(0, 270, Short.MAX_VALUE)
-        );
+            javax.swing.GroupLayout mIPCamPanelLayout = new javax.swing.GroupLayout(mIPCamPanel);
+            mIPCamPanel.setLayout(mIPCamPanelLayout);
+            mIPCamPanelLayout.setHorizontalGroup(
+                    mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGap(0, 539, Short.MAX_VALUE)
+            );
+            mIPCamPanelLayout.setVerticalGroup(
+                    mIPCamPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGap(0, 270, Short.MAX_VALUE)
+            );
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 1.0;
-        getContentPane().add(mIPCamPanel, gridBagConstraints);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 0;
+            gridBagConstraints.gridy = 0;
+            gridBagConstraints.gridwidth = 2;
+            gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+            gridBagConstraints.weightx = 1.0;
+            gridBagConstraints.weighty = 1.0;
+            getContentPane().add(mIPCamPanel, gridBagConstraints);
 
-        jlbCamXYCoord.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jlbCamXYCoord.setText("(x, y) = (0, 0)");
-        jlbCamXYCoord.setAlignmentX(0.5F);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.weightx = 1.0;
-        getContentPane().add(jlbCamXYCoord, gridBagConstraints);
+            jlbCamXYCoord.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+            jlbCamXYCoord.setText("(x, y) = (0, 0)");
+            jlbCamXYCoord.setAlignmentX(0.5F);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 0;
+            gridBagConstraints.gridy = 2;
+            gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            gridBagConstraints.weightx = 1.0;
+            getContentPane().add(jlbCamXYCoord, gridBagConstraints);
 
-        lblIPConStatus.setBackground(new java.awt.Color(178, 115, 52));
-        lblIPConStatus.setText("CamStatus");
-        lblIPConStatus.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        lblIPConStatus.setOpaque(true);
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
-        getContentPane().add(lblIPConStatus, gridBagConstraints);
+            lblIPConStatus.setBackground(new java.awt.Color(178, 115, 52));
+            lblIPConStatus.setText("CamStatus");
+            lblIPConStatus.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
+            lblIPConStatus.setOpaque(true);
+            gridBagConstraints = new java.awt.GridBagConstraints();
+            gridBagConstraints.gridx = 1;
+            gridBagConstraints.gridy = 2;
+            gridBagConstraints.anchor = java.awt.GridBagConstraints.EAST;
+            getContentPane().add(lblIPConStatus, gridBagConstraints);
 
-        pack();
+            pack();
+        } catch(Exception e) {
+            // catch for ClassCastException
+        }
+
     }// </editor-fold>//GEN-END:initComponents
 
     private void mIPCamPanelMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_mIPCamPanelMouseMoved

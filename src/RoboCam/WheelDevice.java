@@ -5,7 +5,6 @@ import Chart.ChartParamsDataset;
 import DB.ConfigDB;
 import PhiDevice.*;
 import PhiDevice.Electrical_Etc.Potentiameters;
-import Rover.Device.RotationLimitSwitch;
 import RoverUI.Vehicle.DeviceInfo;
 import RoverUI.Vehicle.Wheel;
 import com.phidget22.*;
@@ -200,11 +199,6 @@ public class WheelDevice {
             });
         }
     };
-
-    private RotationLimitSwitch mLeftRotationSwitch;
-    private RotationLimitSwitch mRightRotationSwitch;
-    //Listener for change of state of limit switches.
-    private RotationLimitSwitch.StateChangeListener mRotationSwitchListener;
 
     public WheelDevice(Wheel wheel, DeviceManager deviceManager,
                        ConfigDB configDB, Config appConfig) {
