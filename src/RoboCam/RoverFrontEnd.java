@@ -1158,7 +1158,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         });
         jPanel_RoboArm.add(jButton4_Light1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 410, 90, 50));
 
-        mMainTabbedPane.addTab("_RoboArm_", jPanel_RoboArm);
+        //mMainTabbedPane.addTab("_RoboArm_", jPanel_RoboArm); removal of roboarm tab from RoverFrontEnd UI
 
         mPanelVehicle.setMinimumSize(new java.awt.Dimension(1061, 645));
         mPanelVehicle.setLayout(new java.awt.GridBagLayout());
