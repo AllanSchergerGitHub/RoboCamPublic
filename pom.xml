@@ -73,8 +73,22 @@
             <artifactId>log4j</artifactId>
             <version>1.2.14</version>
         </dependency>
-
-
+        <dependency>
+            <groupId>com.huanshankeji</groupId>
+            <artifactId>compose-web-common</artifactId>
+            <version>0.2.1</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.netbeans.lib/cvsclient -->
+        <dependency>
+            <groupId>org.netbeans.lib</groupId>
+            <artifactId>cvsclient</artifactId>
+            <version>20060125</version>
+        </dependency>
+        <dependency>
+            <groupId>com.robocampublic</groupId>
+            <artifactId>robocampublic</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

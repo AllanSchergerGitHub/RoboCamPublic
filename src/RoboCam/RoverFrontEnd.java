@@ -359,7 +359,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
         }
         mChartParamsDatasets = mTruckDevice.getChartParamsDatasets();
-        for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
+        /*for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
             chart = ChartFactory.createXYLineChart(
                     chartParamsDataset.getChartName(),
                     "Time",
@@ -374,7 +374,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
             ChartPanel chartPanel = new ChartPanel(chart);
             mPanelCharts.add(chartPanel);
-        }
+        }*/
 
         mUpdaterTimer = new Timer(200, new ActionListener() {
             @Override
@@ -837,7 +837,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         jTextFieldRightPot_2 = new javax.swing.JTextField();
         jTextFieldLeftPot_2 = new javax.swing.JTextField();
         jButtonCalibrateToTargetPotValue = new javax.swing.JButton();
-        jPanel_RoboArm = new javax.swing.JPanel();
+        //jPanel_RoboArm = new javax.swing.JPanel();
         jButton_SetMotorZERO = new javax.swing.JButton();
         jButton_SetMotorIdeal = new javax.swing.JButton();
         jToggleButton1 = new javax.swing.JToggleButton();
