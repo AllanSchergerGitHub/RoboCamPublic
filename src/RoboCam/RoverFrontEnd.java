@@ -17,6 +17,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 
 import javax.swing.*;
@@ -359,12 +360,16 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
         }
         mChartParamsDatasets = mTruckDevice.getChartParamsDatasets();
-        /*for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
+        for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
             chart = ChartFactory.createXYLineChart(
                     chartParamsDataset.getChartName(),
                     "Time",
                     null,
-                    chartParamsDataset.getDataset()
+                    chartParamsDataset.getDataset(),
+                    PlotOrientation.VERTICAL,
+                    false,
+                    false,
+                    false
             );
 
             xyplot = chart.getXYPlot();
@@ -374,7 +379,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
             ChartPanel chartPanel = new ChartPanel(chart);
             mPanelCharts.add(chartPanel);
-        }*/
+        }
 
         mUpdaterTimer = new Timer(200, new ActionListener() {
             @Override
