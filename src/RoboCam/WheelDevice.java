@@ -8,7 +8,6 @@ import PhiDevice.Electrical_Etc.Potentiameters;
 import RoverUI.Vehicle.DeviceInfo;
 import RoverUI.Vehicle.Wheel;
 import com.phidget22.*;
-import mySQL.MysqlLogger;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -1105,7 +1104,7 @@ public class WheelDevice {
                         }
 
                         if (mAllowMysqlLoggingALTERNATE) {
-                            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mReadDutyCycle, "mReadDutyCycleUPDATER", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_duty2");
+                            //MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mReadDutyCycle, "mReadDutyCycleUPDATER", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_duty2");
                         }
                     }
                 }
@@ -1179,7 +1178,7 @@ public class WheelDevice {
     private void updateEncoders() {
         if (mAllowMysqlLogging) {
             if (encoderCounter < 5) {
-                MysqlLogger.put(MysqlLogger.Type.BETTER, 0000, "launchingEncoders", mBatch_time_stamp_into_mysql, "reset", "MySQL_Better6");
+                //MysqlLogger.put(MysqlLogger.Type.BETTER, 0000, "launchingEncoders", mBatch_time_stamp_into_mysql, "reset", "MySQL_Better6");
                 encoderCounter = 5;
             }
         }
@@ -1198,7 +1197,7 @@ public class WheelDevice {
         }
 
         if (mAllowMysqlLogging) {
-            MysqlLogger.put(MysqlLogger.Type.BETTER, encoderPosition, "encoderPosition", mBatch_time_stamp_into_mysql, encoderDevice, "MySQL_Better7");
+            //MysqlLogger.put(MysqlLogger.Type.BETTER, encoderPosition, "encoderPosition", mBatch_time_stamp_into_mysql, encoderDevice, "MySQL_Better7");
         }
     }
 
@@ -1210,7 +1209,7 @@ public class WheelDevice {
      */
     private void updateBLDcMotor() {
         if (BLDCPositionControllerCounter < 5) { // once more than 4 BLDC motors this may need to change - ie if I have 8 BLDC motors (2 per wheel x 4 wheels)
-            MysqlLogger.put(MysqlLogger.Type.BETTER, 0000, "launchingBLDcMotor", mBatch_time_stamp_into_mysql, "reset", "MySQL_Better6");
+            //MysqlLogger.put(MysqlLogger.Type.BETTER, 0000, "launchingBLDcMotor", mBatch_time_stamp_into_mysql, "reset", "MySQL_Better6");
             BLDCPositionControllerCounter = 5;
         }
 
@@ -1231,11 +1230,11 @@ public class WheelDevice {
         }
 
         if (mAllowMysqlLoggingALTERNATE) {
-            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mPhidBLDCMotorPosition, "wheel_Position", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8a");
+            /*MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mPhidBLDCMotorPosition, "wheel_Position", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8a");
 
             MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mTargetPositionRoverBody, "mTargetPosition", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8b");
 
-            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) dutyCycle, "dutyCycleWhenSettingTargetPos", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8c");
+            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) dutyCycle, "dutyCycleWhenSettingTargetPos", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8c");*/
         }
     }
 
@@ -1440,7 +1439,7 @@ public class WheelDevice {
             posActual_SteeringConvertedToDegrees = convertFromSteeringBLDCPos(posActual_Steering * mStepperMultiplier);
             mWheel.setGhostAngle(convertFromSteeringBLDCPos(posActual_Steering * mStepperMultiplier));
             if (mAllowMysqlLogging) {
-                MysqlLogger.put(MysqlLogger.Type.BETTER, (float) posActual_Steering, "SteeringPosition", mBatch_time_stamp_into_mysql, mWheel.getWheelName() + "", "MySQL_Better10");
+                //MysqlLogger.put(MysqlLogger.Type.BETTER, (float) posActual_Steering, "SteeringPosition", mBatch_time_stamp_into_mysql, mWheel.getWheelName() + "", "MySQL_Better10");
             }
         } catch (PhidgetException ex) {
             System.err.println("error with updateSteering() in WheelDevice.java. " + ex.getDescription() + " " + mWheel.getWheelName());

@@ -6,7 +6,6 @@
 package PhiDevice.Electrical_Etc;
 
 import com.phidget22.*;
-import mySQL.MysqlLogger;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,7 +41,7 @@ public class Potentiameters {
         }
 
         if (mAllowMysqlLogging) {
-            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) Potentiameter_value, "Potentiameters", mBatch_time_stamp_into_mysql, "Truck", "PotentiametersOne");
+//            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) Potentiameter_value, "Potentiameters", mBatch_time_stamp_into_mysql, "Truck", "PotentiametersOne");
         }
 
         return Potentiameter_value;

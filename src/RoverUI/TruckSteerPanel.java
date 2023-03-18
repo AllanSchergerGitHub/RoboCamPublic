@@ -4,7 +4,6 @@ import RoboCam.Config;
 import RoboCam.IPCamPanel;
 import RoverUI.Vehicle.SteeringMode;
 import RoverUI.Vehicle.Truck;
-import mySQL.MysqlLogger;
 
 import javax.swing.*;
 import java.awt.*;
@@ -369,7 +368,7 @@ public class TruckSteerPanel extends javax.swing.JPanel {
             mBarHeartBeatLag.setValue(lagInt + 1);
             mLblHeatBeat.setText("" + lagInt);
             if (mAllowMySqlLogging) {
-                MysqlLogger.put(MysqlLogger.Type.INSERT, lag, "lagTimeFromUI_to_Rover", mBatch_time_stamp_into_mysql, "lagTime");
+                //MysqlLogger.put(MysqlLogger.Type.INSERT, lag, "lagTimeFromUI_to_Rover", mBatch_time_stamp_into_mysql, "lagTime");
             }
         } else {
             mBarHeartBeatLag.setValue((int) 500);

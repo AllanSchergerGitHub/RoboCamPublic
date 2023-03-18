@@ -55,6 +55,6 @@ public class CameraHelper {
                 }
             }
         }
-        return filteredList.toArray(String[]::new);
+        return filteredList.stream().toArray(String[]::new);
     }
 }

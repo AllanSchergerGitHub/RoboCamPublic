@@ -23,6 +23,7 @@ import com.robocam.Socket.*;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
 
 import javax.swing.*;
 import java.awt.*;
@@ -234,12 +235,14 @@ public class UIFrontEnd extends javax.swing.JFrame {
         mChartParamsDatasets = mTruckSteerPanel.getTruck()
                 .getChartParamsDatasets();
         for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
-            JFreeChart chart = ChartFactory.createXYLineChart(
-                    chartParamsDataset.getChartName(),
+            JFreeChart chart = ChartFactory.createXYLineChart(chartParamsDataset.getChartName(),
                     "Time",
                     null,
-                    chartParamsDataset.getDataset()
-            );
+                    chartParamsDataset.getDataset(),
+                    PlotOrientation.VERTICAL,
+                    false,
+                    false,
+                    false);
             ChartPanel chartPanel = new ChartPanel(chart);
             mPanelCharts.add(chartPanel);
         }

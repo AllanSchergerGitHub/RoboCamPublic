@@ -6,7 +6,6 @@
 package PhiDevice.Electrical_Etc;
 
 import com.phidget22.*;
-import mySQL.MysqlLogger;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,7 +48,7 @@ public class Electrical {
         }
 
         if (mAllowMysqlLogging) {
-            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) currentSensor1_value, "electricalCurrent", mBatch_time_stamp_into_mysql, "Truck", "currentSensorOne");
+            //MysqlLogger.put(MysqlLogger.Type.BETTER, (float) currentSensor1_value, "electricalCurrent", mBatch_time_stamp_into_mysql, "Truck", "currentSensorOne");
         }
 
         return currentSensor1_value;
