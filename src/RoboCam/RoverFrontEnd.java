@@ -364,12 +364,12 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             chart = ChartFactory.createXYLineChart(
                     chartParamsDataset.getChartName(),
                     "Time",
-                    null,
+                    "",
                     chartParamsDataset.getDataset(),
                     PlotOrientation.VERTICAL,
-                    false,
-                    false,
-                    false
+                    true,
+                    true,
+                    true
             );
 
             xyplot = chart.getXYPlot();
@@ -842,7 +842,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         jTextFieldRightPot_2 = new javax.swing.JTextField();
         jTextFieldLeftPot_2 = new javax.swing.JTextField();
         jButtonCalibrateToTargetPotValue = new javax.swing.JButton();
-        //jPanel_RoboArm = new javax.swing.JPanel();
+        jPanel_RoboArm = new javax.swing.JPanel();
         jButton_SetMotorZERO = new javax.swing.JButton();
         jButton_SetMotorIdeal = new javax.swing.JButton();
         jToggleButton1 = new javax.swing.JToggleButton();
