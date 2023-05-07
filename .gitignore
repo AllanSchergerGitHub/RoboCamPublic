@@ -2,11 +2,6 @@ nbproject/private/
 project.properties
 build/
 /dist/
-robo-config.ini
-robocam_config.db
-phidget22.jar
-.dynamic-config-robocam.ini
-*.jar
 *.iml
 *.xml
 *.pb

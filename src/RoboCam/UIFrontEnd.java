@@ -42,8 +42,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.lang.Thread.sleep;
 
@@ -237,12 +235,12 @@ public class UIFrontEnd extends javax.swing.JFrame {
         for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
             JFreeChart chart = ChartFactory.createXYLineChart(chartParamsDataset.getChartName(),
                     "Time",
-                    null,
+                    "",
                     chartParamsDataset.getDataset(),
                     PlotOrientation.VERTICAL,
-                    false,
-                    false,
-                    false);
+                    true,
+                    true,
+                    true);
             ChartPanel chartPanel = new ChartPanel(chart);
             mPanelCharts.add(chartPanel);
         }
