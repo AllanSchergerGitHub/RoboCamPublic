@@ -106,7 +106,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
     //JComboBox<String> mDeviceListComboBox = new JComboBox<String>();
 
-    private boolean mAllowMysqlLogging = false;
     private boolean mInitialSettingsPrint = true;
     private int numberOfSettingsPrinted = 0;
 
@@ -124,20 +123,14 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     private ValueAxis axis = null;
     private Double trimValueFrontLeft = 0.0;
     private Double trimValueFrontRight = 0.0;
-    private long mLagTime = 1;
-    private Double priorMax = 0.0;
-    private long newtimestamp = System.currentTimeMillis();
-    private long oldtimestamp = System.currentTimeMillis();
-    private double grandTotalLagTime1000Instances = 0;
-    private final ArrayList<Double> avgLagTime = new ArrayList<Double>();
 
     private final GamePadManager mGamePadManager = new GamePadManager();
     private GamePadUpdater mGamePadUpdater;
 
     /**
      * Creates new form RoverFrontEnd
+     * @machineName
      */
-
     public void setMachineName(String machineName) {
         mMachineName = machineName;
         mTruckSteerPanel.setMachineName(mMachineName);
@@ -157,26 +150,9 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         mPotentiometerFrontRight.connectPotentiameter("FrontRight");
     }
 
-    public void connectRoboArm() throws PhidgetException, InterruptedException, Exception {
-        System.out.println("connecting RoboArm------------------------------------------------------ ");
-        mRoboArm2 = new RoboArm();
-        mRoboArm2.connectBaseJoint();
-        mRoboArm2.connectRCServo1();
-        mRoboArm2.connectWeedClipperHead();
-        mRoboArm2.connectDistanceSensorOne();
-
-        for (int x = 0; x < 4; x++) {
-            // there are 4 channels on the phidget to control upDownArm
-            int channelNumber = x;
-            //mRoboArm2.connectUpDownArm(channelNumber); // this methodology isn't needed with a linear actuator that has position encoder in it
-        }
-        System.out.println("connecting RoboArm------------------------------------------------------ ");
-//        distanceSensor1_value = mRoboArm2.distanceSensor1();
-//        System.out.println("Distance Changed: " + distanceSensor1_value );
-    }
-
     /**
      * Creates new form RoverFrontEnd
+     * @param port
      */
     public RoverFrontEnd(int port) {
         initComponents();
@@ -209,8 +185,12 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     }
 
     public final void initMoreComponents() {
+        mTruckSteerPanel.setRoverOrUI_Flag("Rover");
+        ToolTipManager.sharedInstance().setInitialDelay(100);
+        ToolTipManager.sharedInstance().setReshowDelay(1150);
+        ToolTipManager.sharedInstance().setDismissDelay(15000);
         Preferences prefs;
-
+        
         /* Four Commands for four wheels */
         mWheelDeviceParamCommands = new WheelDeviceParamCommand[]{
                 new WheelDeviceParamCommand(0),
@@ -301,10 +281,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         }).start();
 
         setLocation(520, 25); // set the location of the window on rover upon startup (right, down)
-        mAllowMysqlLogging = config.hasMySQL();
-        mElectricalCurrent.set_mAllowMysalLogging(mAllowMysqlLogging);
-        mPotentiometerFrontLeft.set_mAllowMysalLogging(mAllowMysqlLogging);
-        mPotentiometerFrontRight.set_mAllowMysalLogging(mAllowMysqlLogging);
 
         mFailSafeDelay = config.getFailSafeDelay(mFailSafeDelay);
         try {
@@ -316,7 +292,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         mTruckDevice = new TruckDevice(
                 mTruckSteerPanel.getTruck(),
                 mDeviceManager,
-                mConfigDB, config);
+                mConfigDB);
 
         Truck truck = mTruckSteerPanel.getTruck();
         mTruckSteerPanel.loadFromConfig(config);
@@ -325,9 +301,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         mWheelConfigPanelFrontRight.setWheelDevice(mTruckDevice.getWheelDeviceAt(1));
         mWheelConfigPanelRearLeft.setWheelDevice(mTruckDevice.getWheelDeviceAt(2));
         mWheelConfigPanelRearRight.setWheelDevice(mTruckDevice.getWheelDeviceAt(3));
-
-        mTruckDevice.setBatchTime(Batch_time_stamp_into_mysql);
-        mElectricalCurrent.setBatchTime(Batch_time_stamp_into_mysql);
 
         mTruckDeviceUpdater = new TruckDeviceUpdater();
         mTruckDeviceUpdater.execute();
@@ -361,6 +334,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         }
         mChartParamsDatasets = mTruckDevice.getChartParamsDatasets();
         for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
+             System.out.println("chartParamsDataset " + chartParamsDataset );
             chart = ChartFactory.createXYLineChart(
                     chartParamsDataset.getChartName(),
                     "Time",
@@ -417,8 +391,8 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             }
             wdpc.setBLDCMotorPos(0, wheelDevice.getBLCDCPosAtIndex(0));
             wdpc.setBLDCMotorPos(1, wheelDevice.getBLCDCPosAtIndex(1));
-            wdpc.setBLDCMotorDutyCycle(0, wheelDevice.getBLCDCDutyCyleAtIndex(0));
-            wdpc.setBLDCMotorDutyCycle(1, wheelDevice.getBLCDCDutyCyleAtIndex(1));
+            wdpc.setBLDCMotorDutyCycle(0, wheelDevice.getBLCDCDutyCyleAtIndex(0) * 1000);
+            wdpc.setBLDCMotorDutyCycle(1, wheelDevice.getBLCDCDutyCyleAtIndex(1) * 1000);
         }
     }
 
@@ -628,7 +602,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             mWheelConfigPanelFrontRight.setDeviceManager(mDeviceManager);
             mWheelConfigPanelRearLeft.setDeviceManager(mDeviceManager);
             mWheelConfigPanelRearRight.setDeviceManager(mDeviceManager);
-            //mDeviceListComboBox.setModel(new DeviceListComboBoxModel(mDeviceManager));
         }
     }
 
@@ -653,7 +626,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
         @Override
         protected void process(List<String> list) {
-            boolean showLog = false;
+            boolean showLog = true;
             for (String command : list) {
                 if (command.length() == 0) {//pseudo signal to update other gui widgets
                     //mTruckSteerPanel.getTruck().getSpeed();                
@@ -842,7 +815,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         jTextFieldRightPot_2 = new javax.swing.JTextField();
         jTextFieldLeftPot_2 = new javax.swing.JTextField();
         jButtonCalibrateToTargetPotValue = new javax.swing.JButton();
-        //jPanel_RoboArm = new javax.swing.JPanel();
+        jPanel_RoboArm = new javax.swing.JPanel();
         jButton_SetMotorZERO = new javax.swing.JButton();
         jButton_SetMotorIdeal = new javax.swing.JButton();
         jToggleButton1 = new javax.swing.JToggleButton();
@@ -1163,7 +1136,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         });
         jPanel_RoboArm.add(jButton4_Light1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 410, 90, 50));
 
-        //mMainTabbedPane.addTab("_RoboArm_", jPanel_RoboArm); removal of roboarm tab from RoverFrontEnd UI
+        mMainTabbedPane.addTab("_RoboArm_", jPanel_RoboArm);
 
         mPanelVehicle.setMinimumSize(new java.awt.Dimension(1061, 645));
         mPanelVehicle.setLayout(new java.awt.GridBagLayout());

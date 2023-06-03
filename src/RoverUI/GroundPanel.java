@@ -13,7 +13,7 @@ import java.util.Date;
 
 public class GroundPanel extends javax.swing.JPanel
         implements MouseMotionListener {
-
+    private String roverOrUI_Flag;
     private final Truck mTruck;
     private final Point.Double mMousePos = new Point.Double();
     private final Point.Double mMouseInitPos = new Point.Double();
@@ -282,7 +282,12 @@ public class GroundPanel extends javax.swing.JPanel
             mXYListeners.add(listener);
         }
     }
-
+    
+    public void setRoverOrUI_Flag(String roverOrUI_Flag) {
+        this.roverOrUI_Flag = roverOrUI_Flag;
+        mTruck.setRoverOrUI_Flag(roverOrUI_Flag);
+    }
+ 
     @Override
     protected void paintComponent(Graphics grphcs) {
         super.paintComponent(grphcs);
@@ -292,7 +297,7 @@ public class GroundPanel extends javax.swing.JPanel
                     0, 0, mGroundImage.getWidth(), mGroundImage.getHeight(), null);
         }
         mTruck.moveTo((int) (getWidth() * 0.5), (int) (getHeight() * 0.5));
-        mTruck.draw((Graphics2D) grphcs); // this runs repeatedly
+        mTruck.drawTruck((Graphics2D) grphcs); // this runs repeatedly
     }
 
     @Override

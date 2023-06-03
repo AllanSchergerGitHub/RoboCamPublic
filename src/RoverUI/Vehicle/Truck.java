@@ -15,6 +15,8 @@ public class Truck {
     private final Wheel mWheelFrontRight;
     private final Wheel mWheelRearLeft;
     private final Wheel mWheelRearRight;
+    
+    private String RoverOrUI_Flag;
 
     //private final Arm mArm;
 
@@ -134,6 +136,13 @@ public class Truck {
 
         calculateDimensions();
         mWheelFrontLeft.setDrawAngle(10); // runs only once at start up
+    }
+    
+    public void setRoverOrUI_Flag(String roverOrUI_Flag){
+        RoverOrUI_Flag = roverOrUI_Flag;
+        for(Wheel wheel : mWheels){
+            wheel.setRoverOrUI_Flag(roverOrUI_Flag);
+        }
     }
 
     public double getSteerCircleEdgeY() {
@@ -786,9 +795,7 @@ public class Truck {
         rotateWheels();
     }
 
-
-    public void draw(Graphics2D g2d) {
-
+    public void drawTruck(Graphics2D g2d) {
         boolean displayTroubleshootingValues = true;
         int xDisplayBase = 120;
         int yDisplayBase = -150;

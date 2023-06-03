@@ -21,6 +21,7 @@ public final class Wheel {
 
     private final String mName;
 
+    private String mRoverOrUI_Flag;
     private double mDrawWidth = 10;
     private double mWheelDrawLength = 50;
     private double mTruckDrawLength = 100;
@@ -193,14 +194,6 @@ public final class Wheel {
         return mReadAbsSpeed;
     }
 
-    public double getReadDutyCycle(int index) {
-        return mBLDCmotorDutyCycleList[index];
-    }
-
-    public double[] getBLDCmotorReadPosAllDevices() {
-        return mBLDCmotorReadPosList;
-    }
-
     public double getBLDCmotorReadPos1Device(int index) {
         return mBLDCmotorReadPosList[index];
     }
@@ -214,7 +207,7 @@ public final class Wheel {
     }
 
     public void setBLDCmotorReadPos(int index, double value, String source) {
-        //System.err.println("......................................................."+source + " value " + value);
+        System.err.println("......................................................."+source + " value " + value);
         mBLDCmotorReadPosList[index] = value;
     }
 
@@ -546,31 +539,34 @@ public final class Wheel {
                 new ChartParamType[]{
                         ChartParamType.VELOCITY,
                         ChartParamType.ANGLE,
-                        //ChartParamType.BLDC_1_POSITION,
-                        //ChartParamType.BLDC_2_POSITION,
-                        ChartParamType.BLDC_1_POS_DUTY_CYCLE,
-                        ChartParamType.BLDC_2_POS_DUTY_CYCLE,
-                        //ChartParamType.BLDC_POS_DUTY_CYCLE
+                        ChartParamType.BLDC_1_POSITION,
+                        ChartParamType.BLDC_2_POSITION,
+                        ChartParamType.BLDC_1_DUTY_CYCLE,
+                        ChartParamType.BLDC_2_DUTY_CYCLE,
                 }
         );
         return mChartParamsDataset;
     }
 
-    public void updateChartParamsDataset() { // commenting this out May 17 2019 - not used?
+    public void updateChartParamsDataset() { // 
         if (mChartParamsDataset == null) return;
         mChartParamsDataset.addValue(ChartParamType.ANGLE, mDrawAngle);
         //mChartParamsDataset.addValue(ChartParamType.VELOCITY, mWheelSpeed);
         mChartParamsDataset.addValue(ChartParamType.BLDC_1_POSITION, getBLDCmotorReadPos1Device(0));
         mChartParamsDataset.addValue(ChartParamType.BLDC_2_POSITION, getBLDCmotorReadPos1Device(1));
 
-        mChartParamsDataset.addValue(ChartParamType.BLDC_1_POS_DUTY_CYCLE, getReadDutyCycle(0));
-        mChartParamsDataset.addValue(ChartParamType.BLDC_2_POS_DUTY_CYCLE, getReadDutyCycle(1));
-        //mChartParamsDataset.addValue(ChartParamType.BLDC_POS_DUTY_CYCLE, getReadDutyCycle());
+        mChartParamsDataset.addValue(ChartParamType.BLDC_1_DUTY_CYCLE, mBLDCmotorDutyCycleList[0]);
+        mChartParamsDataset.addValue(ChartParamType.BLDC_2_DUTY_CYCLE, mBLDCmotorDutyCycleList[1]);
+        //mChartParamsDataset.addValue(ChartParamType.BLDC_POS_DUTY_CYCLE, mBLDCmotorDutyCycleList[index]);
     }
 
 
     static final int DEFAULT_LINE_SPACING = 2;
 
+    public void setRoverOrUI_Flag(String roverOrUI_Flag){
+        mRoverOrUI_Flag = roverOrUI_Flag;
+    }    
+    
     public void draw(Graphics2D g2d) {
         AffineTransform saveAT;
 
@@ -624,12 +620,12 @@ public final class Wheel {
         fontSetting = Font.BOLD;
         cursor = Utility.Drawing.drawString(Color.BLACK, TRANS_WHITE, fontSetting, fontSize,
                 g2d,
-                "DutyCycle: " + String.format("%.0f", getReadDutyCycle(0)),
+                "DutyCycle: " + String.format("%.0f", mBLDCmotorDutyCycleList[0]),
                 modifiedDrawLocationX, modifiedDrawLocationY + DEFAULT_LINE_SPACING, true);
 
 //        cursor = Utility.Drawing.drawString(Color.BLACK, TRANS_WHITE, fontSetting, fontSize,
 //                    g2d,
-//                    "dutyCycle2: "+ String.format("%.1f", getReadDutyCycle(1)),
+//                    "dutyCycle2: "+ String.format("%.1f", mBLDCmotorDutyCycleList[1]),
 //                    mDrawLocation.x, cursor.y + DEFAULT_LINE_SPACING, true);        
 //                 
 //        cursor = Utility.Drawing.drawString(Color.BLACK, TRANS_WHITE, fontSetting, fontSize,
@@ -673,10 +669,18 @@ public final class Wheel {
 //                    g2d,
 //                    "AbsSpeed: "+ mReadAbsSpeed, // this is also relative distance
 //                    mDrawLocation.x, cursor.y+DEFAULT_LINE_SPACING, true);
-
+        double BLDC_POS = getBLDCmotorReadPos1Device(0);        
+        if(mName.equals("FrontLeft")){
+            // the front left motor is giving negative values for position. this only affects the readout in the GUI.
+            if(mRoverOrUI_Flag=="Rover"){
+                BLDC_POS = BLDC_POS * -1; 
+            }
+        }
+        //System.out.println("----------mName------ " + mName + " -- mRoverOrUI_Flag -- " + mRoverOrUI_Flag + "; BLDC POS: " + String.format("%.0f", BLDC_POS));
+        
         cursor = Utility.Drawing.drawString(Color.BLACK, TRANS_WHITE, fontSetting, fontSize,
                 g2d,
-                "BLDC POS0: " + String.format("%.0f", getBLDCmotorReadPos1Device(0)),
+                "BLDC POS: " + String.format("%.0f", BLDC_POS),
                 modifiedDrawLocationX, cursor.y + DEFAULT_LINE_SPACING, true);
 
 //        cursor = Utility.Drawing.drawString(Color.BLACK, TRANS_WHITE, fontSetting, fontSize,

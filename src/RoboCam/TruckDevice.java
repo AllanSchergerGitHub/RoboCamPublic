@@ -15,12 +15,12 @@ public class TruckDevice {
     private Wheel[] wheels = null;
 
     public TruckDevice(Truck truck, DeviceManager deviceManager,
-                       ConfigDB configDB, Config appConfig) {
+                       ConfigDB configDB) {
         wheels = truck.getWheels();
         mWheelDevices = new WheelDevice[wheels.length];
         int index = 0;
         for (Wheel wheel : wheels) {
-            mWheelDevices[index] = new WheelDevice(wheel, deviceManager, configDB, appConfig);
+            mWheelDevices[index] = new WheelDevice(wheel, deviceManager, configDB);
             index += 1;
         }
     }
@@ -123,13 +123,6 @@ public class TruckDevice {
     public void disengageDevicesCloseChannels() {
         for (WheelDevice wheelDevice : mWheelDevices) {
             wheelDevice.disengageDevicesCloseChannels();
-        }
-    }
-
-    public void setBatchTime(String Batch_time_stamp_into_mysql) {
-        mBatch_time_stamp_into_mysql = Batch_time_stamp_into_mysql;
-        for (WheelDevice wheelDevice : mWheelDevices) {
-            wheelDevice.setBatchTime(mBatch_time_stamp_into_mysql);
         }
     }
 

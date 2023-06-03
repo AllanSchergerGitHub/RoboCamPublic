@@ -268,8 +268,7 @@ public class IPCamPanel extends javax.swing.JPanel
             try {
                 outputFile = new File(filePath);
                 ImageIO.write(mImageToSave, "jpg", outputFile);
-                System.out.println(String.format(
-                        "saving %d done %d", mURL.getPort(), mImageCount));
+                //System.out.println(String.format("saving %d done %d", mURL.getPort(), mImageCount));
             } catch (IOException ex) {
                 Logger.getLogger(IPCamPanel.class.getName()).log(Level.SEVERE, null, ex);
             }
