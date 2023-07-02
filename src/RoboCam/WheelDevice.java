@@ -20,21 +20,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.prefs.Preferences;
 
 import static java.lang.Thread.sleep;
 
 public class WheelDevice {
-    public static final String DCMOTOR_NAME = "DCMotor.Name";
-    public static final String BLDCMOTOR_NAME = "BLDCMotor.Name";//Not used
     public static final String ENCODER_NAME = "Encoder.Name";
-    public static final String LIMIT_SWITCH_LEFT_NAME = "LimitSwitch.Left.Name";
-    public static final String LIMIT_SWITCH_RIGHT_NAME = "LimitSwitch.Right.Name";
-
-    public static final String BLDCMOTOR_POSITION_CONTROLLER_NAME = "BLDCMotorPosCont.Name";//Deprecated, not we use list of names
     public static final String BLDCMOTOR_POSITION_CONTROLLER_NAMES = "BLDCMotorPosCont.Names";
-
-    public static final String DCMOTOR_SPEED_MULTIPLIER = "DCMotor.Speed.Mult";
     public static final String BLDC_1_POSITION_MULTIPLIER = "BLDC.1.Pos.Mult";
     public static final String BLDC_2_POSITION_MULTIPLIER = "BLDC.2.Pos.Mult";
 
@@ -42,14 +33,10 @@ public class WheelDevice {
 
     private MotorPositionController bldc1 = null;
     private final Wheel mWheel;
-    //private String mDCMotorChannelName;
-    //private String mBLDCMotorChannelName;
     private String mBLDCMotorPositionControllerChannelName;
     private String mEncoderChannelName;
 
     private double trimSettingFromAutoTrim = 0;
-
-    private Preferences prefs;
 
     private final DeviceManager mDeviceManager;
 
@@ -60,18 +47,15 @@ public class WheelDevice {
     double SteeringBLDCTargetPosition = 0;
     double SteeringBLDCTargetPositionConvertedToDegrees = 0;
 
-    private MotorPositionControllerList mPhidBLDCMotorPositionController = null;
+    private MotorPositionControllerList mPhidBLDCMotorPositionControllerList = null;
 
     Potentiameters mPotentiameters = null;
-    private double mPotValue = 0;
     private WheelDeviceSubClassAutoTrim mWheelDeviceSubClassAutoTrim = new WheelDeviceSubClassAutoTrim();
 
     private boolean pauseThis = false; // false means don't pause. keep going. true means we should pause now.
     private double mPotTargetValue = 0;
     private Encoder mPhidEncoder = null;
 
-    private float encoderCounter = 0;
-    private float BLDCPositionControllerCounter = 0;
     private int encoderPosition = 0;
     private double mReadDutyCycle = 0;
 
@@ -85,21 +69,12 @@ public class WheelDevice {
     //private double[] mBLDCPositionDeviceReadPos_PRIVATE = new double[2]; // because this is an array it can have multiple variables pointing to it and making changes to it. Only using it here so named it PRIVATE as a reminder.
     private PositionList mBLDCMotorPosMult = new PositionList(1, 1);
 
-    private String encoderDevice = "initializedValue";
-
-    private String mBatch_time_stamp_into_mysql = "initialized_in_WheelDevice";
-
     private final ConfigDB mConfigDB;
-    private final Config mAppConfig;
 
     private boolean wideDeadBandSet = false;
-    private boolean mAllowMysqlLogging = false;
-    private boolean mAllowMysqlLoggingALTERNATE = false;
     private int dutyCycleRatioAvgShortArrayListsize = 1;
     public int mCenterStraightValue = 0;
     public double MaxdutyCycleReading = 0;
-    private double ratioPreTrunc = 1;
-    //It contains the multipliers of the BLDC motor position controllers.
 
     private ArrayList<Double> mVelocityLimitSettingWithIndex = new ArrayList<Double>();
     private ArrayList<Double> dutyCycleRatioAvgArrayList = new ArrayList<Double>();
@@ -111,7 +86,6 @@ public class WheelDevice {
 
     private double mStepperMultiplier = 1.0;
     private double mDistanceRemainingRover = 0;
-    private ArrayList<Double> dutyCycleDeviceDeltaList = new ArrayList<Double>();
     private double removeFromTotal = 0;
     private double ratioFactorToFixDutyCycle = 1.0;
     private double mVelocityVariableSetting = 1.0;
@@ -124,8 +98,6 @@ public class WheelDevice {
     double mTargetPositionMotor0 = 0;
 
     private int lopp = 0;
-    private String recalcRatioFlag = "initialValue";
-    private double ratioFactorToFixDutyCycl1e = 1;
 
     private String disengageWarning = "initializedV";
 
@@ -165,9 +137,9 @@ public class WheelDevice {
             mCommonServiceExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    if (mPhidBLDCMotorPositionController != null) {
+                    if (mPhidBLDCMotorPositionControllerList != null) {
                         MotorPositioner motorPositioner = null;
-                        for (MotorPositioner positioner : mPhidBLDCMotorPositionController) {
+                        for (MotorPositioner positioner : mPhidBLDCMotorPositionControllerList) {
                             DeviceChannel deviceChannel = positioner.getDeviceChannel();
                             DeviceInfo deviceInfo = mDeviceInfoMap.get(deviceChannel.getLabel());
                             if (deviceInfo != null && sourceDeviceInfo == deviceInfo) {
@@ -200,23 +172,19 @@ public class WheelDevice {
     };
 
     public WheelDevice(Wheel wheel, DeviceManager deviceManager,
-                       ConfigDB configDB, Config appConfig) {
+                       ConfigDB configDB) {
 
         this.mVelocityLimitSettingWithIndex.add(1.0);
         this.mVelocityLimitSettingWithIndex.add(1.0);
 
         mWheel = wheel;
         mConfigDB = configDB;
-        mAppConfig = appConfig;
         mDeviceManager = deviceManager;
 
         if (mWheel.getWheelName().equals("FrontLeft")) {
             mStepperMultiplier = -1.0;
         }
 
-        mAllowMysqlLogging = mAppConfig.hasMySQL();
-        mAllowMysqlLoggingALTERNATE = false;
-        //mySQL.MySQL_Better MySQL_Better = new mySQL.MySQL_Better();
         for (int i = 0; i < 2; i++) {
             DeviceInfo bldcMotorInfo = new DeviceInfo(String.format("BLDC Motor# %d", i));
             bldcMotorInfo.setChangeManager(mDeviceInfoChangeManager);
@@ -272,22 +240,16 @@ public class WheelDevice {
 
     public double getBLCDCPosAtIndex(int index) { // return one element of the index based on a call to the device
         int indexValue = index;
-        if (mPhidBLDCMotorPositionController == null) return 0;
+        if (mPhidBLDCMotorPositionControllerList == null) return 0;
 
         double temp = mBLDCmotorDeviceReadPos[indexValue];
         return temp;
     }
 
     public double getBLCDCDutyCyleAtIndex(int index) {
-        if (mPhidBLDCMotorPositionController == null) return 0;
+        if (mPhidBLDCMotorPositionControllerList == null) return 0;
         try {
-            //double x = mPhidBLDCMotorPositionController.getkPAtIndex(index);
-            //System.out.println(String.format(mWheel.getWheelName()+" target kP at index %d is %f", index, x));
-            //if(mWheel.getWheelName()=="RearRight"){
-            //    System.out.println();// spacer to make the printout look better
-            //}
-            //System.out.println(String.format("target pos at index %d is %f", index, mPhidBLDCMotorPositionController.getPositionAtIndex(index)));
-            return mPhidBLDCMotorPositionController.getDutyCycleAtIndex(index);
+            return mPhidBLDCMotorPositionControllerList.getDutyCycleAtIndex(index);
         } catch (PhidgetException ex) {
             return 0;
         }
@@ -301,19 +263,19 @@ public class WheelDevice {
             status = "Null-Channel";
         } else if (!mBLDCMotorPositionControllerChannel.isOpen()) {
             status = "Not-All-Channel-Open" + "<br>Channels:" + mBLDCMotorPositionControllerChannel.getNames();
-        } else if (mPhidBLDCMotorPositionController == null) {
+        } else if (mPhidBLDCMotorPositionControllerList == null) {
             status = "Null-Motor-Controller" + "<br>Channels:" + mBLDCMotorPositionControllerChannel.getNames();
         } else {
 
-            if (!mPhidBLDCMotorPositionController.getEngaged()) {
+            if (!mPhidBLDCMotorPositionControllerList.getEngaged()) {
                 status = "Not-Motor-Engaged";
             } else {
                 status = "Ok";
             }
 
             status += "<br>Channels:" + mBLDCMotorPositionControllerChannel.getNames();
-            status += "<br>Controllers:" + mPhidBLDCMotorPositionController.getNames();
-            //status += "<br>" + mPhidBLDCMotorPositionController.getTargetPositionLimits();
+            status += "<br>Controllers:" + mPhidBLDCMotorPositionControllerList.getNames();
+            status += "<br>" + mPhidBLDCMotorPositionControllerList.getTargetPositionLimits();
         }
         return String.format("<html>%s</html>", status);
     }
@@ -341,8 +303,8 @@ public class WheelDevice {
                 new ChartParamType[]{ // these are the labels below the chart
                         //ChartParamType.BLDC_1_POSITION,
                         //ChartParamType.BLDC_2_POSITION,
-                        ChartParamType.BLDC_1_POS_DUTY_CYCLE,
-                        ChartParamType.BLDC_2_POS_DUTY_CYCLE,
+                        ChartParamType.BLDC_1_DUTY_CYCLE,
+                        ChartParamType.BLDC_2_DUTY_CYCLE,
                         //ChartParamType.BLDC_POS_DUTY_CYCLE,
                         //ChartParamType.DC_VELOCITY
                 });
@@ -360,9 +322,13 @@ public class WheelDevice {
     public void updategetBLCDCDutyCyleAtIndex() {
         motor0dutycycle = getBLCDCDutyCyleAtIndex(0) * mBLDCMotorPosMult.get(0) * 1000;
         motor1dutycycle = getBLCDCDutyCyleAtIndex(1) * mBLDCMotorPosMult.get(1) * 1000;
+        System.err.println(mWheel.getWheelName() +
+                " getBLCDCDutyCyleAtIndex(0) " + getBLCDCDutyCyleAtIndex(0) +
+                " motor0dutycycle: " + motor0dutycycle +
+                " motor1dutycycle: " + motor1dutycycle);
+        
         delta = motor0dutycycle - motor1dutycycle;
         ratio = Math.abs(motor0dutycycle) / Math.abs(motor1dutycycle);
-        ratioPreTrunc = ratio;
 
         if (!Double.isNaN(delta) && Math.abs(delta) > 80) {
 //            System.err.println(mWheel.getWheelName()+" add a _delta_ Disengage code here? "+ delta
@@ -406,10 +372,6 @@ public class WheelDevice {
                 }
             }
 
-            //lopp++;
-            //dutyCycleDeviceDeltaList.add(0,(double)lopp);
-            //System.err.println("lopp"+lopp);
-            recalcRatioFlag = "pending/stale"; // for testing
             if (dutyCycleRatioAvgArrayList.size() > recordsToKeep && dutyCycleRatioAvgArrayList != null) {
                 try {
                     removeFromTotal = (double) (dutyCycleRatioAvgArrayList.get(recordToRemove));
@@ -420,13 +382,6 @@ public class WheelDevice {
                             dutyCycleRatioAvgArrayList.size() + " " +
                             getBLCDCDutyCyleAtIndex(0) * 1000 + " " +
                             getBLCDCDutyCyleAtIndex(1) * 1000 + " java.util.ConcurrentModificationException part 1 - doesn't seem to cause problems so moving on.");
-//                for (int i = 0; i < dutyCycleRatioAvgArrayList.size(); i++){
-//                    System.err.print(" "+String.format("%.4f",dutyCycleRatioAvgArrayList.get(i))+"; ");
-//                }
-//                System.err.println("");
-
-
-                    // Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 try {
                     // concurrent modification happening here
@@ -438,11 +393,6 @@ public class WheelDevice {
                             dutyCycleRatioAvgArrayList.size() + " " +
                             getBLCDCDutyCyleAtIndex(0) * 1000 + " " +
                             getBLCDCDutyCyleAtIndex(1) * 1000 + " java.util.ConcurrentModificationException part 2 - doesn't seem to cause problems so moving on.");
-//                for (int i = 0; i < dutyCycleRatioAvgArrayList.size(); i++){
-//                    System.err.print(" "+dutyCycleRatioAvgArrayList.get(i)+"; ");
-//                }                
-//                System.err.println("");
-                    // Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 try {
                     if (dutyCycleRatioAvgShortArrayList.size() != 8) {
@@ -488,35 +438,9 @@ public class WheelDevice {
                     ratioFactorToFixDutyCycle = 1;
                     System.err.println("WARNING - see if this can be handled better (ratioFactorToFixDutyCycle is infinite)");
                 }
-                recalcRatioFlag = "complete/current"; // for testing
             }
         }
             
-            /*
-            if  (mAllowMysqlLogging) {
-                double ratioTemp = ratio;
-                double deltaTemp = delta;
-                double ratioPreTruncTemp = ratioPreTrunc;
-                if(Double.isNaN(delta)){
-                    deltaTemp = 999;
-                };
-                if(Double.isNaN(ratio) || Double.isInfinite(ratio)){
-                    ratioTemp = 999;
-                };
-                if(Double.isNaN(ratioPreTrunc) || Double.isInfinite(ratioPreTrunc)){
-                    ratioPreTruncTemp = 999;
-                };
-                //System.err.println("ratioPreTruncTemp "+ratioPreTruncTemp+" dutyCycleRatioAvgShortArrayListsize "+dutyCycleRatioAvgShortArrayListsize);
-            
-                        MysqlLogger.put(MysqlLogger.Type.DUTYCYCLE, (float)mReadDutyCycle, "mReadDutyCycleListener", 
-                                mBatch_time_stamp_into_mysql, mWheel.getWheelName(),"MySQL_DUTYCYCLE",motor0dutycycle,motor1dutycycle,
-                                deltaTemp,ratioTemp,ratioPreTruncTemp,
-                                (double)dutyCycleRatioAvgShortArrayListsize,
-                                grandTotalNumInstances,ratioFactorToFixDutyCycle,recalcRatioFlag,
-                                mTargetPositionRoverBody,getBLCDCPosAtIndex(0),getBLCDCPosAtIndex(1));
-                    }
-              */
-
 //            NumberFormat nf = new DecimalFormat("000.0");
 //            System.out.print(lopp+": ");
 
@@ -524,20 +448,15 @@ public class WheelDevice {
 //                    System.out.println(mWheel.getWheelName()+": "+String.format("%02.1f",motor0dutycycle)
 //                    +" : "+String.format("%02.1f",motor1dutycycle)+" = delta "+String.format("%02.1f",delta)
 //                    +" ratio: "+String.format("%02.2f",ratio)
-//                    +" ratioPreTrunc: "+String.format("%02.2f",ratioPreTrunc) 
 //                    +" less: "+String.format("%02.3f",removeFromTotal)
 //                    +" = "+String.format("%02.2f",grandTotalNumInstances)
-//                    +" ratioFactorToFixDutyCycle: "+String.format("%02.2f",ratioFactorToFixDutyCycle)+"; "+
-//                    recalcRatioFlag);
+//                    +" ratioFactorToFixDutyCycle: "+String.format("%02.2f",ratioFactorToFixDutyCycle)+"; ");
 //        }
 
         if (!Double.isNaN(ratioFactorToFixDutyCycle)) { //  && ratio<=1.1 && ratio>=0.9
             if (ratioFactorToFixDutyCycle > 1.5) { // truncate tail end values to centralized values
                 System.err.println(mWheel.getWheelName() + " - do we need to have a wider band here? over 1.5 now " + ratioFactorToFixDutyCycle);
                 ratioFactorToFixDutyCycle = 1.5;
-            }
-            if (ratioFactorToFixDutyCycle < 0.4) { // truncate tail end values to centralized values
-                //System.err.println(mWheel.getWheelName()+" TESTING - do we need to have a wider band here? under 0.4 now "+ratioFactorToFixDutyCycle);
             }
             if (ratioFactorToFixDutyCycle < 0.1) { // truncate tail end values to centralized values
                 if (mWheel.getWheelName().equals("RearRight")) {
@@ -560,72 +479,26 @@ public class WheelDevice {
 //                ChartParamType.BLDC_1_POSITION, getBLCDCPosAtIndex(0)*(mBLDCMotorPosMult.get(0) < 0 ? -1: 1)); // if/then keeps charts looking correct even if motor physical connection reversed
 //        mChartParamsDataset.addValue(
 //                ChartParamType.BLDC_2_POSITION, getBLCDCPosAtIndex(1)*(mBLDCMotorPosMult.get(1) < 0 ? -1: 1)+(mBLDCMotorPosMult.get(1) < 0 ? -1: 1)*2); // small offset so chart lines don't overlap
-        mChartParamsDataset.addValue(ChartParamType.BLDC_1_POS_DUTY_CYCLE, getBLCDCDutyCyleAtIndex(0) * 1000 * (mBLDCMotorPosMult.get(0) < 0 ? -1 : 1));
+        mChartParamsDataset.addValue(ChartParamType.BLDC_1_DUTY_CYCLE, getBLCDCDutyCyleAtIndex(0) * 1000);// * (mBLDCMotorPosMult.get(0) < 0 ? -1 : 1));
         //System.out.println(getBLCDCDutyCyleAtIndex(0)*1000);
-        mChartParamsDataset.addValue(ChartParamType.BLDC_2_POS_DUTY_CYCLE, getBLCDCDutyCyleAtIndex(1) * 1000 * (mBLDCMotorPosMult.get(1) < 0 ? -1 : 1) + (mBLDCMotorPosMult.get(1) < 0 ? -1 : 1) * 2);
+        mChartParamsDataset.addValue(ChartParamType.BLDC_2_DUTY_CYCLE, getBLCDCDutyCyleAtIndex(1) * 1000 * (mBLDCMotorPosMult.get(1) < 0 ? -1 : 1) + (mBLDCMotorPosMult.get(1) < 0 ? -1 : 1) * 2);
         //mChartParamsDataset.addValue(ChartParamType.BLDC_POS_DUTY_CYCLE, getBLDCDutyCycle());
-        //mChartParamsDataset.addValue(ChartParamType.DC_VELOCITY, mPhidDCMotorVelocity);
     }
 
     /**
      * @param addForwardAngle in WheelDevice.java
-     *                        prior to Sept 12 2018 the cumulative math was done within Truck.java addForwardDistance
      *                        speedratio in this method is actually a distance ratio - it allows wheels to move different distances when turning corners since inside wheels will need to travel a shorter distance than outside wheels to complete the circumfrance of the circle.
      */
     public void setVelocity_AccelAtBLDC_MPC() {
         mVelocityLimitSetting = mWheel.getVelocityLimitSetting() * mWheel.getSpeedRatio(mDistanceRemainingRover);
-        //System.out.println(mWheel.getWheelName()+ " mVelocityLimitSetting " + mVelocityLimitSetting);
-        // getVelocityLimitSetting() returns the ?rover? velocity set by the GUI
-        //  mWheel.getSpeedRatio(mDistanceRemainingRover) sets the ratio for the wheels relative to each other and rover body
-
         double stopValue = 1;
-//        if(Math.abs(mDistanceRemainingRover)<25){
-//        if((mDistanceRemainingRover)<-25){
-//            stopValue = 0;
-//            System.err.println("");
-//            System.err.println(mWheel.getWheelName()+" STOPPING with stopValue "+mVelocityLimitSetting +" "+ mVelocityVariableSetting );
-//            System.err.println("");
-//            //mDevicesDisengaed = true;
-//            //if (!mDevicesDisengaed) {
-//            if (mBLDCMotorPositionControllerChannel != null){ 
-//                if(mBLDCMotorPositionControllerChannel.isOpen()) {
-//                    if (mPhidBLDCMotorPositionController != null) {
-//                        if(!mPhidBLDCMotorPositionController.getEngaged()){
-//                            mPhidBLDCMotorPositionController.setEngaged(false);
-//                            System.err.println("disengaged due to reaching target");
-//                        }
-//                    }
-//                }
-//            }
-//        }
-
+        
         mVelocityLimitSettingWithIndex.set(0, mVelocityLimitSetting * mVelocityVariableSetting * stopValue); //  mVelocityVariableSetting allows for slowing the motor at start and end of range so it doesn't stop so fast - perhaps doubling up on acceleration factor?
-        mVelocityLimitSettingWithIndex.set(1, mVelocityLimitSetting * mVelocityVariableSetting * ratioFactorToFixDutyCycle * stopValue);// * ratioFactorToFixDutyCycle);
+        mVelocityLimitSettingWithIndex.set(1, mVelocityLimitSetting * mVelocityVariableSetting * ratioFactorToFixDutyCycle * stopValue);
 
-//        if(mWheel.getWheelName().equals("RearRight")){
-//            System.err.println("velocitylimits "+ mWheel.getWheelName()
-//                    +" mVelocityLimitSetting: "+String.format("%02.2f",mVelocityLimitSetting)
-//                    +" mVelocityVariableSetting: "+String.format("%02.2f",mVelocityVariableSetting)
-//                    +" ratioFactorToFixDutyCycle: "+String.format("%02.2f",ratioFactorToFixDutyCycle)
-//                    +" equals: "+String.format("%02.2f",(mVelocityLimitSetting * mVelocityVariableSetting * ratioFactorToFixDutyCycle )));//?????? is this an int?
-//        }
-
-        if (mVelocityLimitSettingWithIndex.get(1) != 0) {
-            double delta = (mVelocityLimitSettingWithIndex.get(0) - mVelocityLimitSettingWithIndex.get(1)) / mVelocityLimitSettingWithIndex.get(1);
-            if (delta > 0.2) {
-                //System.err.println("--------------------------------velocity ratio too high "+ mWheel.getWheelName()+" "+delta);
-            }
-            if (delta < -0.25) {
-                //System.err.println("--------------------------------velocity ratio too low "+ mWheel.getWheelName()+" "+delta);
-            }
+        if (mPhidBLDCMotorPositionControllerList != null && mPhidBLDCMotorPositionControllerList.getEngaged()) {
+            mPhidBLDCMotorPositionControllerList.setVelocityLimitWithIndex(mVelocityLimitSettingWithIndex, mWheel.getWheelName());
         }
-
-        if (mPhidBLDCMotorPositionController != null && mPhidBLDCMotorPositionController.getEngaged()) {
-            mPhidBLDCMotorPositionController.setVelocityLimitWithIndex(mVelocityLimitSettingWithIndex, mWheel.getWheelName());
-        } else {
-            //System.err.println("---------------------error setting mVelocityLimitSettingWIthIndex --- is this causing problems? if not; just keep moving on...");
-        }
-
     }
 
     public double getmTargetPositionRoverBody() {
@@ -640,11 +513,11 @@ public class WheelDevice {
      */
     public void addForwardDistance(double mForwardDistance) {
         mTargetPositionRoverBody += mForwardDistance;// * mWheel.getSpeedRatio(); old code worked only if we used only 1 steering angle for the duration of the distance - if we changed angle during duration of travel it wouldn't work correctly
-        if (mPhidBLDCMotorPositionController != null) {
-            mPhidBLDCMotorPositionController.setAcceleration(25, mWheel.getWheelName());
+        if (mPhidBLDCMotorPositionControllerList != null) {
+            mPhidBLDCMotorPositionControllerList.setAcceleration(25, mWheel.getWheelName());
             //System.out.println("Deadband set to 20.");
             wideDeadBandSet = false;
-            mPhidBLDCMotorPositionController.setDeadBand(4, mWheel.getWheelName()); // this is the full range of the db. plus db/2 and minus db/2
+            mPhidBLDCMotorPositionControllerList.setDeadBand(4, mWheel.getWheelName()); // this is the full range of the db. plus db/2 and minus db/2
         }
     }
 
@@ -659,7 +532,6 @@ public class WheelDevice {
 
         if (mWheel.getsetEmergencyStopSetVelocityToZero()) {
             mDistanceRemainingRover = 0;
-            // System.err.println(mWheel.getWheelName()+ " actual positions: "+mBLDCmotorDeviceReadPos[0] +" : "+ mBLDCmotorDeviceReadPos[1]+" target positions "+mTargetPositionWheel);
         }
 
         // this should be split into a new method so the mDistanceRemainingRover variable can be set seperately from the action - and/or the action can be taken from multiple places.
@@ -667,59 +539,20 @@ public class WheelDevice {
         double NewSR = mWheel.getSpeedRatio(mDistanceRemainingRover);
 
         if (NewSR != OldSR || Math.abs(mDistanceRemainingRover) > 25.0) {
-            mTargetPositionWheel = mDistanceRemainingRover * mWheel.getSpeedRatio(mDistanceRemainingRover) + avgActualWheelPos; // in TruckDevice make sure total number of wheels is correct in 'double avgAllDistances = sumAllDistances / 4.00;'
+            mTargetPositionWheel = mDistanceRemainingRover * mWheel.getSpeedRatio(mDistanceRemainingRover) + avgActualWheelPos; 
+            // in TruckDevice make sure total number of wheels is correct in 'double avgAllDistances = sumAllDistances / 4.00;'
             // mTargetPositionWheel is based partially on avgActualWheelPos which may cause some slight problems. For example; if the target is set to 150 but the wheel only goes to 147; 
             // the next increment doesn't add to 150, it adds to 147. So cumulatively there may be a problem.
             // Perhaps the new mTargetPositionWheel could be the same formula and substitute mTargetPositionWheel for avgActualWheelPos?
             // I'm not sure what the implications are during turns.
 
-            String spacer = "";
-            if (mWheel.getWheelName().equals("FrontLeft")) {
-                spacer = " ";
-            }
-            if (mWheel.getWheelName().equals("RearLeft")) {
-                spacer = " ";
-            }
-            if (mWheel.getWheelName().equals("RearRight")) {
-                spacer = " ";
-
-//                System.err.println(mWheel.getWheelName()+spacer+" mTargetPositionRoverBody "+String.format("%02.0f",mTargetPositionRoverBody)+
-//                        "; mTargetPositionWheel = "+String.format("%02.1f",mTargetPositionWheel)+
-//                        " based on mDistanceRemainingRover "+String.format("%02.1f",mDistanceRemainingRover)+
-//                        " * mWheel.getSpeedRatio() = "+ String.format("%02.3f",mWheel.getSpeedRatio(mDistanceRemainingRover))+
-//                        " + avgActualWheelPos "+avgActualWheelPos+" (note from wheeldevice.java)");
-            }
-
-//                            System.err.println(mWheel.getWheelName()+spacer+" mTargetPositionRoverBody "+String.format("%02.0f",mTargetPositionRoverBody)+
-//                        "; mTargetPositionWheel = "+String.format("%02.1f",mTargetPositionWheel)+
-//                        " based on mDistanceRemainingRover "+String.format("%02.1f",mDistanceRemainingRover)+
-//                        " * mWheel.getSpeedRatio() = "+ String.format("%02.3f",mWheel.getSpeedRatio(mDistanceRemainingRover))+
-//                        " + avgActualWheelPos "+avgActualWheelPos+" (note from wheeldevice.java)");
-
             OldSR = NewSR;
         }
-//                        System.err.println(mWheel.getWheelName()+" mTargetPositionRoverBody "+String.format("%02.0f",mTargetPositionRoverBody)+
-//                        "; mTargetPositionWheel = "+String.format("%02.1f",mTargetPositionWheel)+
-//                        " based on mDistanceRemainingRover "+String.format("%02.1f",mDistanceRemainingRover)+
-//                        " * mWheel.getSpeedRatio() = "+ String.format("%02.3f",mWheel.getSpeedRatio(mDistanceRemainingRover))+
-//                        " + avgActualWheelPos "+avgActualWheelPos+" (note from wheeldevice.java)");
-//        
-        NumberFormat nf = new DecimalFormat("000.0");
-
+        
         // problem solving notes:
         // delta variable doesn't seem to be needed at all with only 1 motor per wheel. It is used if there are 2 motors per wheel
         // ratio needs to be validated by looking at the gear ratios on each motor's gearbox.
         // why does frontleft motor0dutycycle start out negative when all the others are positive?
-
-//                            System.err.println(mWheel.getWheelName()+" motor0dutycycle: "+nf.format(motor0dutycycle)+" motor1dutycycle: "+
-//                                nf.format(motor1dutycycle)+
-//                                " ratio: "+ String.format("%02.2f",ratio) +
-//                                " less: "+String.format("%02.2f",removeFromTotal)+" = "+String.format("%02.1f",grandTotalNumInstances)+
-//                                " avg> "+ String.format("%02.2f",ratioFactorToFixDutyCycle)+" "
-//                                + " recalcRatioFlag [" + recalcRatioFlag+
-//                                "] ActualPositions: "+mBLDCmotorDeviceReadPos[0]+" : "+mBLDCmotorDeviceReadPos[1]+ 
-//                                " mTargetPositionWheel "+nf.format(mTargetPositionWheel));
-//                            
 
         mWheel.setdistanceRemainingRover(mDistanceRemainingRover); // this is for displaying onto the GUI
 
@@ -727,67 +560,8 @@ public class WheelDevice {
         if (Math.abs(mDistanceRemainingRover) < 400.0) {
             mVelocityVariableSetting = 0.5;
 
-
             if (Math.abs(mDistanceRemainingRover) < 150.0) {
                 mVelocityVariableSetting = 0.25;
-            }
-            //System.out.println(" mDistanceRemainingRover: " + mDistanceRemainingRover + " delta " + delta);
-            if (Math.abs(mDistanceRemainingRover) < 25.0 && Math.abs(delta) > 40) { // 15 + 40
-
-//            mVelocityVariableSetting = 0.00;
-//            mDistanceRemainingRover = 0;
-//            setVelocity_AccelAtBLDC_MPC();
-
-//                if (delta > 0){ // inside the larger if statement from above; the abs value of delta is already above 40 - this is used to determine if the actual value is above/below zero.
-//                    if(mTargetPositionMotor0>0){
-//                    mTargetPositionMotor0 = mTargetPositionMotor0-1; // reminder: "delta = motor0dutycycle-motor1dutycycle"
-//                    }
-//                    else {
-//                    mTargetPositionMotor0 = mTargetPositionMotor0+1; // reminder: "delta = motor0dutycycle-motor1dutycycle"
-//                    }
-//                }
-//                else { // if delta <=0
-//                    if(mTargetPositionMotor0>0){
-//                    mTargetPositionMotor0 = mTargetPositionMotor0-1; // reminder: "delta = motor0dutycycle-motor1dutycycle"
-//                    }
-//                    else {
-//                    mTargetPositionMotor0 = mTargetPositionMotor0+1; // reminder: "delta = motor0dutycycle-motor1dutycycle"
-//                    }
-//                }
-//                
-//                if(mPhidBLDCMotorPositionController !=null){
-//                    mPhidBLDCMotorPositionController.setTargetPositionOneMotor(0, mTargetPositionMotor0, mBLDCMotorPosMult);
-//                }//
-//                    double tem0 = 0;
-//                    double tem1 = 0;
-//                    double tem2 = 0;
-//                    double tem3 = 0;
-//                    double tem4 = 0;
-//                    double tem5 = 0;
-//                 
-//                    /**
-//                     * this line (tem0=....) seems to hang if it is called too early in the running of the app? Nov 2 2019.
-//                     * it is called in another part of the code and it works ok there. It works here if the
-//                     * 'if/then' statement has delta>40 in it but if I remove this it hangs... not sure why
-//                     */
-//                    tem0 = mPhidBLDCMotorPositionController.getPositionAtIndex(0, mWheel.getWheelName());
-//                    tem1 = mPhidBLDCMotorPositionController.getPositionAtIndex(1, mWheel.getWheelName());
-//                    tem2 = mPhidBLDCMotorPositionController.getWheelTargetPosition();
-//                    tem3 = mPhidBLDCMotorPositionController.getTargetPositionOneMotor(0);
-//                    tem4 = mPhidBLDCMotorPositionController.getTargetPositionOneMotor(1);
-//                    tem5 = mPhidBLDCMotorPositionController.getDeadBand_AtIndex(0, mWheel.getWheelName());
-//                  
-//            System.err.println(tem5 + mWheel.getWheelName()+"_____adjusting_ "
-//                    + " delta " + String.format("%02.1f",delta)
-//                    + " WheelTarget " + String.format("%02.1f",mTargetPositionWheel)
-//                    + " actual positions " + String.format("%02.1f",tem0)+" : " + String.format("%02.1f",tem1)
-//                    + " duty0&1: " + String.format("%02.1f",motor0dutycycle)+" : " + String.format("%02.1f",motor1dutycycle)
-//                    + " WheelTarget per MPC: "+String.format("%02.1f",tem2)
-//                    + " motor target: "+String.format("%02.1f",tem3) + " : "+String.format("%02.1f",tem4)
-//                    + " mDistanceRemainingRover " + String.format("%02.1f",mDistanceRemainingRover)
-//                    );
-                //System.err.println(mWheel.getWheelName()+" read this whole message! _____adjusting mVelocityVariableSetting to 0% (need to adjust mTargetPositionWheel so both motors dont force themselves to get to the same exact position) "); // and mTargetPositionWheel "+mTargetPositionWheel);
-
             }
         }
 
@@ -795,45 +569,37 @@ public class WheelDevice {
 //            System.err.println(mDistanceRemainingRover+ " reached target so setting wide deadband to stop motors;"
 //                                + " disengaging would be better but hard to code.  Or, should we set speed to zero here? ");
 
-            if (mPhidBLDCMotorPositionController != null && !wideDeadBandSet) {
+            if (mPhidBLDCMotorPositionControllerList != null && !wideDeadBandSet) {
                 wideDeadBandSet = true;
-                mPhidBLDCMotorPositionController.setDeadBand(4, mWheel.getWheelName());
+                mPhidBLDCMotorPositionControllerList.setDeadBand(4, mWheel.getWheelName());
 
-                //System.err.println("Deadband has been set to: " + mPhidBLDCMotorPositionController.getDeadBand_AtIndex(0, "Frontleft"));
+                //System.err.println("Deadband has been set to: " + mPhidBLDCMotorPositionControllerList.getDeadBand_AtIndex(0, "Frontleft"));
                 /*
                 following code works to setEngaged(false) but the rengage code 'reEngageUponCommand()' isn't correct yet.
                 */
 //                if(mWheel.getWheelName().equals("FrontRight")){
-//                    //System.err.println("mReadDutyCycle "+mReadDutyCycle);
 //                    if(Math.abs(mReadDutyCycle)>(0.1*1000)) {
 //                        allowEngage = false;
-//                        mPhidBLDCMotorPositionController.setEngaged(false);
-//                        System.err.println("testing engage/disengage by wheel. Front Right is now disengaged........................................................");
-//                        System.err.println("testing engage/disengage by wheel. Front Right is now disengaged........................................................");
-//                        System.err.println("testing engage/disengage by wheel. Front Right is now disengaged........................................................");
+//                        mPhidBLDCMotorPositionControllerList.setEngaged(false);
 //                    }
 //                }
             }
         }
 
-        if (mPhidBLDCMotorPositionController != null) {
-            mPhidBLDCMotorPositionController.setTargetPosition(mTargetPositionWheel, mBLDCMotorPosMult);
+        if (mPhidBLDCMotorPositionControllerList != null) {
+            mPhidBLDCMotorPositionControllerList.setTargetPosition(mTargetPositionWheel, mBLDCMotorPosMult);
         }
         //avgActualWheelPos = (Math.abs(mBLDCmotorDeviceReadPos[0])+Math.abs(mBLDCmotorDeviceReadPos[1]))/2.0; //instead of abs should i take this times the multiplier?
-        avgActualWheelPos = (mBLDCmotorDeviceReadPos[0] * mBLDCMotorPosMult.get(0));//+(mBLDCmotorDeviceReadPos[1]*mBLDCMotorPosMult.get(1)))/2.0;
-        if (mWheel.getWheelName() == "RearRight") {
+        avgActualWheelPos = (mBLDCmotorDeviceReadPos[0] * mBLDCMotorPosMult.get(0));
+        if (mWheel.getWheelName() == "FrontLeft") {
             System.out.println(mWheel.getWheelName() + " mTargetPositionWheel " + String.format("%02.0f", mTargetPositionWheel) + " mBLDCMotorPosMult " + mBLDCMotorPosMult + " avgActualWheelPos " + avgActualWheelPos + " from " + mBLDCmotorDeviceReadPos[0] + " X " + mBLDCMotorPosMult.get(0) + " row 850 in WheelDevice.java");
         }
-
-
-        //if(mWheel.getWheelName()=="RearRight"){System.out.println("");};//line spacing to make reading output easier
     }
-
 
     public void reEngageUponCommand() {
         if (mWheel.getWheelName().equals("FrontRight")) {
             allowEngage = true;
-            mPhidBLDCMotorPositionController.setEngaged(true);
+            mPhidBLDCMotorPositionControllerList.setEngaged(true);
             System.err.println("testing engage/disengage by wheel. Front Right is ENGAGED........................................................");
             System.err.println("testing engage/disengage by wheel. Front Right is ENGAGED........................................................");
             System.err.println("testing engage/disengage by wheel. Front Right is ENGAGED........................................................");
@@ -880,8 +646,8 @@ public class WheelDevice {
                 //Remove the unused BLDC Channels
                 while (i >= 0 && i < mBLDCMotorPositionControllerChannel.size()) {
                     if (newBLDCList.indexOf(mBLDCMotorPositionControllerChannel.get(i)) < 0) {
-                        if (mPhidBLDCMotorPositionController != null) {
-                            mPhidBLDCMotorPositionController.remove(i);
+                        if (mPhidBLDCMotorPositionControllerList != null) {
+                            mPhidBLDCMotorPositionControllerList.remove(i);
                         }
                         mBLDCMotorPositionControllerChannel.remove(i);
                     } else {
@@ -893,8 +659,8 @@ public class WheelDevice {
                 while (i >= 0) {
                     if (mBLDCMotorPositionControllerChannel.indexOf(newBLDCList.get(i)) < 0) {
                         mBLDCMotorPositionControllerChannel.add(newBLDCList.get(i));
-                        if (mPhidBLDCMotorPositionController != null) {
-                            mPhidBLDCMotorPositionController.add(
+                        if (mPhidBLDCMotorPositionControllerList != null) {
+                            mPhidBLDCMotorPositionControllerList.add(
                                     new MotorPositioner(
                                             newBLDCList.get(i).getMotorPos(),
                                             newBLDCList.get(i)
@@ -913,8 +679,8 @@ public class WheelDevice {
         }
 
         if (mBLDCMotorPositionControllerChannelName != null &&
-                (mPhidBLDCMotorPositionController == null ||
-                        !mPhidBLDCMotorPositionController.getEngaged())) {
+                (mPhidBLDCMotorPositionControllerList == null ||
+                        !mPhidBLDCMotorPositionControllerList.getEngaged())) {
             if (mBLDCMotorPositionControllerChannel == null) {
                 mBLDCMotorPositionControllerChannel =
                         mDeviceManager.getChannelListByNames(
@@ -926,16 +692,16 @@ public class WheelDevice {
             if (mBLDCMotorPositionControllerChannel != null) {
                 mBLDCMotorPositionControllerChannel.open();
                 if (mBLDCMotorPositionControllerChannel.isOpen()) {
-                    if (mPhidBLDCMotorPositionController == null) {
-                        mPhidBLDCMotorPositionController =
+                    if (mPhidBLDCMotorPositionControllerList == null) {
+                        mPhidBLDCMotorPositionControllerList =
                                 mBLDCMotorPositionControllerChannel.getMotorPosList();
                     }
-                    if (mPhidBLDCMotorPositionController != null) {
+                    if (mPhidBLDCMotorPositionControllerList != null) {
                         if (allowEngage) {
-                            mPhidBLDCMotorPositionController.setEngaged(true);
+                            mPhidBLDCMotorPositionControllerList.setEngaged(true);
                             //if(mWheel.getWheelName().equals("FrontRight")){
                             System.err.println("row 897 s/b now engaged (wheel driving motors).............." + mWheel.getWheelName()
-                                    + " Engaged? " + mPhidBLDCMotorPositionController.getEngaged()
+                                    + " Engaged? " + mPhidBLDCMotorPositionControllerList.getEngaged()
                             );
                             //}                            
                         }
@@ -1002,20 +768,11 @@ public class WheelDevice {
         mBLDCMotorPosMult.set(1, mConfigDB.getValue(
                 getConfigName(BLDC_2_POSITION_MULTIPLIER), mBLDCMotorPosMult.get(1)));
 
-//        if(mWheel.getWheelName().equals("RearRight")){
-//            System.out.println("");
-//            System.out.println(mWheel.getDeviceInfoListString()+" mBLDCMotorPosMult.get(0) "+mBLDCMotorPosMult.get(0)+" mBLDCMotorPosMult.get(1) "+mBLDCMotorPosMult.get(1));
-//        }
-
-        return (mPhidBLDCMotorPositionController != null && mPhidEncoder != null);
-    }
-
-    public void setVelocityLimitSettingWithIndex(int index, double velocity) {
-        mVelocityLimitSettingWithIndex.set(index, velocity);
+        return (mPhidBLDCMotorPositionControllerList != null && mPhidEncoder != null);
     }
 
     public void add_BLDC_POSChangeListener() {
-        while (mPhidBLDCMotorPositionController == null) {
+        while (mPhidBLDCMotorPositionControllerList == null) {
             System.out.println("----- waiting to connect add_BLDC_POSChangeListener on " + mWheel.getWheelName());
             try {
                 sleep(2000);
@@ -1024,29 +781,21 @@ public class WheelDevice {
             }
         }
 
-        mPhidBLDCMotorPositionController.addPositionChangeListener(// null pointer error here may mean that add_DutyCycleListener is starting too soon in the startup sequence
+        mPhidBLDCMotorPositionControllerList.addPositionChangeListener(// null pointer error here may mean that add_DutyCycleListener is starting too soon in the startup sequence
                 new MotorPositionControllerPositionChangeListener() {
                     public void onPositionChange(MotorPositionControllerPositionChangeEvent e) {
 
-                        mBLDCmotorDeviceReadPos[0] = mPhidBLDCMotorPositionController.getPositionAtIndex(0, mWheel.getWheelName()); //getBLCDCPosAtIndex(0);
+                        mBLDCmotorDeviceReadPos[0] = mPhidBLDCMotorPositionControllerList.getPositionAtIndex(0, mWheel.getWheelName());
 
                         mWheel.setBLDCmotorReadPos(0, mBLDCmotorDeviceReadPos[0], (String) "WheelDevice");
 
-//                        mBLDCmotorDeviceReadPos[1] = mPhidBLDCMotorPositionController.getPositionAtIndex(1,mWheel.getWheelName()); //getBLCDCPosAtIndex(1);
-//                    
-//                    mWheel.setBLDCmotorReadPos(1, mBLDCmotorDeviceReadPos[1], (String)"WheelDevice");
-
                         mWheel.setMotorPositionControllerList(mBLDCMotorPositionControllerChannel.getMotorPosList());
-
-//                    if  (mAllowMysqlLogging) {                        
-//                        MysqlLogger.put(MysqlLogger.Type.BETTER, (float)mBLDCmotorDeviceReadPos[0], "mBLDCmotorReadPos", mBatch_time_stamp_into_mysql, mWheel.getWheelName(),"MySQL_Better5");
-//                    }
                     }
                 });
     }
 
     public void add_DutyCycleListener() {
-        while (mPhidBLDCMotorPositionController == null) {
+        while (mPhidBLDCMotorPositionControllerList == null) {
             System.out.println("----- waiting to connect add_dutycyclelistener on " + mWheel.getWheelName());
             try {
                 sleep(3000);
@@ -1055,12 +804,10 @@ public class WheelDevice {
             }
         }
 
-        mPhidBLDCMotorPositionController.addDutyCycleUpdateListener( // null pointer error here may mean that add_DutyCycleListener is starting too soon in the startup sequence
+        mPhidBLDCMotorPositionControllerList.addDutyCycleUpdateListener( // null pointer error here may mean that add_DutyCycleListener is starting too soon in the startup sequence
                 new MotorPositioner.DutyCycleListener() {
                     @Override
                     public void onUpdate(MotorPositioner positioner, MotorPositionControllerDutyCycleUpdateEvent mpcdc) {
-
-                        //System.err.println(tsNow+mWheel.getWheelName());
                         mReadDutyCycle = mpcdc.getDutyCycle() * 1000;
                         //mWheel.setReadDutyCycle(mReadDutyCycle);
                         updategetBLCDCDutyCyleAtIndex();
@@ -1069,14 +816,12 @@ public class WheelDevice {
                         DeviceInfo deviceInfo = mDeviceInfoMap.get(positioner.getDeviceChannel().getLabel());
                         //deviceInfo.setParam(DeviceInfo.DUTY_CYCLE, mReadDutyCycle);
 //                    if(mWheel.getWheelName()=="FrontRight"){
-//       // 1 device               mPhidBLDCMotorPositionController.get(0).getController().setEngaged(true);
-//       //  both devices               mPhidBLDCMotorPositionController.setEngaged(true);
-//                        //System.err.println(mBLDCMotorPositionControllerChannel.get(0).getName());//String tsNow = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS").format(new Date());                        
+//       // 1 device               mPhidBLDCMotorPositionControllerList.get(0).getController().setEngaged(true);
+//       //  both devices               mPhidBLDCMotorPositionControllerList.setEngaged(true);
 //                    }
                         if ((Math.abs(mReadDutyCycle)) > (0.7 * 1000)) {
                             String timeS = new SimpleDateFormat("HH.mm.ss.SSS").format(new Date());
                             System.err.println("- duty cycle warning - over 0.7*1000 - - - - ratio = " + ratioFactorToFixDutyCycle +
-                                    " " + recalcRatioFlag +
                                     " " + mReadDutyCycle + " - - - " + mWheel.getWheelName() + " " + timeS);
                             NumberFormat nf = new DecimalFormat("000.0");
                             System.err.print(lopp + ": ");
@@ -1084,7 +829,7 @@ public class WheelDevice {
                                     nf.format(motor1dutycycle) + " = delta " + String.format("%02.1f", delta) + " ratio: " + String.format("%02.2f", ratio) +
                                     " less: " + String.format("%02.2f", removeFromTotal) + " = " + String.format("%02.1f", grandTotalNumInstances) + " avg> " +
                                     String.format("%02.2f", ratioFactorToFixDutyCycle) + " " +
-                                    recalcRatioFlag + " ActualPositions: " + mBLDCmotorDeviceReadPos[0] + " : " + mBLDCmotorDeviceReadPos[1] +
+                                    " ActualPositions: " + mBLDCmotorDeviceReadPos[0] + " : " + mBLDCmotorDeviceReadPos[1] +
                                     " mTargetPositionWheel " + mTargetPositionWheel);
                         }
                         if (Math.abs(mReadDutyCycle) > (0.9 * 1000)) {
@@ -1092,19 +837,15 @@ public class WheelDevice {
                             mDevicesDisengaed = true; // needed to keep the devices from 'flapping' (going on and off repeatedly in rapid succession which is dangerous)
 
                             disengageDevicesCloseChannels();
-//                            if (mPhidBLDCMotorPositionController != null) {
-//                                System.err.println(mWheel.getWheelName() +" "+mPhidBLDCMotorPositionController.getNames()+" SETENGAGED(FALSE)");
-//                                mPhidBLDCMotorPositionController.setEngaged(false);
+//                            if (mPhidBLDCMotorPositionControllerList != null) {
+//                                System.err.println(mWheel.getWheelName() +" "+mPhidBLDCMotorPositionControllerList.getNames()+" SETENGAGED(FALSE)");
+//                                mPhidBLDCMotorPositionControllerList.setEngaged(false);
 //                            }
 
                             Long cycle = Math.round(mReadDutyCycle * 1000) / 1000;
                             System.err.println("DISENGAGING!! Duty Cycle Higher than 0.8*1000 (max of 0.8*1000 before error) : " + cycle + " " + mWheel.getWheelName());
                             disengageWarning = "DISENGAGED_" + mWheel.getWheelName();
                             mWheel.setDisnegageWarning(disengageWarning);
-                        }
-
-                        if (mAllowMysqlLoggingALTERNATE) {
-                            //MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mReadDutyCycle, "mReadDutyCycleUPDATER", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_duty2");
                         }
                     }
                 }
@@ -1124,8 +865,8 @@ public class WheelDevice {
     public void disengageDevicesCloseChannels() {
         mDevicesDisengaed = true;
         synchronized (mOpLock) {
-            if (mPhidBLDCMotorPositionController != null) {
-                mPhidBLDCMotorPositionController.setEngaged(false);
+            if (mPhidBLDCMotorPositionControllerList != null) {
+                mPhidBLDCMotorPositionControllerList.setEngaged(false);
             }
             if (mBLDCMotorPositionControllerChannel != null) {
                 mBLDCMotorPositionControllerChannel.close();
@@ -1143,15 +884,13 @@ public class WheelDevice {
 
         if (mDevicesDisengaed) return;
 
-        if (mPhidBLDCMotorPositionController != null &&
-                mPhidBLDCMotorPositionController.getEngaged()) {
+        if (mPhidBLDCMotorPositionControllerList != null &&
+                mPhidBLDCMotorPositionControllerList.getEngaged()) {
             updateBLDcMotor();
         }
 
         if (mWheel.getWheelName().equals("FrontLeft") || mWheel.getWheelName().equals("FrontRight")) {
-            //System.err.println("preparing to updateSteering "+bldc1+" "+mWheel.getWheelName());
             if (bldc1 != null) {
-//                System.err.println("going to updateSteering now "+bldc1+" "+mWheel.getWheelName());        
                 updateSteering();
             }
         }
@@ -1171,53 +910,32 @@ public class WheelDevice {
         }
     }
 
-    public void setBatchTime(String Batch_time_stamp_into_mysql) {
-        mBatch_time_stamp_into_mysql = Batch_time_stamp_into_mysql;
-    }
-
     private void updateEncoders() {
-        if (mAllowMysqlLogging) {
-            if (encoderCounter < 5) {
-                //MysqlLogger.put(MysqlLogger.Type.BETTER, 0000, "launchingEncoders", mBatch_time_stamp_into_mysql, "reset", "MySQL_Better6");
-                encoderCounter = 5;
-            }
-        }
 
         try {
             encoderPosition = (int) mPhidEncoder.getPosition();
         } catch (PhidgetException ex) {
             System.err.println("encoder error (not attached?).");
         }
-        encoderDevice = mWheel.getWheelName();
         try {
             mWheel.setEncoderPositionxyz(encoderPosition);
 
         } catch (InterruptedException ex) {
             Logger.getLogger(WheelDevice.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        if (mAllowMysqlLogging) {
-            //MysqlLogger.put(MysqlLogger.Type.BETTER, encoderPosition, "encoderPosition", mBatch_time_stamp_into_mysql, encoderDevice, "MySQL_Better7");
-        }
     }
 
 
     /**
      * It appears that this 'updateBODcMotor()' code only reads values of dutycycle and postion; it doesn't write any commands to the BLDC Motors.
-     * <p>
-     * It updates mysqllogger and prints a warning to screen output if dutyCycle exceeds a threshold.
      */
     private void updateBLDcMotor() {
-        if (BLDCPositionControllerCounter < 5) { // once more than 4 BLDC motors this may need to change - ie if I have 8 BLDC motors (2 per wheel x 4 wheels)
-            //MysqlLogger.put(MysqlLogger.Type.BETTER, 0000, "launchingBLDcMotor", mBatch_time_stamp_into_mysql, "reset", "MySQL_Better6");
-            BLDCPositionControllerCounter = 5;
-        }
 
         double dutyCycle = -99999999; // out of range default value to be used if real value can't be retreived
         double mPhidBLDCMotorPosition = -99999999; // out of range default value to be used if real value can't be retreived
 
-        dutyCycle = mPhidBLDCMotorPositionController.getDutyCycle();
-        mPhidBLDCMotorPosition = mPhidBLDCMotorPositionController.getPosition();
+        dutyCycle = mPhidBLDCMotorPositionControllerList.getDutyCycle();
+        mPhidBLDCMotorPosition = mPhidBLDCMotorPositionControllerList.getPosition();
 
         if (dutyCycle > 0.4) {
             String timeS = new SimpleDateFormat("HH.mm.ss.SSS").format(new Date());
@@ -1227,14 +945,6 @@ public class WheelDevice {
         if (dutyCycle > 0.75) {
             String timeS = new SimpleDateFormat("HH.mm.ss.SSS").format(new Date());
             System.err.println((String) (mWheel.getWheelName() + "; WARNING!! Power (duty) over 0.75; reading = " + dutyCycle + " ___ " + timeS + "--------------------------------------------------"));
-        }
-
-        if (mAllowMysqlLoggingALTERNATE) {
-            /*MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mPhidBLDCMotorPosition, "wheel_Position", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8a");
-
-            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) mTargetPositionRoverBody, "mTargetPosition", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8b");
-
-            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) dutyCycle, "dutyCycleWhenSettingTargetPos", mBatch_time_stamp_into_mysql, mWheel.getWheelName(), "MySQL_Better8c");*/
         }
     }
 
@@ -1365,11 +1075,6 @@ public class WheelDevice {
         mWheelDeviceSubClassAutoTrim.setValues(bldc1, mWheel.getWheelName());
     }
 
-//    public void pushPotValuesDown(double potValue){
-//        mPotValue = potValue;
-//        //mWheelDeviceSubClassAutoTrim.setPotValue(mPotValue);
-//    }
-
     /**
      * send a pot object down to WheelDevice and then to the mWheelDeviceSubClassAutoTrim so it can take readings at that level.
      *
@@ -1405,9 +1110,6 @@ public class WheelDevice {
         //System.err.println("--updateSteering-----------------------------------------updateSteering---");
         checkIfSteeringBLDCAttached();
 
-        if (mWheel.getWheelName().equals("FrontLeft")) {
-
-        }
         try {// add some calibration here to determine center point of potentiameter value when starting up the app????
 
             // check to see that steering is within acceptable range before doing any more steering
@@ -1438,9 +1140,6 @@ public class WheelDevice {
 
             posActual_SteeringConvertedToDegrees = convertFromSteeringBLDCPos(posActual_Steering * mStepperMultiplier);
             mWheel.setGhostAngle(convertFromSteeringBLDCPos(posActual_Steering * mStepperMultiplier));
-            if (mAllowMysqlLogging) {
-                //MysqlLogger.put(MysqlLogger.Type.BETTER, (float) posActual_Steering, "SteeringPosition", mBatch_time_stamp_into_mysql, mWheel.getWheelName() + "", "MySQL_Better10");
-            }
         } catch (PhidgetException ex) {
             System.err.println("error with updateSteering() in WheelDevice.java. " + ex.getDescription() + " " + mWheel.getWheelName());
         }
@@ -1456,17 +1155,10 @@ public class WheelDevice {
                 mSteeringPositionAbsWriteSpan
         );
 
-//        System.err.println(mWheel.getWheelName()+ " SteeringBLDCTargetPosition "+SteeringBLDCTargetPosition + " TargetPOS "+ TargetPOS+
-//                " mSteeringPositionAbsReadSpan "+-mSteeringPositionAbsReadSpan+
-//                " mSteeringPositionAbsReadSpan*AngleFraction " + -mSteeringPositionAbsReadSpan*AngleFraction+
-//                " mSteeringPositionAbsWriteSpan "+ -mSteeringPositionAbsWriteSpan+
-//                " trimSettingFromAutoTrim " + trimSettingFromAutoTrim);
-
         return TargetPOS;
     }
 
     public double convertFromSteeringBLDCPos(double pos) {
-        // System.out.println("mSteeringPositionAbsReadSpan "+mSteeringPositionAbsReadSpan);
         return 180 * ((pos / mSteeringPositionAbsReadSpan) % 1.0);
     }
 }

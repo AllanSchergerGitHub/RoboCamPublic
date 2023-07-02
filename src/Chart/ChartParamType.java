@@ -5,8 +5,8 @@ public enum ChartParamType {
     ANGLE("steer angle"),
     BLDC_1_POSITION("BLDC Motor 1 Position"),
     BLDC_2_POSITION("BLDC Motor 2 Position"),
-    BLDC_1_POS_DUTY_CYCLE("BLDC Motor 1 DutyCycle"),
-    BLDC_2_POS_DUTY_CYCLE("BLDC Motor 2 DutyCycle"),
+    BLDC_1_DUTY_CYCLE("BLDC Motor 1 DutyCycle"),
+    BLDC_2_DUTY_CYCLE("BLDC Motor 2 DutyCycle"),
 
     ;
 

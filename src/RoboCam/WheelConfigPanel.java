@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package RoboCam;
 
 import DB.ConfigDB;
@@ -31,12 +26,8 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     private Config mConfig;
     private boolean mDataPopulated = false;
 
-    private String mPatternDCMotor;
-    private String mPatternBLDCMotor;
     private String mPatternEncoder;
-    private String mPatternStepperMotor;
     private String mPatternBLDCPositionController;
-    private String mPatternLimitSwitch;
 
     private WheelDevice mWheelDevice;
 
@@ -148,41 +139,19 @@ public class WheelConfigPanel extends javax.swing.JPanel {
      */
     public WheelConfigPanel() {
         initComponents();
-        mComboBoxDCMotor.addActionListener(new WidgetParamChangeListener(
-                WheelDevice.DCMOTOR_NAME, Boolean.FALSE)
-        );
         mComboBoxEncoder.addActionListener(new WidgetParamChangeListener(
                 WheelDevice.ENCODER_NAME, Boolean.FALSE)
         );
-
-        mCmbLeftLimitSwitch.addActionListener(new WidgetParamChangeListener(
-                WheelDevice.LIMIT_SWITCH_LEFT_NAME, Boolean.FALSE)
-        );
-        mCmbRightLimitSwitch.addActionListener(new WidgetParamChangeListener(
-                WheelDevice.LIMIT_SWITCH_RIGHT_NAME, Boolean.FALSE)
-        );
-
         mDeviceCheckBoxList.addActionListener(new WidgetParamChangeListener(
                 WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES, Boolean.FALSE));
-
-        addActionFocusListener(mTextFieldDCMotorSpeedMult, new WidgetParamChangeListener(
-                WheelDevice.DCMOTOR_SPEED_MULTIPLIER, Boolean.TRUE));
     }
 
     public void setWheelName(String wheelName) {
         mWheelName = wheelName;
     }
 
-    public String getWheelName() {
-        return mWheelName;
-    }
-
     public void setWheelIndex(int wheelIndex) {
         mWheelIndex = wheelIndex;
-    }
-
-    public int getWheelIndex() {
-        return mWheelIndex;
     }
 
     public void setDeviceManager(DeviceManager deviceManager) {
@@ -214,11 +183,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
 
     public void loadFromConfig(Config config) {
         mConfig = config;
-        mPatternDCMotor = config.getPhidgetPatternFor("DCMotor");
-        mPatternBLDCMotor = config.getPhidgetPatternFor("BLDCMotor");
-        mPatternStepperMotor = config.getPhidgetPatternFor("StepperMotor");
         mPatternEncoder = config.getPhidgetPatternFor("Encoder");
-        mPatternLimitSwitch = config.getPhidgetPatternFor("LimitSwitch");
         mPatternBLDCPositionController = config.getPhidgetPatternFor("BLDCPositionController");
         populateData();
     }
@@ -235,42 +200,19 @@ public class WheelConfigPanel extends javax.swing.JPanel {
 
     public synchronized void populateData() {
         if (mDataPopulated) return;
-        if (mDeviceManager != null && mConfig != null &&
-                !(mComboBoxDCMotor.getModel() instanceof DeviceListComboBoxModel)) {
+        if (mDeviceManager != null && mConfig != null) {
             /*Build Combo Box lists*/
-            mComboBoxDCMotor.setModel(new DeviceListComboBoxModel(
-                    mDeviceManager, mPatternDCMotor));
-            mComboBoxStepperMotor.setModel(new DeviceListComboBoxModel(
-                    mDeviceManager, mPatternStepperMotor));
             mComboBoxEncoder.setModel(new DeviceListComboBoxModel(
                     mDeviceManager, mPatternEncoder));
-            mCmbLeftLimitSwitch.setModel(new DeviceListComboBoxModel(
-                    mDeviceManager, mPatternLimitSwitch));
-            mCmbRightLimitSwitch.setModel(new DeviceListComboBoxModel(
-                    mDeviceManager, mPatternLimitSwitch));
             mDeviceCheckBoxList.loadDevices(
                     mDeviceManager, mPatternBLDCPositionController);
         }
 
         /*Show values in combo boxes.*/
         if (mConfigDB != null) {
-            mComboBoxDCMotor.setSelectedItem(mConfigDB.getValue(
-                            getConfigName(WheelDevice.DCMOTOR_NAME), ""
-                    )
-            );
             mComboBoxEncoder.setSelectedItem(mConfigDB.getValue(
                             getConfigName(WheelDevice.ENCODER_NAME), ""
-                    )
-            );
-            mCmbLeftLimitSwitch.setSelectedItem(mConfigDB.getValue(
-                            getConfigName(WheelDevice.LIMIT_SWITCH_LEFT_NAME), ""
-                    )
-            );
-            mCmbRightLimitSwitch.setSelectedItem(mConfigDB.getValue(
-                            getConfigName(WheelDevice.LIMIT_SWITCH_RIGHT_NAME), ""
-                    )
-            );
-
+                    ));
             String[] controllerNames = mConfigDB.getValue(
                     getConfigName(WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES), ""
             ).split(",");
@@ -283,21 +225,13 @@ public class WheelConfigPanel extends javax.swing.JPanel {
                                             WheelDevice.BLDC_1_POSITION_MULTIPLIER
                                     ), "1"
                             ), mConfigDB.getValue(
-                            getConfigName(
-                                    WheelDevice.BLDC_2_POSITION_MULTIPLIER
-                            ), "1"
-                    )
+                                    getConfigName(
+                                            WheelDevice.BLDC_2_POSITION_MULTIPLIER
+                                    ), "1"
+                            )
                     }
             );
 
-            /* Show values in text boxes */
-            mTextFieldDCMotorSpeedMult.setText(
-                    mConfigDB.getValue(
-                            getConfigName(
-                                    WheelDevice.DCMOTOR_SPEED_MULTIPLIER
-                            ), "1"
-                    )
-            );
         }
         mDataPopulated = (mDeviceManager != null &&
                 mConfig != null && mConfigDB != null);
@@ -329,133 +263,55 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     private void initComponents() {
 
         deviceCheckBoxList1 = new RoverUI.DeviceCheckBoxList();
-        mLabelDCMotor = new javax.swing.JLabel();
-        mLabelSterpperMotor = new javax.swing.JLabel();
-        mComboBoxDCMotor = new javax.swing.JComboBox<>();
-        mComboBoxStepperMotor = new javax.swing.JComboBox<>();
         mLabelEncoder = new javax.swing.JLabel();
         mComboBoxEncoder = new javax.swing.JComboBox<>();
-        mLabelStepperCurrent = new javax.swing.JLabel();
-        mTextFieldStepperCurrent = new javax.swing.JTextField();
-        mLabelStepperPosReadScale = new javax.swing.JLabel();
-        mTextFieldStepperPositionReadScale = new javax.swing.JTextField();
-        mLabelStepperPosWriteScale = new javax.swing.JLabel();
-        mTextFieldStepperPositionWriteScale = new javax.swing.JTextField();
-        mLabelStepperMaxSpeed = new javax.swing.JLabel();
-        mTextFieldStepperMaxSpeed = new javax.swing.JTextField();
-        mLblLimitSwitchLeft = new javax.swing.JLabel();
-        mTextFieldDCMotorSpeedMult = new javax.swing.JTextField();
         mLabelBLDCPosControllerStatusValue = new javax.swing.JLabel();
         mScrollPaneDeviceCheckBoxList = new javax.swing.JScrollPane();
         mDeviceCheckBoxList = new RoverUI.DeviceCheckBoxList();
         mLabelBLDCPositionControllers = new javax.swing.JLabel();
-        mLabelStepperStatusValue = new javax.swing.JLabel();
         mLabelBLDCPosControllerStatus = new javax.swing.JLabel();
-        mLabelStepperStatus = new javax.swing.JLabel();
         mLabelEncoderStatusValue = new javax.swing.JLabel();
         mLabelEncoderStatus = new javax.swing.JLabel();
         btnShowUpdatedStatus = new javax.swing.JButton();
-        mLabelDCMotorSpeedMult = new javax.swing.JLabel();
-        mCmbLeftLimitSwitch = new javax.swing.JComboBox<>();
-        mLblLimitSwitchRight = new javax.swing.JLabel();
-        mCmbRightLimitSwitch = new javax.swing.JComboBox<>();
 
         setAlignmentY(0.0F);
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        mLabelDCMotor.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelDCMotor.setText("DC Motor");
-        add(mLabelDCMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 3, -1, -1));
-
-        mLabelSterpperMotor.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelSterpperMotor.setText("Stepper Motor");
-        add(mLabelSterpperMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 23, -1, -1));
-
-        mComboBoxDCMotor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
-        add(mComboBoxDCMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 0, 560, -1));
-
-        mComboBoxStepperMotor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
-        add(mComboBoxStepperMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 20, 560, -1));
-
         mLabelEncoder.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         mLabelEncoder.setText("Encoder");
-        add(mLabelEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 43, -1, -1));
+        add(mLabelEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, -1, -1));
 
-        mComboBoxEncoder.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
-        add(mComboBoxEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 40, 560, -1));
-
-        mLabelStepperCurrent.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelStepperCurrent.setText("Stepper Current");
-        add(mLabelStepperCurrent, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 63, -1, -1));
-
-        mTextFieldStepperCurrent.setText("<Number>");
-        add(mTextFieldStepperCurrent, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 60, 435, -1));
-
-        mLabelStepperPosReadScale.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelStepperPosReadScale.setText("Stepper Position Read Scale");
-        add(mLabelStepperPosReadScale, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 83, -1, -1));
-
-        mTextFieldStepperPositionReadScale.setText("<Number>");
-        add(mTextFieldStepperPositionReadScale, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 80, 435, -1));
-
-        mLabelStepperPosWriteScale.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelStepperPosWriteScale.setText("Stepper Position Write Scale");
-        add(mLabelStepperPosWriteScale, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 103, -1, -1));
-
-        mTextFieldStepperPositionWriteScale.setText("<Number>");
-        add(mTextFieldStepperPositionWriteScale, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 100, 435, -1));
-
-        mLabelStepperMaxSpeed.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelStepperMaxSpeed.setText("Stepper Max Speed");
-        add(mLabelStepperMaxSpeed, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 123, -1, -1));
-
-        mTextFieldStepperMaxSpeed.setText("<Number>");
-        add(mTextFieldStepperMaxSpeed, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 120, 435, -1));
-
-        mLblLimitSwitchLeft.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLblLimitSwitchLeft.setText("Left Limit Switch");
-        add(mLblLimitSwitchLeft, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 170, -1, -1));
-
-        mTextFieldDCMotorSpeedMult.setText("<Number>");
-        add(mTextFieldDCMotorSpeedMult, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 140, 435, -1));
+        mComboBoxEncoder.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        add(mComboBoxEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 10, 560, -1));
 
         mLabelBLDCPosControllerStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         mLabelBLDCPosControllerStatusValue.setText("< Status>");
         mLabelBLDCPosControllerStatusValue.setAlignmentX(0.5F);
         mLabelBLDCPosControllerStatusValue.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        add(mLabelBLDCPosControllerStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 470, 435, -1));
+        add(mLabelBLDCPosControllerStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 460, 520, 110));
 
         mDeviceCheckBoxList.setAutoscrolls(true);
         mScrollPaneDeviceCheckBoxList.setViewportView(mDeviceCheckBoxList);
 
-        add(mScrollPaneDeviceCheckBoxList, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 240, 560, 190));
+        add(mScrollPaneDeviceCheckBoxList, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 50, 600, 310));
 
         mLabelBLDCPositionControllers.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         mLabelBLDCPositionControllers.setText("BLDC Position Controllers");
         mLabelBLDCPositionControllers.setAlignmentY(0.0F);
         mLabelBLDCPositionControllers.setVerticalTextPosition(javax.swing.SwingConstants.TOP);
-        add(mLabelBLDCPositionControllers, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 230, -1, -1));
-
-        mLabelStepperStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        mLabelStepperStatusValue.setText("< Status>");
-        mLabelStepperStatusValue.setAlignmentX(0.5F);
-        mLabelStepperStatusValue.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        add(mLabelStepperStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 430, 435, -1));
+        add(mLabelBLDCPositionControllers, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 150, -1, -1));
 
         mLabelBLDCPosControllerStatus.setText("BLDC Position Controller Status");
-        add(mLabelBLDCPosControllerStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 470, -1, -1));
-
-        mLabelStepperStatus.setText("Stepper Status");
-        add(mLabelStepperStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 430, -1, -1));
+        add(mLabelBLDCPosControllerStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 490, -1, -1));
 
         mLabelEncoderStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         mLabelEncoderStatusValue.setText("< Status>");
         mLabelEncoderStatusValue.setAlignmentX(0.5F);
         mLabelEncoderStatusValue.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        add(mLabelEncoderStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(160, 450, 435, -1));
+        add(mLabelEncoderStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 420, 520, -1));
 
         mLabelEncoderStatus.setText("Encoder Status");
-        add(mLabelEncoderStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 450, -1, -1));
+        add(mLabelEncoderStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 430, -1, -1));
 
         btnShowUpdatedStatus.setText("Show Updated Status");
         btnShowUpdatedStatus.addActionListener(new java.awt.event.ActionListener() {
@@ -463,21 +319,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
                 btnShowUpdatedStatusActionPerformed(evt);
             }
         });
-        add(btnShowUpdatedStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(230, 500, -1, -1));
-
-        mLabelDCMotorSpeedMult.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelDCMotorSpeedMult.setText("DC Motor Speed Multiplier");
-        add(mLabelDCMotorSpeedMult, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 143, -1, -1));
-
-        mCmbLeftLimitSwitch.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
-        add(mCmbLeftLimitSwitch, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 170, 560, -1));
-
-        mLblLimitSwitchRight.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLblLimitSwitchRight.setText("Right Limit Switch");
-        add(mLblLimitSwitchRight, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 200, -1, -1));
-
-        mCmbRightLimitSwitch.setModel(new javax.swing.DefaultComboBoxModel<>(new String[]{"Item 1", "Item 2", "Item 3", "Item 4"}));
-        add(mCmbRightLimitSwitch, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 200, 560, -1));
+        add(btnShowUpdatedStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(420, 630, -1, -1));
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnShowUpdatedStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnShowUpdatedStatusActionPerformed
@@ -488,34 +330,14 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnShowUpdatedStatus;
     private RoverUI.DeviceCheckBoxList deviceCheckBoxList1;
-    private javax.swing.JComboBox<String> mCmbLeftLimitSwitch;
-    private javax.swing.JComboBox<String> mCmbRightLimitSwitch;
-    private javax.swing.JComboBox<String> mComboBoxDCMotor;
     private javax.swing.JComboBox<String> mComboBoxEncoder;
-    private javax.swing.JComboBox<String> mComboBoxStepperMotor;
     private RoverUI.DeviceCheckBoxList mDeviceCheckBoxList;
     private javax.swing.JLabel mLabelBLDCPosControllerStatus;
     private javax.swing.JLabel mLabelBLDCPosControllerStatusValue;
     private javax.swing.JLabel mLabelBLDCPositionControllers;
-    private javax.swing.JLabel mLabelDCMotor;
-    private javax.swing.JLabel mLabelDCMotorSpeedMult;
     private javax.swing.JLabel mLabelEncoder;
     private javax.swing.JLabel mLabelEncoderStatus;
     private javax.swing.JLabel mLabelEncoderStatusValue;
-    private javax.swing.JLabel mLabelStepperCurrent;
-    private javax.swing.JLabel mLabelStepperMaxSpeed;
-    private javax.swing.JLabel mLabelStepperPosReadScale;
-    private javax.swing.JLabel mLabelStepperPosWriteScale;
-    private javax.swing.JLabel mLabelStepperStatus;
-    private javax.swing.JLabel mLabelStepperStatusValue;
-    private javax.swing.JLabel mLabelSterpperMotor;
-    private javax.swing.JLabel mLblLimitSwitchLeft;
-    private javax.swing.JLabel mLblLimitSwitchRight;
     private javax.swing.JScrollPane mScrollPaneDeviceCheckBoxList;
-    private javax.swing.JTextField mTextFieldDCMotorSpeedMult;
-    private javax.swing.JTextField mTextFieldStepperCurrent;
-    private javax.swing.JTextField mTextFieldStepperMaxSpeed;
-    private javax.swing.JTextField mTextFieldStepperPositionReadScale;
-    private javax.swing.JTextField mTextFieldStepperPositionWriteScale;
     // End of variables declaration//GEN-END:variables
 }

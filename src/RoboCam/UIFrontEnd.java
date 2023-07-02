@@ -84,7 +84,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private double grandTotalLagTime1000Instances = 0;
     private final ArrayList<Double> avgLagTime = new ArrayList<Double>();
     private long mLagTime = 1;
-    private Double priorMax = 0.0;
+    private Double LongTermMaxTimeLag = 0.0;
     int doInBackgroundCounter = 0;
 
     Timer mUpdaterTimer;
@@ -94,17 +94,17 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private final GamePadManager mGamePadManager = new GamePadManager();
     private GamePadUpdater mGamePadUpdater;
 
-    ExecutorService mCameraExecutor = Executors.newFixedThreadPool(1);
+    ExecutorService mCameraExecutor = Executors.newFixedThreadPool(2);
 
     /**
      * Creates new form RoboFrontEnd
      */
-    public UIFrontEnd() {
-        initComponents();
-        initMoreComponents();
-        mSocketClientThread = null;
-        mSocketClient = null;
-    }
+//    public UIFrontEnd() { can remove? noted on 3/27/2023.
+//        initComponents();
+//        initMoreComponents();
+//        mSocketClientThread = null;
+//        mSocketClient = null;
+//    }
 
     public UIFrontEnd(String roverHost, int roverPort) throws IOException, PhidgetException {
         System.out.println("UI Machine: (poor variables name) roverHost and roverPort " + roverHost + " " + roverPort);
@@ -137,6 +137,10 @@ public class UIFrontEnd extends javax.swing.JFrame {
     }
 
     private void initMoreComponents() {
+        mTruckSteerPanel.setRoverOrUI_Flag("UI");
+        ToolTipManager.sharedInstance().setInitialDelay(100);
+        ToolTipManager.sharedInstance().setReshowDelay(1150);
+        ToolTipManager.sharedInstance().setDismissDelay(15000);
         /* Four Commands for four wheels */
         mWheelDeviceParamCommands = new WheelDeviceParamCommand[]{
                 new WheelDeviceParamCommand(0),
@@ -539,62 +543,76 @@ public class UIFrontEnd extends javax.swing.JFrame {
         @Override
         protected Void doInBackground() throws Exception {
             long maxEstimateTime = 0;
+            long shortTermMaxTimeLag = 0;
             long lastUpdatedAt = 0;
+            /**
+                 The purpose of this time tracking is to monitor if the system is slowing down too much.
+                 This time tracking is only measuring the time between a couple non-important tasks.
+                 Keep track of when the last maxEstimateTime occurred so we can limit the length of history 
+                 of the maxEstimateTime; otherwise it only captures increases since the program started to run. 
+                 It is also good to see the max within the last x minutes (ie last 3 minutes) via the shortTermMaxTimeLag.
+                */
+            long lastMaxTime = System.nanoTime(); 
             while (true) {
                 String line = mComPipe.getIn();
                 if (line != null) {
-                    publish(line);
+                    publish(line); // this line is published and the process method listens for it.
+                    if(!line.contains(("cs"))){ // don't print to the screen those commands that contain cs.
+                        System.out.println("publish line here: " + line);
+                    }     
                 }
-
                 if (System.currentTimeMillis() - lastUpdatedAt > 200) {
                     lastUpdatedAt = System.currentTimeMillis();
                     publish("");
                 }
-
-                long startTime = System.nanoTime();
-                //mTruckSteerPanel.updateLagProgress(lag); // Allan modified this Jan 15 2019
-
-                long estimatedTime = System.nanoTime() - startTime;
-                estimatedTime = System.nanoTime() - startTime;
-                if (estimatedTime > maxEstimateTime) {
-                    //System.err.println(" new Max loop time: "+estimatedTime);
-                    maxEstimateTime = estimatedTime;
+                long currentTime = System.nanoTime();
+                long currentTimeLag = System.nanoTime() - currentTime;
+                long delta = currentTime-lastMaxTime;
+                /**
+                 * On a regular basis update the shortTermMaxTimeLag; this is a measurement of slowest response time in recent history
+                */
+                if(delta>1500000000){ // 1500000000 is roughly equal to 1000 loops (March 8, 2023
+                    //System.out.println("lastMaxTime " + lastMaxTime + " AvgLagTime " + (double) grandTotalLagTime1000Instances/1000 + " currentTimeLag " + currentTimeLag +  " shortTermMaxTimeLag " + shortTermMaxTimeLag + " currentTime " + currentTime + " delta " + delta + " lastUpdatedAt " + lastUpdatedAt);
+                    lastMaxTime = currentTime;
+                    shortTermMaxTimeLag = currentTimeLag;
+                    }
+                
+                /**
+                 * If the currentTimeLag is longer than the recent record slowest response; make an update to the recent record slowest time.
+                 */
+                if (currentTimeLag > shortTermMaxTimeLag) {
+                    shortTermMaxTimeLag = currentTimeLag;
                 }
-//                if(doInBackgroundCounter % 80 == 0){
-//                        System.err.print(" Max: "+maxEstimateTime);
-//                        //System.err.println("; avg lag:"+averageValue+" max lag:"+priorMax);
-//                    }//+" .....  "+removeFromTotal+" .... "+(double)(avgLagTime.get(500)));
 
-                //estimatedTime = estimatedTime-1000000;
-
-                Double addThis = (double) estimatedTime;
+                Double addThis = (double) currentTimeLag;
                 avgLagTime.add(0, addThis);
                 grandTotalLagTime1000Instances = grandTotalLagTime1000Instances + addThis;
-                if (addThis > priorMax) {
-                    priorMax = addThis;
+                if (addThis > LongTermMaxTimeLag) {
+                    LongTermMaxTimeLag = addThis;
                 }
                 if ((avgLagTime.size()) > 1000) {
                     double removeFromTotal = (double) (avgLagTime.get(1000));
                     grandTotalLagTime1000Instances = grandTotalLagTime1000Instances - removeFromTotal;
                     double averageValue = (double) (grandTotalLagTime1000Instances / 1000);
                     if (doInBackgroundCounter % 500 == 0) {
-                        System.err.println("avg lag: " + averageValue + " max lag: " + priorMax + " nanoseconds");
-                    }//+" .....  "+removeFromTotal+" .... "+(double)(avgLagTime.get(500)));
+                        System.err.println("avg lag: " + averageValue + " shortTermMaxTimeLag: " + shortTermMaxTimeLag + " max lag: " + LongTermMaxTimeLag + " nanoseconds");
+                    }
                     avgLagTime.remove(1000);
-
                 }
                 doInBackgroundCounter++;
-                //mTruckSteerPanel.getTruck().executeNextCueTask();
-                //System.out.println("sleeping for 5");
                 Thread.sleep(5);
             }
         }
 
         @Override
-        protected void process(List<String> list) {
+        protected void process(List<String> list) { // this process method listens for the publish(line) command from above to publish
             for (String command : list) {
                 //mTxtAreaLog.append(command + "\n");
-                //System.out.println("command " + command);
+                if(!command.contains(("cs"))){
+                    if(command.length() != 0){
+                        System.out.println("command " + command);
+                    }
+                }
                 if (command.length() == 0) {//update other gui widgets
                     long lastHeartBeatAge = mComPipe.getLastReceviedMessageAge();
                     mTruckSteerPanel.updateLagProgress(lastHeartBeatAge);
@@ -604,15 +622,17 @@ public class UIFrontEnd extends javax.swing.JFrame {
                     mCommonSensorCommand.parseCommand(command);
                     mTruckSteerPanel.setLabel_jLabel_ElectricalCurrent(
                             mCommonSensorCommand.getElectricalCurrent());
-                    continue;
+                    continue; // if this if statement is true; then skip to the next loop with 'continue' command.
                 }
-                for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) {
+                /*
+                    This is the UI processing messages sent to it from Rover via the robocam.socket jar
+                */
+                for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) { 
                     if (wdpc.canServeCommand(command)) {
-                        //System.out.println("comman: " + command);
+                        //System.out.println("wdpc command: " + command);
                         wdpc.parseCommand(command);
                         Wheel wheel = mTruckSteerPanel
                                 .getTruck().getWheels()[wdpc.getWheelIndex()];
-                        //wheel.setBLDCmotorReadPosDepreciated(wdpc.getBLDCMotorPosDepreciated());
                         wheel.setBLDCmotorReadPos(0, wdpc.getBLDCMotorPos(0), (String) "UIFront");
                         //System.err.println("???????????????????????????UIFront is setting BLDC MOTOR POS? Maybe this causes errors? "+wdpc.getBLDCMotorPos(0)+" : "+wdpc.getBLDCMotorPos(1));
                         wheel.setBLDCmotorReadPos(1, wdpc.getBLDCMotorPos(1), (String) "UIFront");
@@ -639,10 +659,10 @@ public class UIFrontEnd extends javax.swing.JFrame {
     }
 
     private void cleanUpOnClose() {
-        long startTime = System.currentTimeMillis();
+        long currentTime = System.currentTimeMillis();
         mComPipe.sendCloseMessage();
         mDyanmicConfig.save();
-        while ((System.currentTimeMillis() - startTime) < 1000 * 5) {
+        while ((System.currentTimeMillis() - currentTime) < 1000 * 5) {
             //mTruckSteerPanel.getTruck().stopMoving();
             try {
                 TimeUnit.SECONDS.sleep(1);
