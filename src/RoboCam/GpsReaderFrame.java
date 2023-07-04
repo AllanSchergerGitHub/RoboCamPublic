@@ -45,7 +45,7 @@ public class GpsReaderFrame extends javax.swing.JFrame {
 
     String mPositonPickType = "";
 
-    RoverUI.TruckSteerPanel mTruckSteerPanel = null;
+    InterfaceComponents.TruckSteerPanel mTruckSteerPanel = null;
 
     /**
      * Creates new form GpsReaderFrame
@@ -224,7 +224,7 @@ public class GpsReaderFrame extends javax.swing.JFrame {
         mPanelWaypoint.add(mCanvasWaypoint, BoxLayout.X_AXIS);
     }
 
-    public void setTruckSteerPanel(RoverUI.TruckSteerPanel truck) {
+    public void setTruckSteerPanel(InterfaceComponents.TruckSteerPanel truck) {
         mTruckSteerPanel = truck;
     }
 

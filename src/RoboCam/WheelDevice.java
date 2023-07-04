@@ -30,30 +30,30 @@ public class WheelDevice {
     public static final String BLDC_2_POSITION_MULTIPLIER = "BLDC.2.Pos.Mult";
 
     public static Executor mCommonServiceExecutor = Executors.newCachedThreadPool();
-
+    
+    private MotorPositionControllerList mPhidBLDCMotorPositionControllerList = null;
     private MotorPositionController bldc1 = null;
-    private final Wheel mWheel;
     private String mBLDCMotorPositionControllerChannelName;
+
+    private final Wheel mWheel;
     private String mEncoderChannelName;
+    private DeviceChannelList mBLDCMotorPositionControllerChannel;
+    private DeviceChannel mEncoderChannel;
 
     private double trimSettingFromAutoTrim = 0;
 
     private final DeviceManager mDeviceManager;
 
-    private DeviceChannelList mBLDCMotorPositionControllerChannel;
-    private DeviceChannel mEncoderChannel;
-
     double ConnectionAttemptCount = 0;
     double SteeringBLDCTargetPosition = 0;
     double SteeringBLDCTargetPositionConvertedToDegrees = 0;
 
-    private MotorPositionControllerList mPhidBLDCMotorPositionControllerList = null;
-
     Potentiameters mPotentiameters = null;
+    private double mPotTargetValue = 0;
+
     private WheelDeviceSubClassAutoTrim mWheelDeviceSubClassAutoTrim = new WheelDeviceSubClassAutoTrim();
 
     private boolean pauseThis = false; // false means don't pause. keep going. true means we should pause now.
-    private double mPotTargetValue = 0;
     private Encoder mPhidEncoder = null;
 
     private int encoderPosition = 0;
@@ -173,7 +173,6 @@ public class WheelDevice {
 
     public WheelDevice(Wheel wheel, DeviceManager deviceManager,
                        ConfigDB configDB) {
-
         this.mVelocityLimitSettingWithIndex.add(1.0);
         this.mVelocityLimitSettingWithIndex.add(1.0);
 
@@ -230,6 +229,12 @@ public class WheelDevice {
         return mBLDCmotorDeviceReadPos.clone();
     }
 
+    /*
+     * this compensates for devices that are wired backward. While the name indicates it
+     * is for BLDCPos (position); it also works for DutyCycle.
+     * The values are set using the checkboxes the user selects on the configuration tab of the 
+     * Rover Interface (in RoverFrontEnd.java).
+    */
     public double[] getBLCDCPosMultiplier() {
         //mBLDCMotorPosMult.get(1);
         double[] temp = new double[2];
@@ -249,7 +254,12 @@ public class WheelDevice {
     public double getBLCDCDutyCyleAtIndex(int index) {
         if (mPhidBLDCMotorPositionControllerList == null) return 0;
         try {
-            return mPhidBLDCMotorPositionControllerList.getDutyCycleAtIndex(index);
+            /*
+             * it might be better to add this code " * mBLDCMotorPosMult.get(0)" here?
+             * Do a search for getBLCDCDutyCyleAtIndex and notice that thie PosMult is applied
+             * in most cases when called.
+            */
+            return mPhidBLDCMotorPositionControllerList.getDutyCycleAtIndex(index);// * mBLDCMotorPosMult.get(0)
         } catch (PhidgetException ex) {
             return 0;
         }
@@ -315,18 +325,26 @@ public class WheelDevice {
      *
      * this updates the dutycycle in the wheel.java so it can be displayed in the rover GUI
      * and
-     * it calculates the difference between the two motors and provides an adjustment so the motors stay in sync
-     *
+     * it calculates the difference between the two motors and provides an adjustment so the motors stay in sync.
+     * One way this is kicked off via a timer in TruckDevice.java.
+     * The second way this is kicked off is via a DutyCycleListener in WheelDevice.java.
+     * 
+     *    
      * this could be done on a random basis - ie every 20% of the time or some other method to reduce frequency
      */
     public void updategetBLCDCDutyCyleAtIndex() {
         motor0dutycycle = getBLCDCDutyCyleAtIndex(0) * mBLDCMotorPosMult.get(0) * 1000;
         motor1dutycycle = getBLCDCDutyCyleAtIndex(1) * mBLDCMotorPosMult.get(1) * 1000;
+        /*
+         * This is testing to see if motor1dutycycle is ever used. If not it can be removed from the codebase.
+         * This was added when we had 2 motors running 1 wheel so the 2 motors would stay in sync.
+        */
+        if (motor1dutycycle!=0){
         System.err.println(mWheel.getWheelName() +
                 " getBLCDCDutyCyleAtIndex(0) " + getBLCDCDutyCyleAtIndex(0) +
                 " motor0dutycycle: " + motor0dutycycle +
                 " motor1dutycycle: " + motor1dutycycle);
-        
+        }
         delta = motor0dutycycle - motor1dutycycle;
         ratio = Math.abs(motor0dutycycle) / Math.abs(motor1dutycycle);
 
@@ -335,29 +353,13 @@ public class WheelDevice {
 //                    + " positions "+mBLDCmotorDeviceReadPos[0]+" : "+mBLDCmotorDeviceReadPos[1]
 //                    + " mDistanceRemainingRover "+mDistanceRemainingRover);
         }
-        double dutyCycleFloor = 50;
+
         if (!Double.isNaN(ratio) && !Double.isInfinite(ratio) && motor1dutycycle != 0) { //  && ratio<=1.1 && ratio>=0.9
             if (ratio > 1.2) { // truncate tail end values to centralized values
-                //if (mWheel.getWheelName()!="FrontRight" && (motor0dutycycle>dutyCycleFloor || motor1dutycycle>dutyCycleFloor)){
-                if ((motor0dutycycle > dutyCycleFloor || motor1dutycycle > dutyCycleFloor)) {
-                    //System.err.println("TRUNCATING more than 1.2 - any problems? ratio pretrunc= "+ratio+" motor0dutycycle= "+motor0dutycycle+" motor1dutycycle "+motor1dutycycle+" "+mWheel.getWheelName());
-                }
                 ratio = 1.2;
             }
-//            if(ratio<0){
-//                if(ratio<-1.2){
-//                    ratio=-1.2;
-//                }
-//                if(ratio>-.8){
-//                    ratio=-.8;
-//                }
-//            }
             else {
                 if (ratio < 0.8) { // truncate tail end values to centralized values
-                    //if (mWheel.getWheelName()!="FrontRight" &&  (motor0dutycycle>dutyCycleFloor || motor1dutycycle>dutyCycleFloor)){
-                    if ((motor0dutycycle > dutyCycleFloor || motor1dutycycle > dutyCycleFloor)) {
-                        //System.err.println("TRUNCATING less than 0.8 - any problems? ratio pretrunc= "+ratio+" motor0dutycycle= "+motor0dutycycle+" motor1dutycycle "+motor1dutycycle+" "+mWheel.getWheelName());
-                    }
                     ratio = 0.8;
                 }
             }
@@ -405,11 +407,6 @@ public class WheelDevice {
                             dutyCycleRatioAvgArrayList.size() + " " +
                             getBLCDCDutyCyleAtIndex(0) * 1000 + " " +
                             getBLCDCDutyCyleAtIndex(1) * 1000 + " java.util.ConcurrentModificationException part 3 - doesn't seem to cause problems so moving on.");
-//                for (int i = 0; i < dutyCycleRatioAvgArrayList.size(); i++){
-//                    System.err.print(" "+dutyCycleRatioAvgArrayList.get(i)+"; ");
-//                }                
-//                System.err.println("");
-                    // Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 try {
                     dutyCycleRatioAvgArrayList.remove(recordToRemove); // remove the last element in the list - is this being updated by two different devices and changing too fast?
@@ -420,11 +417,6 @@ public class WheelDevice {
                             dutyCycleRatioAvgArrayList.size() + " " +
                             getBLCDCDutyCyleAtIndex(0) * 1000 + " " +
                             getBLCDCDutyCyleAtIndex(1) * 1000 + " java.util.ConcurrentModificationException part 4 - doesn't seem to cause problems so moving on.");
-//                for (int i = 0; i < dutyCycleRatioAvgArrayList.size(); i++){
-//                    System.err.print(" "+dutyCycleRatioAvgArrayList.get(i)+"; ");
-//                }                
-//                System.err.println("");
-                    // Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
                 grandTotalNumInstances = 0.0;
@@ -440,18 +432,6 @@ public class WheelDevice {
                 }
             }
         }
-            
-//            NumberFormat nf = new DecimalFormat("000.0");
-//            System.out.print(lopp+": ");
-
-//        if(mWheel.getWheelName().equals("RearRight")){
-//                    System.out.println(mWheel.getWheelName()+": "+String.format("%02.1f",motor0dutycycle)
-//                    +" : "+String.format("%02.1f",motor1dutycycle)+" = delta "+String.format("%02.1f",delta)
-//                    +" ratio: "+String.format("%02.2f",ratio)
-//                    +" less: "+String.format("%02.3f",removeFromTotal)
-//                    +" = "+String.format("%02.2f",grandTotalNumInstances)
-//                    +" ratioFactorToFixDutyCycle: "+String.format("%02.2f",ratioFactorToFixDutyCycle)+"; ");
-//        }
 
         if (!Double.isNaN(ratioFactorToFixDutyCycle)) { //  && ratio<=1.1 && ratio>=0.9
             if (ratioFactorToFixDutyCycle > 1.5) { // truncate tail end values to centralized values
@@ -472,6 +452,11 @@ public class WheelDevice {
         mWheel.setBLCDCDutyCyleAtIndex(1, motor1dutycycle);
     }
 
+    /*
+    * This updates the Rover Interface charts. It doesn't affect the UI's Interface Charts.
+    * See updateWheelDeviceParamsForCom in RoverFrontEnd.java for code that sends data
+    * from Rover to UI to be displayed on the UI charts.
+    */
     public void updateChartParamsDataset() {
         // speed of chart updates is controlled here -> mUpdaterTimer within UI and possibly Rover UI?
         if (mChartParamsDataset == null) return; // lines shown here show up on the chart
@@ -479,8 +464,8 @@ public class WheelDevice {
 //                ChartParamType.BLDC_1_POSITION, getBLCDCPosAtIndex(0)*(mBLDCMotorPosMult.get(0) < 0 ? -1: 1)); // if/then keeps charts looking correct even if motor physical connection reversed
 //        mChartParamsDataset.addValue(
 //                ChartParamType.BLDC_2_POSITION, getBLCDCPosAtIndex(1)*(mBLDCMotorPosMult.get(1) < 0 ? -1: 1)+(mBLDCMotorPosMult.get(1) < 0 ? -1: 1)*2); // small offset so chart lines don't overlap
-        mChartParamsDataset.addValue(ChartParamType.BLDC_1_DUTY_CYCLE, getBLCDCDutyCyleAtIndex(0) * 1000);// * (mBLDCMotorPosMult.get(0) < 0 ? -1 : 1));
-        //System.out.println(getBLCDCDutyCyleAtIndex(0)*1000);
+     
+        mChartParamsDataset.addValue(ChartParamType.BLDC_1_DUTY_CYCLE, getBLCDCDutyCyleAtIndex(0) * 1000 * mBLDCMotorPosMult.get(0));// < 0 ? -1 : 1));
         mChartParamsDataset.addValue(ChartParamType.BLDC_2_DUTY_CYCLE, getBLCDCDutyCyleAtIndex(1) * 1000 * (mBLDCMotorPosMult.get(1) < 0 ? -1 : 1) + (mBLDCMotorPosMult.get(1) < 0 ? -1 : 1) * 2);
         //mChartParamsDataset.addValue(ChartParamType.BLDC_POS_DUTY_CYCLE, getBLDCDutyCycle());
     }
@@ -591,9 +576,9 @@ public class WheelDevice {
         }
         //avgActualWheelPos = (Math.abs(mBLDCmotorDeviceReadPos[0])+Math.abs(mBLDCmotorDeviceReadPos[1]))/2.0; //instead of abs should i take this times the multiplier?
         avgActualWheelPos = (mBLDCmotorDeviceReadPos[0] * mBLDCMotorPosMult.get(0));
-        if (mWheel.getWheelName() == "FrontLeft") {
-            System.out.println(mWheel.getWheelName() + " mTargetPositionWheel " + String.format("%02.0f", mTargetPositionWheel) + " mBLDCMotorPosMult " + mBLDCMotorPosMult + " avgActualWheelPos " + avgActualWheelPos + " from " + mBLDCmotorDeviceReadPos[0] + " X " + mBLDCMotorPosMult.get(0) + " row 850 in WheelDevice.java");
-        }
+//        if (mWheel.getWheelName() == "FrontLeft") {
+//            System.out.println(mWheel.getWheelName() + " mTargetPositionWheel " + String.format("%02.0f", mTargetPositionWheel) + " mBLDCMotorPosMult " + mBLDCMotorPosMult + " avgActualWheelPos " + avgActualWheelPos + " from " + mBLDCmotorDeviceReadPos[0] + " X " + mBLDCMotorPosMult.get(0) + " row 850 in WheelDevice.java");
+//        }
     }
 
     public void reEngageUponCommand() {
@@ -784,11 +769,8 @@ public class WheelDevice {
         mPhidBLDCMotorPositionControllerList.addPositionChangeListener(// null pointer error here may mean that add_DutyCycleListener is starting too soon in the startup sequence
                 new MotorPositionControllerPositionChangeListener() {
                     public void onPositionChange(MotorPositionControllerPositionChangeEvent e) {
-
                         mBLDCmotorDeviceReadPos[0] = mPhidBLDCMotorPositionControllerList.getPositionAtIndex(0, mWheel.getWheelName());
-
                         mWheel.setBLDCmotorReadPos(0, mBLDCmotorDeviceReadPos[0], (String) "WheelDevice");
-
                         mWheel.setMotorPositionControllerList(mBLDCMotorPositionControllerChannel.getMotorPosList());
                     }
                 });
@@ -1003,7 +985,7 @@ public class WheelDevice {
             // Logger.getLogger(WheelDevice.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            System.err.println("Update the motor ratios here depending on which motor gear ratios are used.");
+            System.err.println(mWheel.getWheelName() + ": Update the motor ratios here depending on which motor gear ratios are used.");
             double Acceleration = 1600; // for FrontLeft with a 15.3:1 ratio gearbox
             double Velocity = 600; // for FrontLeft with a 15.3:1 ratio gearbox
             if (mWheel.getWheelName().equals("FrontLeft")) {
@@ -1130,14 +1112,15 @@ public class WheelDevice {
                 bldc1.setTargetPosition(SteeringBLDCTargetPosition);
             }
 
-            SteeringBLDCTargetPositionConvertedToDegrees = convertFromSteeringBLDCPos(SteeringBLDCTargetPosition);
-
             try {
                 posActual_Steering = bldc1.getPosition() / SteeringBLDC_Multiplier;
             } catch (PhidgetException ex) {
                 System.err.println("error with updateSteering() in WheelDevice.java getting position isn't working. " + ex.getDescription() + " " + mWheel.getWheelName());
             }
 
+            // set 3 measurements to Degrees: Target; Actual; Ghost.  Standardized naming convention would help.
+            // As of June 6, 2023 Actual and Ghost are the same formulas at this point in the code.
+            SteeringBLDCTargetPositionConvertedToDegrees = convertFromSteeringBLDCPos(SteeringBLDCTargetPosition);
             posActual_SteeringConvertedToDegrees = convertFromSteeringBLDCPos(posActual_Steering * mStepperMultiplier);
             mWheel.setGhostAngle(convertFromSteeringBLDCPos(posActual_Steering * mStepperMultiplier));
         } catch (PhidgetException ex) {
@@ -1145,7 +1128,7 @@ public class WheelDevice {
         }
     }
 
-    public double convertToSteeringPos(double AngleFraction) {
+    private double convertToSteeringPos(double AngleFraction) {
         double TargetPOS = Math.min(
                 Math.max(
                         -mSteeringPositionAbsWriteSpan,
@@ -1158,7 +1141,7 @@ public class WheelDevice {
         return TargetPOS;
     }
 
-    public double convertFromSteeringBLDCPos(double pos) {
+    private double convertFromSteeringBLDCPos(double pos) {
         return 180 * ((pos / mSteeringPositionAbsReadSpan) % 1.0);
     }
 }

@@ -17,17 +17,11 @@ public class Electrical {
 
     CurrentInput chCurrentSensor1 = null;
     double currentSensor1_value = 0;
-    private boolean mAllowMysqlLogging = false;
-    private String mBatch_time_stamp_into_mysql = "initialized_in_Electrical.java";
     double currentOverageCounter = 0; // how many times was the current over a threashold?
     double maxOverageCurrent = 0; // what was the maximum current measurement over a threashold?
 //    public void Electrical(){
 //        // do not delete this - it doesn't do anything?? but deleting it causes pain! (July 18 2018)
 //    }
-
-    public void set_mAllowMysalLogging(boolean AllowMysqlLogging) {
-        mAllowMysqlLogging = AllowMysqlLogging;
-    }
 
     public double currentSensor1() {
         double current = currentSensorOne();
@@ -47,15 +41,7 @@ public class Electrical {
             // Logger.getLogger(Electrical.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        if (mAllowMysqlLogging) {
-            //MysqlLogger.put(MysqlLogger.Type.BETTER, (float) currentSensor1_value, "electricalCurrent", mBatch_time_stamp_into_mysql, "Truck", "currentSensorOne");
-        }
-
         return currentSensor1_value;
-    }
-
-    public void setBatchTime(String Batch_time_stamp_into_mysql) {
-        mBatch_time_stamp_into_mysql = Batch_time_stamp_into_mysql;
     }
 
     public void connectCurrentSensorOne() {

@@ -2,8 +2,8 @@ package RoboCam;
 
 import DB.ConfigDB;
 import PhiDevice.DeviceManager;
-import RoverUI.DeviceCheckBoxList;
-import RoverUI.DeviceListComboBoxModel;
+import InterfaceComponents.DeviceCheckBoxList;
+import InterfaceComponents.DeviceListComboBoxModel;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -262,12 +262,12 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        deviceCheckBoxList1 = new RoverUI.DeviceCheckBoxList();
+        deviceCheckBoxList1 = new InterfaceComponents.DeviceCheckBoxList();
         mLabelEncoder = new javax.swing.JLabel();
         mComboBoxEncoder = new javax.swing.JComboBox<>();
         mLabelBLDCPosControllerStatusValue = new javax.swing.JLabel();
         mScrollPaneDeviceCheckBoxList = new javax.swing.JScrollPane();
-        mDeviceCheckBoxList = new RoverUI.DeviceCheckBoxList();
+        mDeviceCheckBoxList = new InterfaceComponents.DeviceCheckBoxList();
         mLabelBLDCPositionControllers = new javax.swing.JLabel();
         mLabelBLDCPosControllerStatus = new javax.swing.JLabel();
         mLabelEncoderStatusValue = new javax.swing.JLabel();
@@ -329,9 +329,9 @@ public class WheelConfigPanel extends javax.swing.JPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnShowUpdatedStatus;
-    private RoverUI.DeviceCheckBoxList deviceCheckBoxList1;
+    private InterfaceComponents.DeviceCheckBoxList deviceCheckBoxList1;
     private javax.swing.JComboBox<String> mComboBoxEncoder;
-    private RoverUI.DeviceCheckBoxList mDeviceCheckBoxList;
+    private InterfaceComponents.DeviceCheckBoxList mDeviceCheckBoxList;
     private javax.swing.JLabel mLabelBLDCPosControllerStatus;
     private javax.swing.JLabel mLabelBLDCPosControllerStatusValue;
     private javax.swing.JLabel mLabelBLDCPositionControllers;

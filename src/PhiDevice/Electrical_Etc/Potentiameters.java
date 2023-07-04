@@ -18,15 +18,9 @@ public class Potentiameters {
     //Create your Phidget channels
     VoltageRatioInput voltageRatioInput3 = null;
     double Potentiameter_value = 0;
-    private boolean mAllowMysqlLogging = false;
-    private String mBatch_time_stamp_into_mysql = "initialized_in_Potentiameters.java";
 
     public void Potentiameters() {
         // do not delete this - it doesn't do anything?? but deleting it causes pain! (July 18 2018)
-    }
-
-    public void set_mAllowMysalLogging(boolean AllowMysqlLogging) {
-        mAllowMysqlLogging = AllowMysqlLogging;
     }
 
     public double getPotentiameterValue(String CallingLocation) {
@@ -40,15 +34,7 @@ public class Potentiameters {
             //Logger.getLogger(Electrical.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        if (mAllowMysqlLogging) {
-//            MysqlLogger.put(MysqlLogger.Type.BETTER, (float) Potentiameter_value, "Potentiameters", mBatch_time_stamp_into_mysql, "Truck", "PotentiametersOne");
-        }
-
         return Potentiameter_value;
-    }
-
-    public void setBatchTime(String Batch_time_stamp_into_mysql) {
-        mBatch_time_stamp_into_mysql = Batch_time_stamp_into_mysql;
     }
 
     public void connectPotentiameter(String wheelName) {

@@ -740,7 +740,7 @@
 
           <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridBagLayout"/>
           <SubComponents>
-            <Component class="RoverUI.TruckSteerPanel" name="mTruckSteerPanel">
+            <Component class="InterfaceComponents.TruckSteerPanel" name="mTruckSteerPanel">
               <Properties>
                 <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                   <Dimension value="[600, 600]"/>

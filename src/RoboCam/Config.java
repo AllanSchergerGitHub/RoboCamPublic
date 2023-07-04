@@ -239,10 +239,6 @@ public class Config {
         return mProps.getProperty("ConfigDBPath", "robocam_config.db");
     }
 
-    public boolean hasMySQL() {
-        return mProps.getProperty("MySQL.Allow", "").trim().equals("true");
-    }
-
     public double getFailSafeDelay(double defaultValue) {
         try {
             return Double.parseDouble(

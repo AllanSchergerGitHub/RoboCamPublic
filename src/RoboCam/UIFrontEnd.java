@@ -12,11 +12,11 @@ import PhiDevice.ChannelType;
 import PhiDevice.DeviceChannel;
 import PhiDevice.DeviceListJob;
 import PhiDevice.DeviceManager;
-import RoverUI.DoubleListener;
-import RoverUI.DoubleVarArgListener;
-import RoverUI.StringListener;
+import InterfaceComponents.DoubleListener;
+import InterfaceComponents.DoubleVarArgListener;
+import InterfaceComponents.StringListener;
 import RoverUI.Vehicle.Wheel;
-import RoverUI.XYDoubleListener;
+import InterfaceComponents.XYDoubleListener;
 import Utility.CameraHelper;
 import com.phidget22.PhidgetException;
 import com.robocam.Socket.*;
@@ -42,10 +42,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.lang.Thread.sleep;
+import java.text.NumberFormat;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 
 /**
  * @author sujoy
@@ -57,8 +60,6 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private final ComParser mComParser = new ComParser();
     DeviceManager mDeviceManager;
     DeviceListJob mDeviceListJob;
-
-    private String mMachineName = "init";
 
     String targetValue;
     int targetValue_int;
@@ -83,7 +84,6 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
     private double grandTotalLagTime1000Instances = 0;
     private final ArrayList<Double> avgLagTime = new ArrayList<Double>();
-    private long mLagTime = 1;
     private Double LongTermMaxTimeLag = 0.0;
     int doInBackgroundCounter = 0;
 
@@ -96,23 +96,12 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
     ExecutorService mCameraExecutor = Executors.newFixedThreadPool(2);
 
-    /**
-     * Creates new form RoboFrontEnd
-     */
-//    public UIFrontEnd() { can remove? noted on 3/27/2023.
-//        initComponents();
-//        initMoreComponents();
-//        mSocketClientThread = null;
-//        mSocketClient = null;
-//    }
-
     public UIFrontEnd(String roverHost, int roverPort) throws IOException, PhidgetException {
         System.out.println("UI Machine: (poor variables name) roverHost and roverPort " + roverHost + " " + roverPort);
         initComponents();
         initMoreComponents();
         mSocketClient = new SocketClient(roverHost, roverPort, mComPipe);
         mSocketClientThread = new Thread(mSocketClient);
-        mSocketClientThread.start();
 
         //mSocketWriteClient = new SocketWriteClient(roverHost, roverPort, mComPipe);
         //mSocketWriteClientThread = new Thread(mSocketWriteClient);
@@ -129,15 +118,14 @@ public class UIFrontEnd extends javax.swing.JFrame {
         mGamePadUpdater = new GamePadUpdater(
                 mGamePadManager, mTruckSteerPanel, mLblGamePadStatusValue);
         mGamePadUpdater.execute();
+        mTruckSteerPanel.setRotateToStraight();
     }
 
-    public void setMachineName(String machineName) {
-        mMachineName = machineName;
-        mTruckSteerPanel.setMachineName(mMachineName);
+    public void start_mSocketClientThread() {
+        mSocketClientThread.start();
     }
 
     private void initMoreComponents() {
-        mTruckSteerPanel.setRoverOrUI_Flag("UI");
         ToolTipManager.sharedInstance().setInitialDelay(100);
         ToolTipManager.sharedInstance().setReshowDelay(1150);
         ToolTipManager.sharedInstance().setDismissDelay(15000);
@@ -181,6 +169,11 @@ public class UIFrontEnd extends javax.swing.JFrame {
                     }
                 });
 
+        /**
+         * When the mouse position changes on UI Computer this updates the mMousePosCommand; 
+         * mComPipe.putOut (to send signal to rover);
+         * and the updateChartParamsDataset is updated.
+         */
         mTruckSteerPanel.addGroudPanelMousePosListener(new XYDoubleListener() {
             @Override
             public void onChange(double xPos, double yPos) {
@@ -236,21 +229,48 @@ public class UIFrontEnd extends javax.swing.JFrame {
             }
         });
 
-        mChartParamsDatasets = mTruckSteerPanel.getTruck()
-                .getChartParamsDatasets();
+        mChartParamsDatasets = mTruckSteerPanel.getTruck().getChartParamsDatasets();
+        
         for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
             JFreeChart chart = ChartFactory.createXYLineChart(chartParamsDataset.getChartName(),
                     "Time",
-                    null,
-                    chartParamsDataset.getDataset(),
+                    "Duty Cycle",
+                    chartParamsDataset.getDutyCycleDataset(),
                     PlotOrientation.VERTICAL,
                     false,
                     false,
                     false);
+            
+
+            // Create a new Y-axis
+            NumberAxis posAxis = new NumberAxis("POS");
+            posAxis.setAutoRangeIncludesZero(false);
+            // Set the font size for the axis label
+            posAxis.setLabelFont(new Font("Dialog", Font.PLAIN, 16));
+            // Set the font size for the tick labels
+            posAxis.setTickLabelFont(new Font("Dialog", Font.PLAIN, 14));
+            // Create a new renderer for the second dataset
+            XYItemRenderer posRenderer = new XYLineAndShapeRenderer(true, false);
+            // Create a new dataset for the second Y-axis and add it to the chart
+            XYPlot plot = chart.getXYPlot();
+            plot.setRangeAxis(1, posAxis);
+            plot.setDataset(1, chartParamsDataset.getPosDataset());
+            plot.setRenderer(1, posRenderer);
+            // Ensure the ranges do not overlap
+            plot.mapDatasetToRangeAxis(1, 1);            
+            
             ChartPanel chartPanel = new ChartPanel(chart);
+            // Set the preferred size of the chartPanel
+            chartPanel.setPreferredSize(new Dimension(1800, 600)); // width, height
+            // Set the min width & height of the area where charts will be drawn:
+            chartPanel.setMinimumSize(new Dimension(1500,600));
+            // Add the chartPanel to your container (e.g., a JPanel???)
             mPanelCharts.add(chartPanel);
         }
 
+        /**
+         * The action is the firing of the timer
+         */
         mUpdaterTimer = new Timer(200, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -266,6 +286,13 @@ public class UIFrontEnd extends javax.swing.JFrame {
                 super.windowClosing(e);
             }
         });
+        
+        /*
+         * This makes the steering aligned straight ahead when the application is launched.
+         * It may be better to have it start where it ended the prior time but I don't think that
+         * capability is currently programmed (as of July 2023).
+        */
+        mTruckSteerPanel.setRotateToStraight();
     }
 
     public int getImageSaveLag() {
@@ -539,9 +566,12 @@ public class UIFrontEnd extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Reads in messages sent from Rover computer to UI computer and processes them.
+     */
     final class ComParser extends SwingWorker<Void, String> {
         @Override
-        protected Void doInBackground() throws Exception {
+        protected Void doInBackground() {
             long maxEstimateTime = 0;
             long shortTermMaxTimeLag = 0;
             long lastUpdatedAt = 0;
@@ -557,9 +587,9 @@ public class UIFrontEnd extends javax.swing.JFrame {
                 String line = mComPipe.getIn();
                 if (line != null) {
                     publish(line); // this line is published and the process method listens for it.
-                    if(!line.contains(("cs"))){ // don't print to the screen those commands that contain cs.
-                        System.out.println("publish line here: " + line);
-                    }     
+//                    if(!line.contains(("cs"))){ // don't print out the common sensor commands - these are for the electrical monitor and they are very frequent.
+//                        System.out.println("bm1d = brushlessmotor1 dutycycle; bm1p = bm1 position. " + line);
+//                    }     
                 }
                 if (System.currentTimeMillis() - lastUpdatedAt > 200) {
                     lastUpdatedAt = System.currentTimeMillis();
@@ -593,26 +623,52 @@ public class UIFrontEnd extends javax.swing.JFrame {
                 if ((avgLagTime.size()) > 1000) {
                     double removeFromTotal = (double) (avgLagTime.get(1000));
                     grandTotalLagTime1000Instances = grandTotalLagTime1000Instances - removeFromTotal;
-                    double averageValue = (double) (grandTotalLagTime1000Instances / 1000);
-                    if (doInBackgroundCounter % 500 == 0) {
-                        System.err.println("avg lag: " + averageValue + " shortTermMaxTimeLag: " + shortTermMaxTimeLag + " max lag: " + LongTermMaxTimeLag + " nanoseconds");
+                    NumberFormat nf = NumberFormat.getInstance(); // Get a NumberFormat instance for the default locale
+                    nf.setMaximumFractionDigits(0); // Set maximum decimal places to 0
+                    if (doInBackgroundCounter % 1000 == 0) {
+                        System.err.printf("avg lag: %s shortTermMaxTimeLag: %s max lag: %.4f seconds%n", 
+                            nf.format((double) (grandTotalLagTime1000Instances / 1000)), 
+                            nf.format((double) shortTermMaxTimeLag), 
+                            LongTermMaxTimeLag / 1_000_000_000.0);
                     }
                     avgLagTime.remove(1000);
                 }
                 doInBackgroundCounter++;
-                Thread.sleep(5);
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException ex) {
+                    System.out.println("This should be extrememly rare.");
+                    Logger.getLogger(UIFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
 
+        /**
+        * Processes a list of commands published during the execution of the background task.
+        * The list of commands is incoming data into the UIFrontEnd from the socket; these commands come from the Rover.
+        * 
+        * This method is invoked in the Event Dispatch Thread.
+        *
+        * @param list A list of commands to be processed. Each command is a string.
+        *
+        * The method iterates over each command in the list. If the command does not contain "cs" and is not empty,
+        * it prints the command to the console.  cs stands for CommonSensor'Command'.
+        * 
+        * If the command is empty, it updates the GUI widgets based on the age of the last received message.
+        *
+        * If the command can be served by the mCommonSensorCommand, it parses the command and updates the electrical 
+        * current label in the TruckSteerPanel.
+        *
+        * If the command can be served by any of the WheelDeviceParamCommand objects in mWheelDeviceParamCommands, 
+        * it parses the command and updates the corresponding wheel's BLDC motor positions and duty cycles.
+        *
+        * This method is part of the SwingWorker's life cycle which is intended to be overridden in the subclass.
+        * This method should not do any long running processing; long running processing should be done in doinbackground()
+        */
         @Override
         protected void process(List<String> list) { // this process method listens for the publish(line) command from above to publish
             for (String command : list) {
                 //mTxtAreaLog.append(command + "\n");
-                if(!command.contains(("cs"))){
-                    if(command.length() != 0){
-                        System.out.println("command " + command);
-                    }
-                }
                 if (command.length() == 0) {//update other gui widgets
                     long lastHeartBeatAge = mComPipe.getLastReceviedMessageAge();
                     mTruckSteerPanel.updateLagProgress(lastHeartBeatAge);
@@ -723,7 +779,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
         jSlider1 = new javax.swing.JSlider();
         jButton1 = new javax.swing.JButton();
         jPanelVehicle = new javax.swing.JPanel();
-        mTruckSteerPanel = new RoverUI.TruckSteerPanel();
+        mTruckSteerPanel = new InterfaceComponents.TruckSteerPanel();
         mPanelCharts = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         jTextField1 = new javax.swing.JTextField();
@@ -1602,7 +1658,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private javax.swing.JTabbedPane mMainTabbedPane;
     private javax.swing.JPanel mPanelCharts;
     private javax.swing.JPanel mPanelStatusInfo;
-    private RoverUI.TruckSteerPanel mTruckSteerPanel;
+    private InterfaceComponents.TruckSteerPanel mTruckSteerPanel;
     private javax.swing.JFormattedTextField txtPhidgetParamTargetValue;
     // End of variables declaration//GEN-END:variables
 

@@ -7,8 +7,6 @@ import PhiDevice.DeviceManager;
 import PhiDevice.Electrical_Etc.Electrical;
 import PhiDevice.Electrical_Etc.Potentiameters;
 import PhiDevice.Electrical_Etc.RoboLights;
-import PhiDevice.RoboArm.RoboArm;
-import RoverUI.TruckSteerPanel;
 import RoverUI.Vehicle.SteeringMode;
 import RoverUI.Vehicle.Truck;
 import com.phidget22.PhidgetException;
@@ -27,7 +25,6 @@ import java.io.IOException;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -49,8 +46,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     private Thread mSocketServerThread = null;
     private final ComParser mComParser = new ComParser();
     private WheelDeviceSubClassAutoTrim[] mWheelDeviceSubClassAutoTrim = new WheelDeviceSubClassAutoTrim[2];
-
-    private String mMachineName = "init";
 
     private final MousePosCommand mRemoteMousePosCommand = new MousePosCommand();
     private final SteeringCommand mRemoteSteeringCommand = new SteeringCommand();
@@ -79,10 +74,8 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     private double startingTargetPotPositionFrontRight = .5113; // the Pot reading when steering is straight ahead.
     private double targetPotPositionFrontRight = 0;
 
-    public String Batch_time_stamp_into_mysql = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss.SSS").format(new Date());
     boolean sendingManualSteer = true;
 
-    RoboArm mRoboArm2 = null;
     Electrical mElectricalCurrent = null;
     Potentiameters mPotentiometerFrontLeft = null;
     Potentiameters mPotentiometerFrontRight = null;
@@ -98,8 +91,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
     double angleLeftBasedOnPot = 0;
     double angleRightBasedOnPot = 0;
-
-    boolean updatejSlider_moveBasemotor = true;
 
     private TruckDeviceUpdater mTruckDeviceUpdater;
     ExecutorService mWheelDeviceExecutor = Executors.newFixedThreadPool(4);
@@ -126,15 +117,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
     private final GamePadManager mGamePadManager = new GamePadManager();
     private GamePadUpdater mGamePadUpdater;
-
-    /**
-     * Creates new form RoverFrontEnd
-     * @machineName
-     */
-    public void setMachineName(String machineName) {
-        mMachineName = machineName;
-        mTruckSteerPanel.setMachineName(mMachineName);
-    }
 
     public void connectLight() {
         mLight = new RoboLights();
@@ -185,7 +167,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     }
 
     public final void initMoreComponents() {
-        mTruckSteerPanel.setRoverOrUI_Flag("Rover");
         ToolTipManager.sharedInstance().setInitialDelay(100);
         ToolTipManager.sharedInstance().setReshowDelay(1150);
         ToolTipManager.sharedInstance().setDismissDelay(15000);
@@ -205,15 +186,12 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         System.out.println(prefs.name() + " 'FrontRight_posActual _ending STEPPER Position from last session '" + prefs.getDouble(ID, 99999.9));
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                .addKeyEventDispatcher(new KeyEventDispatcher() {
-                    @Override
-                    public boolean dispatchKeyEvent(KeyEvent e) {
-                        if (e.getID() == KeyEvent.KEY_PRESSED && mMainTabbedPane.getSelectedIndex() == 3) {
-                            return mTruckSteerPanel.onKeyPressed(e);
-                        }
-                        return false;
+                .addKeyEventDispatcher((KeyEvent e) -> {
+                    if (e.getID() == KeyEvent.KEY_PRESSED && mMainTabbedPane.getSelectedIndex() == 3) {
+                        return mTruckSteerPanel.onKeyPressed(e);
                     }
-                });
+                    return false;
+        });
 
         try {
             mDeviceManager = new DeviceManager();
@@ -223,7 +201,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
         new DeviceListLoader().execute();
         System.out.println("Starting UI_UpdaterAllan now.");
-        new UI_UpdaterAllan().execute();
+        new RoverInterface_Updater().execute();
 
         mTruckEngager.setTruck(mTruckSteerPanel.getTruck());
 
@@ -264,15 +242,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         System.out.println("Devices are disengaged and channels are closed.");
     }
 
-    public void RFESetBaseMotorPosition(double pos) throws Exception {
-        pos = 2;
-        mRoboArm2.SetBaseMotorPosition(pos);
-    }
-
-    public void RFESetServo1Position(double pos) throws Exception {
-        mRoboArm2.RFESetServo1Position(pos);
-    }
-
     public void loadFromConfig(Config config) { // there is also a loadfromConfig for the UI UI
         //Separate thread is used as setIPCamPosition blocks the execution
         //of main thread
@@ -306,13 +275,10 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         mTruckDeviceUpdater.execute();
 
         //Attache change listerner to Wheel Config Panels
-        WheelConfigPanel.ChangeListener mWheelConfigListener = new WheelConfigPanel.ChangeListener() {
-            @Override
-            public void onChange(int wheelIndex, String paramName) {
-                mWheelDeviceExecutor.execute(new WheelDeviceUpdateTask(
-                        mTruckDevice.getWheelDeviceAt(wheelIndex), paramName
-                ));
-            }
+        WheelConfigPanel.ChangeListener mWheelConfigListener = (int wheelIndex, String paramName) -> {
+            mWheelDeviceExecutor.execute(new WheelDeviceUpdateTask(
+                    mTruckDevice.getWheelDeviceAt(wheelIndex), paramName
+            ));
         };
 
         WheelConfigPanel[] wheelConfigPanels = new WheelConfigPanel[]{
@@ -339,7 +305,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
                     chartParamsDataset.getChartName(),
                     "Time",
                     null,
-                    chartParamsDataset.getDataset(),
+                    chartParamsDataset.getDutyCycleDataset(),
                     PlotOrientation.VERTICAL,
                     false,
                     false,
@@ -347,7 +313,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             );
 
             xyplot = chart.getXYPlot();
-            double gger = 0;
             axis = xyplot.getDomainAxis();
             axis = xyplot.getRangeAxis();
 
@@ -355,14 +320,11 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             mPanelCharts.add(chartPanel);
         }
 
-        mUpdaterTimer = new Timer(200, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mTruckDevice.updateChartParamsDataset();
-                mTruckDevice.updateDutyCycleAtIndex();
-                for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) {
-                    mComPipe.putOut(wdpc.buildCommandIfChanged());
-                }
+        mUpdaterTimer = new Timer(200, e -> {
+            mTruckDevice.updateChartParamsDataset();
+            mTruckDevice.updateDutyCycleAtIndex();
+            for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) {
+                mComPipe.putOut(wdpc.buildCommandIfChanged());
             }
         });
         mUpdaterTimer.start();
@@ -374,6 +336,12 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         mGamePadManager.loadFromConfig(config);
     }
 
+    /*
+    * This is data that is sent from the Rover to the UI. This code runs on the Rover.
+    * This data goes into the charts on the UI Interface.
+    * Min/MaxBLDCPOS variables are designed to limit the range displayed on the charts; however,
+    * this part of the code currently doesn't work.
+    */
     private void updateWheelDeviceParamsForCom() {
         for (int i = 0; i < 4; i++) {
             WheelDevice wheelDevice = mTruckDevice.getWheelDeviceAt(i);
@@ -389,9 +357,16 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             if (currentBLDCPOSValueDepreciated[0] > MaxBLDCPOS) {
                 MaxBLDCPOS = currentBLDCPOSValueDepreciated[0];
             }
-            wdpc.setBLDCMotorPos(0, wheelDevice.getBLCDCPosAtIndex(0));
+
+            /*
+            * This is the specific part of the code that sends data from Rover to UI
+            * so it can be displayed in the UI charts.
+            * 
+            * wheelDevice.getBLCDCPosMultiplier()[0] this compensates for devices that are wired backward.
+            */
+            wdpc.setBLDCMotorPos(0, wheelDevice.getBLCDCPosAtIndex(0)*wheelDevice.getBLCDCPosMultiplier()[0]);
             wdpc.setBLDCMotorPos(1, wheelDevice.getBLCDCPosAtIndex(1));
-            wdpc.setBLDCMotorDutyCycle(0, wheelDevice.getBLCDCDutyCyleAtIndex(0) * 1000);
+            wdpc.setBLDCMotorDutyCycle(0, wheelDevice.getBLCDCDutyCyleAtIndex(0) * 1000*wheelDevice.getBLCDCPosMultiplier()[0]);
             wdpc.setBLDCMotorDutyCycle(1, wheelDevice.getBLCDCDutyCyleAtIndex(1) * 1000);
         }
     }
@@ -447,7 +422,15 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         }
     }
 
-    final class UI_UpdaterAllan extends SwingWorker<Void, String> {
+    /**
+     * 1) Picks up a value of the ElectricalCurrent and updates Rover Screen with value;
+     * and sends value to UI via compipe.
+     * 2) Prints a few sample Front Pot readings to screen for visibility at the beginning of a run.
+     * 3) Updates the pot values on the screen (measurement of steering angle for both front wheel).
+     * 4) Updates the max duty cycle reading from the motors that steer the wheels. Steering puts a lot
+     * of pressure on these motors so we track it on the screen.
+     */
+    final class RoverInterface_Updater extends SwingWorker<Void, String> {
         @Override
         protected Void doInBackground() {
 
@@ -456,7 +439,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             } catch (InterruptedException ex) {
                 //Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
             }
-            System.err.println("into the UI_UpdaterAllan command now ");
+            System.err.println("Into the RoverInterface_Updater command now.");
             double oldCurrentValue = -1;
             while (true) {
                 currentSensor1_value = mElectricalCurrent.currentSensor1();
@@ -466,7 +449,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
                     mCommonSensorCommand.setElectricalCurrent(currentSensor1_value);
                     mComPipe.putOut(mCommonSensorCommand.buildCommand());
                 }
-
 
                 //jTextFieldLeftPot_2.setOpaque(true);
                 //jTextFieldLeftPot_2.setBackground(Color.red);
@@ -524,15 +506,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
                     }
                 }
 
-                try {
-                    //System.err.println("BRWEAK");
-                    if (mRoboArm2 != null) {
-                        distanceSensor1_value = mRoboArm2.distanceSensor1();
-                    }
-                } catch (PhidgetException ex) {
-                    Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
                 publish("");
                 //System.err.println("ending due to ?????");
                 try {
@@ -549,18 +522,10 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         @Override
         protected void process(List<String> list) {//Works on GUI thread
             for (String command : list) {
-                if (command.equals("current")) {
+                if (command.equals("current")) { // this is a bit awkward
                     mTruckSteerPanel.setLabel_jLabel_ElectricalCurrent(
                             currentSensor1_value);
                 }
-            }
-            jLabel1.setText(distanceSensor1_value + "");
-            jLabel1.setOpaque(true);
-            jProgressBar1.setValue((int) distanceSensor1_value);
-            if (distanceSensor1_value < 100) {
-                jLabel1.setBackground(Color.red);
-            } else {
-                jLabel1.setBackground(Color.green);
             }
         }
     }
@@ -604,11 +569,13 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             mWheelConfigPanelRearRight.setDeviceManager(mDeviceManager);
         }
     }
-
+/**
+ * On the Rover UI this processes messages from the UI computer.
+ * 
+ */
     final class ComParser extends SwingWorker<Void, String> {
         @Override
         protected Void doInBackground() throws Exception {
-            mTruckSteerPanel.setBatchTime(Batch_time_stamp_into_mysql);
             long lastUpdatedAt = 0;
             while (true) {
                 String line = mComPipe.getIn();
@@ -625,6 +592,9 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         }
 
         @Override
+        /**
+         * multiple line values could be published and then processed all at once via the list
+         */
         protected void process(List<String> list) {
             boolean showLog = true;
             for (String command : list) {
@@ -702,7 +672,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
                 } else if (mTruckScaleCommand.canServeCommand(command)) {
                     mTruckScaleCommand.parseCommand(command);
                     mTruckSteerPanel.setTruckScale(mTruckScaleCommand.getTruckScale());
-                } else if (mWheelSteeringAngleCommand.canServeCommand(command)) {
+                } else if (mWheelSteeringAngleCommand.canServeCommand(command)) { // this isn't used?? on either rover nor UI as of 6/22/2023
                     mWheelSteeringAngleCommand.parseCommand(command);
                     double angle = mWheelSteeringAngleCommand.getAngle();
                     switch (mWheelSteeringAngleCommand.getMode()) {
@@ -715,7 +685,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
                             break;
                         case WheelSteeringAngleCommand.MODE_INCREMENTAL:
                             for (int wheelIndex : mWheelSteeringAngleCommand.getWheelIndices()) {
-                                mTruckSteerPanel.getTruck().increaseWheelsAngle(
+                                mTruckSteerPanel.getTruck().increaseWheelsAngle( // this isn't used?? on either rover nor UI as of 6/22/2023
                                         wheelIndex, angle
                                 );
                             }
@@ -772,7 +742,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
                 }
 
                 if (showLog) {
-                    mTxtAreaLog.append(command + "\n");
+                    mTxtAreaLog.append(command + "\n"); // this shows the command on the debugger tab of the RoboCam GUI on Rover.
                 }
             }
         }
@@ -802,7 +772,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         jButton_LeftFrontMoreStepperRight = new javax.swing.JButton();
         jButton_RightFrontMoreStepperLeft = new javax.swing.JButton();
         jButton_RightFrontMoreStepperRight = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
         jTextField1 = new javax.swing.JTextField();
         jTextField2 = new javax.swing.JTextField();
         jSeparator1 = new javax.swing.JSeparator();
@@ -815,28 +784,11 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         jTextFieldRightPot_2 = new javax.swing.JTextField();
         jTextFieldLeftPot_2 = new javax.swing.JTextField();
         jButtonCalibrateToTargetPotValue = new javax.swing.JButton();
-        jPanel_RoboArm = new javax.swing.JPanel();
-        jButton_SetMotorZERO = new javax.swing.JButton();
-        jButton_SetMotorIdeal = new javax.swing.JButton();
-        jToggleButton1 = new javax.swing.JToggleButton();
-        jScrollBarwaitTime = new javax.swing.JScrollBar();
-        jLabel2 = new javax.swing.JLabel();
-        jButton3Up = new javax.swing.JButton();
-        jButton4Down = new javax.swing.JButton();
-        jLabel3 = new javax.swing.JLabel();
-        jSlider1 = new javax.swing.JSlider();
-        jSlider_moveBaseMotor = new javax.swing.JSlider();
-        jSlider2 = new javax.swing.JSlider();
-        jTextField_Ideal = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
-        jProgressBar1 = new javax.swing.JProgressBar();
-        jButton4_AutoSweep = new javax.swing.JButton();
-        jButton4_Light1 = new javax.swing.JButton();
         mPanelVehicle = new javax.swing.JPanel();
-        mTruckSteerPanel = new RoverUI.TruckSteerPanel();
+        mTruckSteerPanel = new InterfaceComponents.TruckSteerPanel();
         mPanelCharts = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
-        mTruckEngager = new RoverUI.TruckEngager();
+        mTruckEngager = new InterfaceComponents.TruckEngager();
         jButtonFrontRightReEngage = new javax.swing.JButton();
         mPanelDebug = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
@@ -935,14 +887,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         });
         jPanel1.add(jButton_RightFrontMoreStepperRight, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 70, -1, 60));
 
-        jButton3.setText("Disconnect Steppers");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
-            }
-        });
-        jPanel1.add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(720, 90, -1, -1));
-
         jTextField1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jTextField1.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         jTextField1.setText("Right Front Trim");
@@ -997,146 +941,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         jPanel1.add(jButtonCalibrateToTargetPotValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 13, -1, 50));
 
         mMainTabbedPane.addTab("Lights and Trim Settings", jPanel1);
-
-        jPanel_RoboArm.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
-
-        jButton_SetMotorZERO.setText("setMotor to 0");
-        jButton_SetMotorZERO.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton_SetMotorZEROActionPerformed(evt);
-            }
-        });
-        jPanel_RoboArm.add(jButton_SetMotorZERO, new org.netbeans.lib.awtextra.AbsoluteConstraints(80, 50, -1, -1));
-
-        jButton_SetMotorIdeal.setText("setMotor to ideal spot");
-        jButton_SetMotorIdeal.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton_SetMotorIdealActionPerformed(evt);
-            }
-        });
-        jPanel_RoboArm.add(jButton_SetMotorIdeal, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 50, -1, -1));
-
-        jToggleButton1.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
-        jToggleButton1.setText("Clipper Off");
-        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton1ActionPerformed(evt);
-            }
-        });
-        jPanel_RoboArm.add(jToggleButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(110, 410, 190, 60));
-
-        jScrollBarwaitTime.setBackground(new java.awt.Color(102, 255, 102));
-        jScrollBarwaitTime.setBlockIncrement(125);
-        jScrollBarwaitTime.setMaximum(2000);
-        jScrollBarwaitTime.setToolTipText("");
-        jScrollBarwaitTime.setUnitIncrement(100);
-        jScrollBarwaitTime.setValue(75);
-        jScrollBarwaitTime.setVisibleAmount(5);
-        jScrollBarwaitTime.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        jScrollBarwaitTime.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        jScrollBarwaitTime.addAdjustmentListener(new java.awt.event.AdjustmentListener() {
-            public void adjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
-                jScrollBarwaitTimeAdjustmentValueChanged(evt);
-            }
-        });
-        jPanel_RoboArm.add(jScrollBarwaitTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 230, 130, 280));
-
-        jLabel2.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        jLabel2.setText("Set to:");
-        jPanel_RoboArm.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(490, 410, 110, 30));
-
-        jButton3Up.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jButton3Up.setText("Up");
-        jButton3Up.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3UpActionPerformed(evt);
-            }
-        });
-        jPanel_RoboArm.add(jButton3Up, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 40, 120, 60));
-
-        jButton4Down.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
-        jButton4Down.setText("Down");
-        jButton4Down.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4DownActionPerformed(evt);
-            }
-        });
-        jPanel_RoboArm.add(jButton4Down, new org.netbeans.lib.awtextra.AbsoluteConstraints(630, 130, 120, 70));
-
-        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
-        jLabel3.setText("Run Time for UpDownArm");
-        jPanel_RoboArm.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(541, 10, 180, -1));
-
-        jSlider1.setMajorTickSpacing(1);
-        jSlider1.setMaximum(60);
-        jSlider1.setMinimum(35);
-        jSlider1.setMinorTickSpacing(1);
-        jSlider1.setOrientation(javax.swing.JSlider.VERTICAL);
-        jSlider1.setPaintLabels(true);
-        jSlider1.setPaintTicks(true);
-        jSlider1.setToolTipText("");
-        jSlider1.setValue(52);
-        jSlider1.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                jSlider1StateChanged(evt);
-            }
-        });
-        jPanel_RoboArm.add(jSlider1, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 10, 90, 500));
-
-        jSlider_moveBaseMotor.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        jSlider_moveBaseMotor.setMaximum(0);
-        jSlider_moveBaseMotor.setPaintLabels(true);
-        jSlider_moveBaseMotor.setPaintTicks(true);
-        jSlider_moveBaseMotor.setToolTipText("");
-        jSlider_moveBaseMotor.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                jSlider_moveBaseMotorStateChanged(evt);
-            }
-        });
-        jPanel_RoboArm.add(jSlider_moveBaseMotor, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 110, 340, 70));
-
-        jSlider2.setMajorTickSpacing(1000);
-        jSlider2.setMaximum(4000);
-        jSlider2.setPaintLabels(true);
-        jSlider2.setPaintTicks(true);
-        jSlider2.setToolTipText("");
-        jSlider2.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                jSlider2StateChanged(evt);
-            }
-        });
-        jPanel_RoboArm.add(jSlider2, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 230, 360, -1));
-
-        jTextField_Ideal.setText("300");
-        jPanel_RoboArm.add(jTextField_Ideal, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 20, 60, -1));
-
-        jLabel1.setFont(new java.awt.Font("Tahoma", 0, 18)); // NOI18N
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("jLabel1");
-        jPanel_RoboArm.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 450, 90, 50));
-
-        jProgressBar1.setMaximum(150);
-        jProgressBar1.setOrientation(1);
-        jProgressBar1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-        jPanel_RoboArm.add(jProgressBar1, new org.netbeans.lib.awtextra.AbsoluteConstraints(510, 40, 70, 310));
-
-        jButton4_AutoSweep.setText("AutoSweep");
-        jButton4_AutoSweep.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4_AutoSweepActionPerformed(evt);
-            }
-        });
-        jPanel_RoboArm.add(jButton4_AutoSweep, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 330, 120, 30));
-
-        jButton4_Light1.setText("Light 1");
-        jButton4_Light1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4_Light1ActionPerformed(evt);
-            }
-        });
-        jPanel_RoboArm.add(jButton4_Light1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 410, 90, 50));
-
-        mMainTabbedPane.addTab("_RoboArm_", jPanel_RoboArm);
 
         mPanelVehicle.setMinimumSize(new java.awt.Dimension(1061, 645));
         mPanelVehicle.setLayout(new java.awt.GridBagLayout());
@@ -1200,7 +1004,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
         mMainTabbedPane.addTab("Debug", mPanelDebug);
 
-        mMainTabbedPane.setSelectedIndex(3);
+        mMainTabbedPane.setSelectedIndex(2);
 
         getContentPane().add(mMainTabbedPane);
 
@@ -1318,206 +1122,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         mGamePadUpdater.setActive(mBtnEnableGamePad.isSelected());
     }//GEN-LAST:event_mBtnEnableGamePadActionPerformed
 
-    private void jButton_SetMotorZEROActionPerformed(java.awt.event.ActionEvent evt) {
-        int pos = 0;
-        try {
-            RFESetBaseMotorPosition(pos);
-        } catch (Exception ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        jSlider_moveBaseMotor.setValue(0);
-    }
-
-    private void jButton_SetMotorIdealActionPerformed(java.awt.event.ActionEvent evt) {
-        String pos_string = jTextField_Ideal.getText() + "";
-        int pos = Integer.parseInt(pos_string);
-        System.out.println(pos);
-
-        try {
-            RFESetBaseMotorPosition(pos);
-        } catch (Exception ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        updatejSlider_moveBasemotor = false; // a temp flag to keep the slider from also trying to update the RFESetBaseMotorPosition
-        jSlider_moveBaseMotor.setValue(pos);
-    }
-
-    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {
-        double clipperOn = 0;
-        try {
-            if (jToggleButton1.isSelected()) {
-                clipperOn = 1.0; // if true then ON
-                jToggleButton1.setBackground(Color.red);
-                jToggleButton1.setText("Clipper Running");
-            } else {
-                clipperOn = 0.0; // if false then OFF
-                jToggleButton1.setBackground(Color.green);
-                jToggleButton1.setText("Clipper Off");
-            }
-            mRoboArm2.SetDutyCycleWeedClipperHead(clipperOn);//RoboArmSetDutyCycle();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(TruckSteerPanel.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (Exception ex) {
-            Logger.getLogger(TruckSteerPanel.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void jScrollBarwaitTimeAdjustmentValueChanged(java.awt.event.AdjustmentEvent evt) {
-        waitTime = jScrollBarwaitTime.getValue();
-        jLabel2.setText("Set to: " + waitTime + "");
-    }
-
-    private void jButton3UpActionPerformed(java.awt.event.ActionEvent evt) {
-        String UpDown = "Up";
-
-        try {
-            mRoboArm2.setUpDownPosition(changeSize, waitTime, UpDown);
-        } catch (PhidgetException ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void jButton4DownActionPerformed(java.awt.event.ActionEvent evt) {
-        String UpDown = "Down";
-
-        try {
-            mRoboArm2.setUpDownPosition(changeSize, waitTime, UpDown);
-        } catch (PhidgetException ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        }// TODO add your handling code here:
-    }
-
-    private void jSlider_moveBaseMotorStateChanged(javax.swing.event.ChangeEvent evt) {
-        if (updatejSlider_moveBasemotor) {
-            try {
-                RFESetBaseMotorPosition(jSlider_moveBaseMotor.getValue());
-            } catch (Exception ex) {
-                System.err.println("--------ccccccccccccccccc-----------------------");
-                Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } else {
-            updatejSlider_moveBasemotor = true;
-        }
-    }
-
-    private void jSlider2StateChanged(javax.swing.event.ChangeEvent evt) {
-        jSlider_moveBaseMotor.setMaximum(jSlider2.getValue());
-
-        int sp = (int) (jSlider_moveBaseMotor.getMaximum() / 5);
-        jSlider_moveBaseMotor.setMajorTickSpacing(sp);
-        jSlider_moveBaseMotor.setLabelTable(jSlider_moveBaseMotor.createStandardLabels(sp, 0));
-    }
-
-    private void jSlider1StateChanged(javax.swing.event.ChangeEvent evt) {
-        double pos = (double) jSlider1.getValue();
-        System.out.println("slider value = " + pos);
-        try {
-            RFESetServo1Position(pos);
-        } catch (Exception ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
-        // do this on the RoboArm tab where I have other connections to phidgets?
-
-//        int targetValue_int=0;
-//        String channelName = cmbPhidgetChannels.getSelectedItem().toString();
-//        String paramName = cmbPhidgetParamNames.getSelectedItem().toString();
-//        String targetValue = (String)(targetValue_int+"");
-//        System.out.println("targetValue - "+targetValue_int);
-//        mDeviceManager.setChannelParam(
-//                channelName,
-//                paramName,
-//                Float.parseFloat(targetValue)
-//        );
-    }
-
-    private void jButton4_AutoSweepActionPerformed(java.awt.event.ActionEvent evt) {
-        double servo1_pos = 50;
-        double basePos = 300;
-
-        // open a csv file
-        // read in the steps into an array?
-        // do the steps from the array?
-
-        // move to starting position
-        try {
-            System.out.println("servo rotation (up/down) = " + servo1_pos);
-            System.out.println("servo rotation (side to side) = " + basePos);
-            RFESetServo1Position(servo1_pos);
-            RFESetBaseMotorPosition(basePos);
-        } catch (Exception ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-
-        // rotate down
-        servo1_pos = 47;
-        //basePos = 300;
-        try {
-            System.out.println("servo rotation (up/down) = " + servo1_pos);
-            System.out.println("servo rotation (side to side) = " + basePos);
-            RFESetServo1Position(servo1_pos);
-            //RFESetBaseMotorPosition(basePos);
-        } catch (Exception ex) {
-            Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        // start loop (or do while rotation is over 0)
-
-        while (basePos >= 10) {
-
-            try {
-                sleep(250);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            // move back 40
-            // move forward 20
-
-            basePos = basePos - 40;
-
-            try {
-                //System.out.println("servo rotation (up/down) = "+servo1_pos);
-                System.out.println("servo rotation (side to side) = " + basePos);
-                RFESetServo1Position(servo1_pos);
-                RFESetBaseMotorPosition(basePos);
-            } catch (Exception ex) {
-                Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            try {
-                sleep(250);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            basePos = basePos + 20;
-            try {
-                //System.out.println("servo rotation (up/down) = "+servo1_pos);
-                System.out.println("servo rotation (side to side) = " + basePos);
-                RFESetServo1Position(servo1_pos);
-                RFESetBaseMotorPosition(basePos);
-            } catch (Exception ex) {
-                Logger.getLogger(RoverFrontEnd.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-
-    }
-
-    private void jButton4_Light1ActionPerformed(java.awt.event.ActionEvent evt) {
-        // switch #3
-
-        //jToggleButton1// TODO add your handling code here:
-    }
-
     private void mBtnAppExitActionPerformed(java.awt.event.ActionEvent evt) {
         cleanUpOnClose();
         System.exit(0);
@@ -1525,11 +1129,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton3Up;
-    private javax.swing.JButton jButton4Down;
-    private javax.swing.JButton jButton4_AutoSweep;
-    private javax.swing.JButton jButton4_Light1;
     private javax.swing.JButton jButtonCalibrateToTargetPotValue;
     private javax.swing.JButton jButtonFrontRightReEngage;
     private javax.swing.JButton jButtonUpdateSteppersManually;
@@ -1537,22 +1136,11 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     private javax.swing.JButton jButton_LeftFrontMoreStepperRight;
     private javax.swing.JButton jButton_RightFrontMoreStepperLeft;
     private javax.swing.JButton jButton_RightFrontMoreStepperRight;
-    private javax.swing.JButton jButton_SetMotorIdeal;
-    private javax.swing.JButton jButton_SetMotorZERO;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel_RoboArm;
-    private javax.swing.JProgressBar jProgressBar1;
-    private javax.swing.JScrollBar jScrollBarwaitTime;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JSlider jSlider1;
-    private javax.swing.JSlider jSlider2;
-    private javax.swing.JSlider jSlider_moveBaseMotor;
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
@@ -1560,8 +1148,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     private javax.swing.JTextField jTextFieldFrontRightTrim;
     private javax.swing.JTextField jTextFieldLeftPot_2;
     private javax.swing.JTextField jTextFieldRightPot_2;
-    private javax.swing.JTextField jTextField_Ideal;
-    private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JToggleButton jToggleButtonLightsOnOff;
     private javax.swing.JButton mBtnAppExit;
     private javax.swing.JToggleButton mBtnEnableGamePad;
@@ -1575,8 +1161,8 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     private javax.swing.JPanel mPanelVehicle;
     private javax.swing.JScrollPane mScrollPaneLog;
     private javax.swing.JPanel mTabConfig;
-    private RoverUI.TruckEngager mTruckEngager;
-    private RoverUI.TruckSteerPanel mTruckSteerPanel;
+    private InterfaceComponents.TruckEngager mTruckEngager;
+    private InterfaceComponents.TruckSteerPanel mTruckSteerPanel;
     private javax.swing.JTextArea mTxtAreaLog;
     private RoboCam.WheelConfigPanel mWheelConfigPanelFrontLeft;
     private RoboCam.WheelConfigPanel mWheelConfigPanelFrontRight;

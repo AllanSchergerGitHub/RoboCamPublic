@@ -105,6 +105,10 @@ public class MotorPositioner {
         listener.onUpdate(this, mpcdc);
     }
 
+    /*
+    * Register a listener that will be notified when an event happens.
+    
+    */
     public void addDutyCycleListener(DutyCycleListener listener) {
         mMotorPositionController.addDutyCycleUpdateListener(new MotorPositionControllerDutyCycleUpdateListener() {
             @Override
