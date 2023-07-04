@@ -16,16 +16,12 @@ public class Truck {
     private final Wheel mWheelRearLeft;
     private final Wheel mWheelRearRight;
     
-    private String RoverOrUI_Flag;
-
-    //private final Arm mArm;
-
     private int wheel_ID = 3;
 
     private final Wheel[] mWheels;
     private final SteeringArc mSteeringArc;
 
-    Point.Double modifiedMousePos = new Point.Double(427.5, 180); //(434.5 when on UI?) - adjusting the x here can help if the wheels don't face straight ahead when the 'forwardsteer' button is pressed.
+    Point.Double modifiedMousePos = new Point.Double(330.5, 180); //(330.5 when on UI?) - adjusting the x here can help if the wheels don't face straight ahead when the 'forwardsteer' button is pressed.
     private Boolean mTroubleshootingMessages = false; // set this to true for additional messages to help with modifiedMousePos problems.
     Point.Double modifiedRelMousePos = new Point.Double();
 
@@ -52,7 +48,7 @@ public class Truck {
     private double rearRightDeltaX = 1;
     private double rearLeftDeltaX = 1;
 
-    private Point.Double mDrawLocation = new Point.Double(434, 180);
+    private Point.Double mDrawLocation = new Point.Double(330, 240);
     private Point.Double rotateWheelsTo_toPoint;
 
     private double mDrawAngle = 0;
@@ -124,11 +120,20 @@ public class Truck {
 
         mSteeringArc = new SteeringArc();
 
-        mDrawLocation = new Point.Double();
-        if (mTroubleshootingMessages) {
-            System.out.println("AA Draw Location defined here " + mDrawLocation);
-        }
-        drawLocation = new Point.Double(427.5, 180.0); //427.5 if this is set to a lower value the bounding box is closer to the correct starting point but there must be a negative that is lower so the circle is farther right as this gets smaller.
+        //mDrawLocation = new Point.Double(); (removed July 3, 2023)
+//        if (mTroubleshootingMessages) {
+//            System.out.println("AA Draw Location defined here " + mDrawLocation);
+//        }
+        /*
+         * drawLocation should be a point where the green circle is placed within the boundingbox
+         * at application start. It should be centered so the rover is headed straight forward.
+         * mDrawLocation is also set in the constructor "private Point.Double mDrawLocation = new Point.Double(330, 240);"
+         * Why it needs to be reset here again I'm not sure; additional testing is needed (July 2023).
+         * The y value (242.5) is exactly 1/2 of the height of the groundpanel. Perhaps setting it here
+         * can be automated. The min/max/preferred height of groudpanel (485) is defined by Allan via netbeans from within the 
+         * design window of TruckSteerPanel.java.
+        */
+        drawLocation = new Point.Double(330.0, 242.5); //427.5 if this is set to a lower value the bounding box is closer to the correct starting point but there must be a negative that is lower so the circle is farther right as this gets smaller.
         mDrawLocation.setLocation(drawLocation);
         if (mTroubleshootingMessages) {
             System.out.println("BB Draw Location defined here " + mDrawLocation);
@@ -138,13 +143,6 @@ public class Truck {
         mWheelFrontLeft.setDrawAngle(10); // runs only once at start up
     }
     
-    public void setRoverOrUI_Flag(String roverOrUI_Flag){
-        RoverOrUI_Flag = roverOrUI_Flag;
-        for(Wheel wheel : mWheels){
-            wheel.setRoverOrUI_Flag(roverOrUI_Flag);
-        }
-    }
-
     public double getSteerCircleEdgeY() {
         return mDrawLocation.y + mSteerCircleEdgeY;
     }
@@ -321,6 +319,12 @@ public class Truck {
         }
     }
 
+    public void increaseWheelsAngle(int wheelIndex, double angle) {
+        if (wheelIndex >= mWheels.length || wheelIndex < 0) return;
+
+        mWheels[wheelIndex].increaseDrawAngle(angle);
+    }
+
     public void setWheelsAngle(double angle) {
         for (Wheel wheel : mWheels) {
             wheel.setDrawAngle(angle);
@@ -330,12 +334,6 @@ public class Truck {
     public void setWheelsAngle(int wheelIndex, double angle) {
         if (wheelIndex >= mWheels.length || wheelIndex < 0) return;
         mWheels[wheelIndex].setDrawAngle(angle);
-    }
-
-    public void increaseWheelsAngle(int wheelIndex, double angle) {
-        if (wheelIndex >= mWheels.length || wheelIndex < 0) return;
-
-        mWheels[wheelIndex].increaseDrawAngle(angle);
     }
 
     public void stopMoving() {
@@ -363,9 +361,13 @@ public class Truck {
 
         Point.Double diffPoint;
         double angle;
-        //System.out.print("delta:");
-        //System.out.println((mWheelFrontRight.getReadDutyCycle(0)-mWheelFrontRight.getReadDutyCycle(1)));
 
+        /*
+         * The value "Stopped" is shown as both enum "None" and enum "Stopped"; See SteeringMode.java.
+         * There is probably a better way to do this.
+         * When the application starts (and/or is in mode 'Stopped') the code for case NONE is executed.
+         * 
+        */
         switch (mSteeringMode) {
             case NONE:
                 for (Wheel wheel : mWheels) {
@@ -375,7 +377,7 @@ public class Truck {
                     wheel.setWheelSpeed(0);
                     wheel.setEmergencyStopSetVelocityToTrue(); // this just forces the wheel device to set the velocity (presumably to zero) - it isn't a true emergency stop
                     //wheel.setSpeedRatio(1);
-                }
+                }                
                 break;
             case MOUSE_FREE:
                 //DO NOTHING

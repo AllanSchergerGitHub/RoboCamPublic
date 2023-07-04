@@ -53,18 +53,7 @@ public class Launcher {
         String machineName = null;
         int roverPort = 0;
         String roverHost = null;
-//        String fileTimestamp = "phidgetlog"+(new SimpleDateFormat("yyyy_MM_dd_hh_mm_ss").format(new Date()))+".log";
-//        System.err.println("lgger file name: "+fileTimestamp);
-//        try {
-//            Log.enable(LogLevel.VERBOSE, "phidgetlog"+fileTimestamp+".log");
-//        } catch (PhidgetException ex) {
-//            Logger.getLogger(Launcher.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        try {
-//            Log.enable(LogLevel.VERBOSE, fileTimestamp); // this is a phidget logger; not the java logger.
-//        } catch (PhidgetException ex) {
-//            Logger.getLogger(Launcher.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+
         /* Parse the command line arguments and set parameters */
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
@@ -104,14 +93,15 @@ public class Launcher {
         System.out.println("the '--machine' command line arg = " + machineName + " (options are UI or Rover");
 
         whatIsMyIP(machineName);
+        Utility.ComputerMachineNameService.setComputerMachineName(machineName, "InitialSetup_Launcher.java");
 
         if (machineName.equals("UI")) {
             System.out.println("UI Machine " + roverHost + " " + roverPort);
             try {
                 UIFrontEnd uiFrontEnd = new UIFrontEnd(roverHost, roverPort);
+                uiFrontEnd.start_mSocketClientThread();
                 uiFrontEnd.setVisible(true);
                 uiFrontEnd.loadFromConfig(config);
-                uiFrontEnd.setMachineName(machineName);
             } catch (IOException ex) {
                 Logger.getLogger(Launcher.class.getName()).log(Level.SEVERE, null, ex);
             } catch (PhidgetException ex) {
@@ -123,16 +113,19 @@ public class Launcher {
                 RoverFrontEnd roverFrontEnd = new RoverFrontEnd(roverPort);
                 roverFrontEnd.setVisible(true);
                 roverFrontEnd.loadFromConfig(config);
-                roverFrontEnd.setMachineName(machineName);
             } catch (Exception ex) {
                 Logger.getLogger(Launcher.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
+    /**
+     * Gets the IP address of Rover so it can be used for testing connection issues between Rover and UI.
+     * Returns the instance of InetAddress containing
+     * local host name and address
+     * @param zMachineName 
+     */
     public static void whatIsMyIP(String zMachineName) {
-        // Returns the instance of InetAddress containing
-        // local host name and address
         InetAddress localhost = null;
         if (zMachineName.equals("Rover")) {
             try {
@@ -156,7 +149,7 @@ public class Launcher {
             } catch (Exception e) {
                 systemipaddress = "Cannot Execute Properly";
             }
-            System.out.println("Public IP Address: " + systemipaddress + " (useful for connecting to Rover from UI Machine)");
+            System.out.println("Public IP Address of Rover: " + systemipaddress + " (useful for connecting to Rover from UI Machine)");
             System.out.println("If UI machine IP address refreshes or changes you will need to go into UNIFI and update source ip addresses in the port forwarding section.");
         }
     }

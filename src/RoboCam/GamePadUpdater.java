@@ -3,7 +3,7 @@ package RoboCam;
 import GamePad.GamePadController;
 import GamePad.GamePadControllerValue;
 import GamePad.GamePadManager;
-import RoverUI.TruckSteerPanel;
+import InterfaceComponents.TruckSteerPanel;
 import RoverUI.Vehicle.SteeringMode;
 
 import javax.swing.*;

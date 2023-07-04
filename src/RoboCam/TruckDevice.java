@@ -9,7 +9,6 @@ import RoverUI.Vehicle.Wheel;
 
 public class TruckDevice {
     private WheelDevice[] mWheelDevices;
-    private String mBatch_time_stamp_into_mysql;
     double distanceRemainingRover = 0;
     private PositionList mBLDCMotorPosMult = new PositionList(1, 1);
     private Wheel[] wheels = null;
@@ -130,7 +129,6 @@ public class TruckDevice {
         boolean allDetected = false;
         for (WheelDevice wheelDevice : mWheelDevices) {
             allDetected &= wheelDevice.detectDevices(forced);
-            //wheelDevice.setBatchTime(mBatch_time_stamp_into_mysql); // don't need to do this over and over again
         }
 
         return allDetected;

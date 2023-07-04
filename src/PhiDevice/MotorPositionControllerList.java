@@ -248,6 +248,12 @@ public class MotorPositionControllerList extends ArrayList<MotorPositioner> {
         return x;
     }
 
+    /**
+     * This goes down to the physical device to get a dutycycle reading from the motor.
+     * @param index
+     * @return
+     * @throws PhidgetException 
+     */
     public double getDutyCycleAtIndex(int index) throws PhidgetException {
         if (index >= size()) return 0;
         if (this.get(index).getController() == null) {

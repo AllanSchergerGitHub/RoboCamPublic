@@ -2,7 +2,7 @@
 
 <Form version="1.3" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <NonVisualComponents>
-    <Component class="RoverUI.DeviceCheckBoxList" name="deviceCheckBoxList1">
+    <Component class="InterfaceComponents.DeviceCheckBoxList" name="deviceCheckBoxList1">
     </Component>
   </NonVisualComponents>
   <Properties>
@@ -78,7 +78,7 @@
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
       <SubComponents>
-        <Component class="RoverUI.DeviceCheckBoxList" name="mDeviceCheckBoxList">
+        <Component class="InterfaceComponents.DeviceCheckBoxList" name="mDeviceCheckBoxList">
           <Properties>
             <Property name="autoscrolls" type="boolean" value="true"/>
           </Properties>

@@ -3,6 +3,7 @@ package RoverUI.Vehicle;
 import Chart.ChartParamType;
 import Chart.ChartParamsDataset;
 import PhiDevice.MotorPositionControllerList;
+import Utility.ComputerMachineNameService;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -76,14 +77,15 @@ public final class Wheel {
 
     private ChartParamsDataset mChartParamsDataset;
 
-    public Wheel(String name) {
-        mName = name;
-        calculateDimensions();
-    }
-
     public Wheel(String name, Color fillColor) {
         mName = name;
         mFillColor = fillColor;
+        Utility.ComputerMachineNameService.ComputerMachineInfo machineInfo = ComputerMachineNameService.getComputerMachineNameInstance("Wheel.java");
+        if (machineInfo != null) {
+            mRoverOrUI_Flag = machineInfo.getComputerMachineName();
+        } else {
+            mRoverOrUI_Flag = "Not Defined Yet";    // Handle the case where machineInfo is null, e.g., by logging an error, throwing an exception, or setting a default value
+        }
         calculateDimensions();
     }
 
@@ -158,9 +160,7 @@ public final class Wheel {
 
     public void setMaxdutyCycleReading(double MaxdutyCycleReadingFromDevice) {
         MaxdutyCycleReading = MaxdutyCycleReadingFromDevice;
-    }
-
-    ;
+    };
 
     public double getSpeedRatio(double mDistanceRemainingRover) {
         double wheelVelocityFactor = 1.04; // for wheels start with front wheels going faster than rear and assuming moving forward (this is updated below)
@@ -207,7 +207,6 @@ public final class Wheel {
     }
 
     public void setBLDCmotorReadPos(int index, double value, String source) {
-        System.err.println("......................................................."+source + " value " + value);
         mBLDCmotorReadPosList[index] = value;
     }
 
@@ -217,7 +216,6 @@ public final class Wheel {
 
     public interface DeviceInfoListChangeListener {
         public void onChange();
-
     }
 
     ArrayList<DeviceInfoListChangeListener> mDeviceInfoListChangeListeners = new ArrayList<>();
@@ -468,15 +466,6 @@ public final class Wheel {
     }
 
     /**
-     * not used. try to use 'public void rotateTo(Point.Double point, double offset)' instead
-     *
-     * @param point
-     */
-    public void rotateTo(Point.Double point) {
-        mDrawAngle = Geom.getSlope(mDrawLocation, point);
-    }
-
-    /**
      * only used with steer method 'turnaround' (and this could probably be simplified with some work).
      *
      * @param point
@@ -550,11 +539,10 @@ public final class Wheel {
 
     public void updateChartParamsDataset() { // 
         if (mChartParamsDataset == null) return;
-        mChartParamsDataset.addValue(ChartParamType.ANGLE, mDrawAngle);
         //mChartParamsDataset.addValue(ChartParamType.VELOCITY, mWheelSpeed);
+        mChartParamsDataset.addValue(ChartParamType.ANGLE, mDrawAngle);        
         mChartParamsDataset.addValue(ChartParamType.BLDC_1_POSITION, getBLDCmotorReadPos1Device(0));
         mChartParamsDataset.addValue(ChartParamType.BLDC_2_POSITION, getBLDCmotorReadPos1Device(1));
-
         mChartParamsDataset.addValue(ChartParamType.BLDC_1_DUTY_CYCLE, mBLDCmotorDutyCycleList[0]);
         mChartParamsDataset.addValue(ChartParamType.BLDC_2_DUTY_CYCLE, mBLDCmotorDutyCycleList[1]);
         //mChartParamsDataset.addValue(ChartParamType.BLDC_POS_DUTY_CYCLE, mBLDCmotorDutyCycleList[index]);
@@ -562,10 +550,6 @@ public final class Wheel {
 
 
     static final int DEFAULT_LINE_SPACING = 2;
-
-    public void setRoverOrUI_Flag(String roverOrUI_Flag){
-        mRoverOrUI_Flag = roverOrUI_Flag;
-    }    
     
     public void draw(Graphics2D g2d) {
         AffineTransform saveAT;
@@ -672,11 +656,10 @@ public final class Wheel {
         double BLDC_POS = getBLDCmotorReadPos1Device(0);        
         if(mName.equals("FrontLeft")){
             // the front left motor is giving negative values for position. this only affects the readout in the GUI.
-            if(mRoverOrUI_Flag=="Rover"){
+            if(mRoverOrUI_Flag.equals("Rover")){
                 BLDC_POS = BLDC_POS * -1; 
             }
         }
-        //System.out.println("----------mName------ " + mName + " -- mRoverOrUI_Flag -- " + mRoverOrUI_Flag + "; BLDC POS: " + String.format("%.0f", BLDC_POS));
         
         cursor = Utility.Drawing.drawString(Color.BLACK, TRANS_WHITE, fontSetting, fontSize,
                 g2d,
