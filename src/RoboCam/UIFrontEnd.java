@@ -17,6 +17,7 @@ import InterfaceComponents.DoubleVarArgListener;
 import InterfaceComponents.StringListener;
 import RoverUI.Vehicle.Wheel;
 import InterfaceComponents.XYDoubleListener;
+import InterfaceComponents.PopOutCharts;
 import Utility.CameraHelper;
 import com.phidget22.PhidgetException;
 import com.robocam.Socket.*;
@@ -54,6 +55,7 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
  * @author sujoy
  */
 public class UIFrontEnd extends javax.swing.JFrame {
+    ChartParamsDataset[] mChartParamsDatasets;
     private final SocketClient mSocketClient;
     private ComPipe mComPipe;
     private final Thread mSocketClientThread;
@@ -80,14 +82,11 @@ public class UIFrontEnd extends javax.swing.JFrame {
     ConfigDB mConfigDB;
     Config mConfig;
     DynamicConfig mDyanmicConfig;
-    ChartParamsDataset[] mChartParamsDatasets;
 
     private double grandTotalLagTime1000Instances = 0;
     private final ArrayList<Double> avgLagTime = new ArrayList<Double>();
     private Double LongTermMaxTimeLag = 0.0;
     int doInBackgroundCounter = 0;
-
-    Timer mUpdaterTimer;
 
     private HashMap<String, IPCamSetting> mCamSettingMap = new HashMap<>();
 
@@ -96,19 +95,23 @@ public class UIFrontEnd extends javax.swing.JFrame {
 
     ExecutorService mCameraExecutor = Executors.newFixedThreadPool(2);
 
+    /**
+     * This is called from the Launcher.java file at application launch.
+     * @param roverHost (from the robo-config.ini file)
+     * @param roverPort (from the robo-config.ini file)
+     * @throws IOException
+     * @throws PhidgetException 
+     */
     public UIFrontEnd(String roverHost, int roverPort) throws IOException, PhidgetException {
-        System.out.println("UI Machine: (poor variables name) roverHost and roverPort " + roverHost + " " + roverPort);
         initComponents();
         initMoreComponents();
-        mSocketClient = new SocketClient(roverHost, roverPort, mComPipe);
-        mSocketClientThread = new Thread(mSocketClient);
-
-        //mSocketWriteClient = new SocketWriteClient(roverHost, roverPort, mComPipe);
-        //mSocketWriteClientThread = new Thread(mSocketWriteClient);
-        //mSocketWriteClientThread.start();
-
+        
+        PopOutCharts popOutCharts = new PopOutCharts(mBtnExitApp, mTruckSteerPanel);
+            popOutCharts.initCreateAngleCharts();
+            popOutCharts.initGaugeChartUpdateTimer();
+            popOutCharts.initCreateAngleGaugeCharts();
+        
         mComParser.execute();
-
         mDeviceManager = new DeviceManager();
         mDeviceListJob = new DeviceListJob(mDeviceManager, cmbPhidgetChannels);
         mDeviceListJob.execute();
@@ -119,12 +122,11 @@ public class UIFrontEnd extends javax.swing.JFrame {
                 mGamePadManager, mTruckSteerPanel, mLblGamePadStatusValue);
         mGamePadUpdater.execute();
         mTruckSteerPanel.setRotateToStraight();
+        
+        mSocketClient = new SocketClient(roverHost, roverPort, mComPipe);
+        mSocketClientThread = new Thread(mSocketClient);
     }
-
-    public void start_mSocketClientThread() {
-        mSocketClientThread.start();
-    }
-
+    
     private void initMoreComponents() {
         ToolTipManager.sharedInstance().setInitialDelay(100);
         ToolTipManager.sharedInstance().setReshowDelay(1150);
@@ -229,56 +231,6 @@ public class UIFrontEnd extends javax.swing.JFrame {
             }
         });
 
-        mChartParamsDatasets = mTruckSteerPanel.getTruck().getChartParamsDatasets();
-        
-        for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
-            JFreeChart chart = ChartFactory.createXYLineChart(chartParamsDataset.getChartName(),
-                    "Time",
-                    "Duty Cycle",
-                    chartParamsDataset.getDutyCycleDataset(),
-                    PlotOrientation.VERTICAL,
-                    false,
-                    false,
-                    false);
-            
-
-            // Create a new Y-axis
-            NumberAxis posAxis = new NumberAxis("POS");
-            posAxis.setAutoRangeIncludesZero(false);
-            // Set the font size for the axis label
-            posAxis.setLabelFont(new Font("Dialog", Font.PLAIN, 16));
-            // Set the font size for the tick labels
-            posAxis.setTickLabelFont(new Font("Dialog", Font.PLAIN, 14));
-            // Create a new renderer for the second dataset
-            XYItemRenderer posRenderer = new XYLineAndShapeRenderer(true, false);
-            // Create a new dataset for the second Y-axis and add it to the chart
-            XYPlot plot = chart.getXYPlot();
-            plot.setRangeAxis(1, posAxis);
-            plot.setDataset(1, chartParamsDataset.getPosDataset());
-            plot.setRenderer(1, posRenderer);
-            // Ensure the ranges do not overlap
-            plot.mapDatasetToRangeAxis(1, 1);            
-            
-            ChartPanel chartPanel = new ChartPanel(chart);
-            // Set the preferred size of the chartPanel
-            chartPanel.setPreferredSize(new Dimension(1800, 600)); // width, height
-            // Set the min width & height of the area where charts will be drawn:
-            chartPanel.setMinimumSize(new Dimension(1500,600));
-            // Add the chartPanel to your container (e.g., a JPanel???)
-            mPanelCharts.add(chartPanel);
-        }
-
-        /**
-         * The action is the firing of the timer
-         */
-        mUpdaterTimer = new Timer(200, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mTruckSteerPanel.getTruck().updateChartParamsDataset();
-            }
-        });
-        mUpdaterTimer.start();
-
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -287,12 +239,86 @@ public class UIFrontEnd extends javax.swing.JFrame {
             }
         });
         
+        {/** This subblock of code could be put into a separate method for clarity.
+         * This subblock is responsible for the 4 charts that update in real time and 
+         * show the Position and Duty Cycle of the motors on the 4 wheels.
+         */
+        mChartParamsDatasets = mTruckSteerPanel.getTruck().getChartParamsDatasets_From_Truck_For_UI();
+            for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
+                JFreeChart chart = ChartFactory.createXYLineChart(chartParamsDataset.getChartName(),
+                        "Time",
+                        "Duty Cycle",
+                        /*
+                         * The data for the 2nd Y-axis is from the getDutyCycleDataset() method; the method defines
+                         * that it should return the DutyCycle data.
+                        */
+                        chartParamsDataset.getDutyCycleDataset(),
+                        PlotOrientation.VERTICAL,
+                        false,
+                        false,
+                        false);
+
+                /* Create a new Y-axis so there are 2 Y-axis. The scale on the second Y-axis
+                 * is different. The second Y-axis is on the right; the 1st axis is on the left.
+                */            
+                NumberAxis posAxis = new NumberAxis("POS");
+                posAxis.setAutoRangeIncludesZero(false);
+                // Set the font size for the axis label
+                posAxis.setLabelFont(new Font("Dialog", Font.PLAIN, 16));
+                // Set the font size for the tick labels
+                posAxis.setTickLabelFont(new Font("Dialog", Font.PLAIN, 14));
+                // Create a new renderer for the second dataset
+                XYItemRenderer posRenderer = new XYLineAndShapeRenderer(true, false);
+                // Create a new dataset for the second Y-axis and add it to the chart
+                XYPlot plot = chart.getXYPlot();
+                plot.setRangeAxis(1, posAxis);
+                /*
+                 * The data for the 2nd Y-axis is from the getPosDataset() method; the method defines
+                 * that it should return the POS data.
+                */
+                plot.setDataset(1, chartParamsDataset.getPosDataset());
+                plot.setRenderer(1, posRenderer);
+                // Ensure the ranges do not overlap
+                plot.mapDatasetToRangeAxis(1, 1);            
+
+                ChartPanel chartPanel = new ChartPanel(chart);
+                // Set the preferred size of the chartPanel
+                chartPanel.setPreferredSize(new Dimension(1800, 600)); // width, height
+                // Set the min width & height of the area where charts will be drawn:
+                chartPanel.setMinimumSize(new Dimension(1500,600));
+                // Add the chartPanel to your container (e.g., a JPanel???)
+                mPanelCharts.add(chartPanel);
+
+                if(chartParamsDataset.getChartName().contains("Front")){
+                    String chartName = "Angle: " + chartParamsDataset.getChartName();
+                    // Create new popout charts with angle data.
+                    // This version of the code produces 4 charts (one per wheel).
+                    // Only 2 charts are needed for the 2 front wheels since the rear wheels never change.
+                    // This displays the setting of the wheel angle; not the actual physical angles.
+                    JFreeChart angleChart = ChartFactory.createXYLineChart(
+                        chartName,
+                        "Time",
+                        "Angle",
+                        chartParamsDataset.getANGLE_Dataset(),
+                        PlotOrientation.VERTICAL,
+                        false,
+                        false,
+                        false
+                    );
+                }
+            }
+        }
+        
         /*
          * This makes the steering aligned straight ahead when the application is launched.
          * It may be better to have it start where it ended the prior time but I don't think that
          * capability is currently programmed (as of July 2023).
         */
         mTruckSteerPanel.setRotateToStraight();
+    }
+    
+    public void start_mSocketClientThread() {
+        mSocketClientThread.start();
     }
 
     public int getImageSaveLag() {
@@ -685,7 +711,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
                 */
                 for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) { 
                     if (wdpc.canServeCommand(command)) {
-                        //System.out.println("wdpc command: " + command);
+                        System.out.println("wdpc command: " + command);
                         wdpc.parseCommand(command);
                         Wheel wheel = mTruckSteerPanel
                                 .getTruck().getWheels()[wdpc.getWheelIndex()];

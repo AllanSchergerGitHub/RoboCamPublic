@@ -306,6 +306,11 @@ public class WheelDevice {
         return status;
     }
 
+    /*
+     * This getChartParamsDataset_For_Truck_For_UI method is for the Rover Interface charts only.
+     * See getChartParamsDataset_For_Truck_For_UI in Wheel.java for the code that updates
+     * the UI Interface charts.
+    */
     public ChartParamsDataset getChartParamsDataset() {
         if (mChartParamsDataset != null) return mChartParamsDataset;
         mChartParamsDataset = new ChartParamsDataset(
@@ -456,6 +461,8 @@ public class WheelDevice {
     * This updates the Rover Interface charts. It doesn't affect the UI's Interface Charts.
     * See updateWheelDeviceParamsForCom in RoverFrontEnd.java for code that sends data
     * from Rover to UI to be displayed on the UI charts.
+    * Also need to check why there is a better(?) version of updateChartParamsDataset in wheel.java. 
+    * Is it needed in both places?
     */
     public void updateChartParamsDataset() {
         // speed of chart updates is controlled here -> mUpdaterTimer within UI and possibly Rover UI?

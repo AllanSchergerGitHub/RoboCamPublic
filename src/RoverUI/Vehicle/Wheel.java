@@ -521,7 +521,12 @@ public final class Wheel {
         mPolyPointYs[4] = mPolyPointYs[3];
     }
 
-    public ChartParamsDataset getChartParamsDataset() {
+    /*
+     * This getChartParamsDataset_For_Truck_For_UI method is for the UI Interface charts only.
+     * See getChartParamsDataset_For_Truck_For_UI in WheelDevice.java for the code that updates
+     * the Rover Interface charts.
+    */
+    public ChartParamsDataset getChartParamsDataset_For_Truck_For_UI() {
         if (mChartParamsDataset != null) return mChartParamsDataset;
         mChartParamsDataset = new ChartParamsDataset(
                 getWheelName() + " Chart",
@@ -539,7 +544,7 @@ public final class Wheel {
 
     public void updateChartParamsDataset() { // 
         if (mChartParamsDataset == null) return;
-        //mChartParamsDataset.addValue(ChartParamType.VELOCITY, mWheelSpeed);
+        mChartParamsDataset.addValue(ChartParamType.VELOCITY, mWheelSpeed);
         mChartParamsDataset.addValue(ChartParamType.ANGLE, mDrawAngle);        
         mChartParamsDataset.addValue(ChartParamType.BLDC_1_POSITION, getBLDCmotorReadPos1Device(0));
         mChartParamsDataset.addValue(ChartParamType.BLDC_2_POSITION, getBLDCmotorReadPos1Device(1));

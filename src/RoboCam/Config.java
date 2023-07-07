@@ -134,7 +134,7 @@ public class Config {
 
     public String getIPCamPassword(String name) {
         String ggg = mProps.getProperty("ComputerNetworkLocation");
-        System.out.println(ggg);
+        System.out.println("ComputerNetworkLocation for " + name + " is " + ggg);
         if (mComputerNetworkLocation.equals("ExternalNetwork")) {
             return mProps.getProperty("houseIPCam." + name + ".Pwd");
         } else {
