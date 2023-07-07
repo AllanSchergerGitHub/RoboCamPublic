@@ -24,6 +24,9 @@ public class TruckDevice {
         }
     }
 
+    /*
+     * This is for the Rover UI charts only.
+    */
     public Chart.ChartParamsDataset[] getChartParamsDatasets() {
         Chart.ChartParamsDataset[] chartParamsDatasets =
                 new ChartParamsDataset[mWheelDevices.length];

@@ -300,7 +300,6 @@ public class RoverFrontEnd extends javax.swing.JFrame {
         }
         mChartParamsDatasets = mTruckDevice.getChartParamsDatasets();
         for (ChartParamsDataset chartParamsDataset : mChartParamsDatasets) {
-             System.out.println("chartParamsDataset " + chartParamsDataset );
             chart = ChartFactory.createXYLineChart(
                     chartParamsDataset.getChartName(),
                     "Time",

@@ -500,12 +500,15 @@ public class Truck {
         rotateWheels();
     }
 
-    public Chart.ChartParamsDataset[] getChartParamsDatasets() {
+    /*
+     * UI Interface charts only.
+    */
+    public Chart.ChartParamsDataset[] getChartParamsDatasets_From_Truck_For_UI() {
         Chart.ChartParamsDataset[] chartParamsDatasets =
                 new ChartParamsDataset[mWheels.length];
         int i = 0;
         for (Wheel wheel : mWheels) {
-            chartParamsDatasets[i] = wheel.getChartParamsDataset();
+            chartParamsDatasets[i] = wheel.getChartParamsDataset_For_Truck_For_UI();
             i++;
         }
         return chartParamsDatasets;

@@ -17,7 +17,12 @@ public class ChartParamsDataset {
     private HashMap<String, XYSeries> mParamsXYSeries;
     private XYSeriesCollection mDutyCycleXYSeriesCollection;
     private XYSeriesCollection mPosXYSeriesCollection;
+    private XYSeriesCollection mANGLE_XYSeriesCollection;
+    private XYSeriesCollection mVELOCITY_XYSeriesCollection;
 
+    /*
+     * These are used in both Rover Interface and UI Interface.
+    */
     public ChartParamsDataset(String chartName, ChartParamType[] paramTypes) {
         mChartName = chartName; // chartName is based on the wheel name; for example "FrontLeft Chart", etc.
         mParamTypes = paramTypes; // Velocity, Angle, BLDC1_Position, BLDC2_Position, BLDC1_DutyCycle, BLDC2_DutyCycle
@@ -25,6 +30,8 @@ public class ChartParamsDataset {
         mParamsXYSeries = new HashMap<>();
         mDutyCycleXYSeriesCollection = new XYSeriesCollection(); // this is a collection of different series; each series is one line on a chart.
         mPosXYSeriesCollection = new XYSeriesCollection();       // this is a collection of different series; each series is one line on a chart.
+        mANGLE_XYSeriesCollection = new XYSeriesCollection();       // this is a collection of different series; each series is one line on a chart.
+        mVELOCITY_XYSeriesCollection = new XYSeriesCollection();       // this is a collection of different series; each series is one line on a chart.
         
         for (ChartParamType paramType : paramTypes) {
             XYSeries series = new XYSeries(paramType.getName()); // this assigns a name to each series
@@ -34,6 +41,10 @@ public class ChartParamsDataset {
                 mDutyCycleXYSeriesCollection.addSeries(series);
             } else if (paramType == ChartParamType.BLDC_1_POSITION || paramType == ChartParamType.BLDC_2_POSITION) {
                 mPosXYSeriesCollection.addSeries(series);
+            } else if (paramType == ChartParamType.ANGLE) {
+                mANGLE_XYSeriesCollection.addSeries(series);
+            } else if (paramType == ChartParamType.VELOCITY) {
+                mVELOCITY_XYSeriesCollection.addSeries(series);    
             }
         }
     }
@@ -44,6 +55,14 @@ public class ChartParamsDataset {
 
     public XYSeriesCollection getPosDataset() {
         return mPosXYSeriesCollection;
+    }
+
+    public XYSeriesCollection getANGLE_Dataset() {
+        return mANGLE_XYSeriesCollection;
+    }
+
+    public XYSeriesCollection getVELOCITY_Dataset() {
+        return mVELOCITY_XYSeriesCollection;
     }
 
     public String getChartName() {
