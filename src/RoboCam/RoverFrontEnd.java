@@ -319,6 +319,10 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             mPanelCharts.add(chartPanel);
         }
 
+        /**
+         * mComPipe.putOut timer to send data from Rover (server) to UI (client) on a
+         * regular time interval.
+         */
         mUpdaterTimer = new Timer(200, e -> {
             mTruckDevice.updateChartParamsDataset();
             mTruckDevice.updateDutyCycleAtIndex();
@@ -363,6 +367,19 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             * 
             * wheelDevice.getBLCDCPosMultiplier()[0] this compensates for devices that are wired backward.
             */
+            if(wheelDevice.getWheel().getWheelName().equals("FrontLeft")){
+                // index zero refers to how many motors are on each wheel; not the wheel number.
+                wdpc.setActualSteeringAngle(0, angleLeftBasedOnPot);
+            } else if(wheelDevice.getWheel().getWheelName().equals("FrontRight")){
+                wdpc.setActualSteeringAngle(0, angleRightBasedOnPot);
+            }
+            
+            // index zero refers to how many motors are on each wheel; not the wheel number.
+            wdpc.setBLDCMotorActualVelocity(0, );
+            look at getDutyCycle() in WheelDevice.java as a template to get temperature data
+            
+            // setGhostAngle in WheelDevice.java?
+                        
             wdpc.setBLDCMotorPos(0, wheelDevice.getBLCDCPosAtIndex(0)*wheelDevice.getBLCDCPosMultiplier()[0]);
             wdpc.setBLDCMotorPos(1, wheelDevice.getBLCDCPosAtIndex(1));
             wdpc.setBLDCMotorDutyCycle(0, wheelDevice.getBLCDCDutyCyleAtIndex(0) * 1000*wheelDevice.getBLCDCPosMultiplier()[0]);

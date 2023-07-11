@@ -7,15 +7,14 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * @author sujoy
- */
 public class MotorPositionControllerList extends ArrayList<MotorPositioner> {
 
     double mWheelTargetPosition = 0; // applies to both motor 1 and 2 (0 and 1?) This is a mWheelTargetPosition
     double mTargetPosition0 = 0; // use this when we set a diff target for each motor
     double mTargetPosition1 = 0; // use this when we set a diff target for each motor
 
+    //private ArrayList<TemperatureSensor> mTemperatureSensors = new ArrayList<>();
+    
     @Override
     public MotorPositioner remove(int index) {
         System.err.println("---------????????????????????????removing a motor?");
@@ -255,6 +254,20 @@ public class MotorPositionControllerList extends ArrayList<MotorPositioner> {
      * @throws PhidgetException 
      */
     public double getDutyCycleAtIndex(int index) throws PhidgetException {
+        if (index >= size()) return 0;
+        if (this.get(index).getController() == null) {
+            return 0;
+        }
+        return this.get(index).getController().getDutyCycle();
+    }
+
+    /**
+     * This goes down to the physical device to get a dutycycle reading from the motor.
+     * @param index
+     * @return
+     * @throws PhidgetException 
+     */
+    public double getTemperatureAtIndex(int index) throws PhidgetException {
         if (index >= size()) return 0;
         if (this.get(index).getController() == null) {
             return 0;

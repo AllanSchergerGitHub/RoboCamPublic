@@ -523,7 +523,7 @@ public final class Wheel {
 
     /*
      * This getChartParamsDataset_For_Truck_For_UI method is for the UI Interface charts only.
-     * See getChartParamsDataset_For_Truck_For_UI in WheelDevice.java for the code that updates
+     * See getChartParamsDataset in WheelDevice.java for the code that updates
      * the Rover Interface charts.
     */
     public ChartParamsDataset getChartParamsDataset_For_Truck_For_UI() {
@@ -542,6 +542,9 @@ public final class Wheel {
         return mChartParamsDataset;
     }
 
+    /**
+     * UI side; not Rover.
+     */
     public void updateChartParamsDataset() { // 
         if (mChartParamsDataset == null) return;
         mChartParamsDataset.addValue(ChartParamType.VELOCITY, mWheelSpeed);
