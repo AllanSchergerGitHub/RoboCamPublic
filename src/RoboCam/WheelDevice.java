@@ -32,6 +32,7 @@ public class WheelDevice {
     public static Executor mCommonServiceExecutor = Executors.newCachedThreadPool();
     
     private MotorPositionControllerList mPhidBLDCMotorPositionControllerList = null;
+    private MotorTemperature mMotorTemperatureSensor = null;
     private MotorPositionController bldc1 = null;
     private String mBLDCMotorPositionControllerChannelName;
 
@@ -265,6 +266,15 @@ public class WheelDevice {
         }
     }
 
+    public double getBLCDCTemperatureAtIndex(int index) {
+        if (mMotorTemperatureSensor == null) return 0;
+        try {
+            return mMotorTemperatureSensor.getTemperature();// * mBLDCMotorPosMult.get(0)
+        } catch (PhidgetException ex) {
+            return 0;
+        }
+    }
+    
     public String getBLDCPositionControllerStatus() {
         String status;
         if (mBLDCMotorPositionControllerChannelName == null) {
@@ -307,7 +317,7 @@ public class WheelDevice {
     }
 
     /*
-     * This getChartParamsDataset_For_Truck_For_UI method is for the Rover Interface charts only.
+     * This getChartParamsDataset method is for the Rover Interface charts only.
      * See getChartParamsDataset_For_Truck_For_UI in Wheel.java for the code that updates
      * the UI Interface charts.
     */
@@ -783,6 +793,9 @@ public class WheelDevice {
                 });
     }
 
+    /**
+     * This doesn't seem to be doing anything??
+     */
     public void add_DutyCycleListener() {
         while (mPhidBLDCMotorPositionControllerList == null) {
             System.out.println("----- waiting to connect add_dutycyclelistener on " + mWheel.getWheelName());

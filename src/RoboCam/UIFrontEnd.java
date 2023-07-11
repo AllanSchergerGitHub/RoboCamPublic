@@ -707,7 +707,8 @@ public class UIFrontEnd extends javax.swing.JFrame {
                     continue; // if this if statement is true; then skip to the next loop with 'continue' command.
                 }
                 /*
-                    This is the UI processing messages sent to it from Rover via the robocam.socket jar
+                    This is the UI processing messages sent to it from Rover via the robocam.socket jar.
+                    Look for the publish code above.
                 */
                 for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) { 
                     if (wdpc.canServeCommand(command)) {
@@ -721,6 +722,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
                         //wheel.setReadDutyCycle(wdpc.getBLDCMotorDutyCycle());
                         wheel.setBLCDCDutyCyleAtIndex(0, wdpc.getBLDCMotorDutyCycle(0));
                         wheel.setBLCDCDutyCyleAtIndex(1, wdpc.getBLDCMotorDutyCycle(1));
+                        
                         break;
                     }
                 }

@@ -9,8 +9,11 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import static java.lang.Thread.sleep;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 import javax.swing.JButton;
@@ -233,8 +236,16 @@ public class PopOutCharts {
      */
     public void initGaugeChartUpdateTimer(){        
         /**
-         * The action is the firing of the timer
-         */
+        * The action is the firing of the timer
+        */
+        try {
+            /*  Give it a little pause before starting the timer to ensure
+                everything is started correctly; had a null exception error once.
+            */
+            sleep(150);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(PopOutCharts.class.getName()).log(Level.SEVERE, null, ex);
+        }
         mUpdaterTimer = new Timer(200, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
