@@ -7,6 +7,7 @@ import com.phidget22.TemperatureSensorTemperatureChangeListener;
 public class MotorTemperature {
     private TemperatureSensor mMotorTemperatureReader;
     private DeviceChannel mDeviceChannel;
+    private double currentTemperature;
     
     
     public static interface MotorTemperatureListener {
@@ -19,9 +20,15 @@ public class MotorTemperature {
         mDeviceChannel = deviceChannel;
     }
     
+    // This method returns the current temperature of the motor
+    public double getTemperature() {
+        return currentTemperature;
+    }
+    
     private void fireTempSensorListener(MotorTemperatureListener listener,
                                         TemperatureSensorTemperatureChangeEvent tempSensorUpdateEvent) {
         listener.onUpdate(mMotorTemperatureReader, tempSensorUpdateEvent);
+        currentTemperature = tempSensorUpdateEvent.getTemperature(); // Update the current temperature
     }
     
   // Add a temperature change listener

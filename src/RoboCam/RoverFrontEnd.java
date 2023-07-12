@@ -375,8 +375,8 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             }
             
             // index zero refers to how many motors are on each wheel; not the wheel number.
-            wdpc.setBLDCMotorActualVelocity(0, );
-            look at getDutyCycle() in WheelDevice.java as a template to get temperature data
+            wdpc.setBLDCMotorActualTemperature(0, wheelDevice.getBLCDCTemperatureAtIndex(0));
+            //look at getDutyCycle() in WheelDevice.java as a template to get temperature data
             
             // setGhostAngle in WheelDevice.java?
                         
