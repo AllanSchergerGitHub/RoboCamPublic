@@ -261,19 +261,19 @@ public class MotorPositionControllerList extends ArrayList<MotorPositioner> {
         return this.get(index).getController().getDutyCycle();
     }
 
-    /**
-     * This goes down to the physical device to get a dutycycle reading from the motor.
-     * @param index
-     * @return
-     * @throws PhidgetException 
-     */
-    public double getTemperatureAtIndex(int index) throws PhidgetException {
-        if (index >= size()) return 0;
-        if (this.get(index).getController() == null) {
-            return 0;
-        }
-        return this.get(index).getController().getDutyCycle();
-    }
+//    /**
+//     * This goes down to the physical device to get a dutycycle reading from the motor.
+//     * @param index
+//     * @return
+//     * @throws PhidgetException 
+//     */
+//    public double getTemperatureAtIndex(int index) throws PhidgetException {
+//        if (index >= size()) return 0;
+//        if (this.get(index).getController() == null) {
+//            return 0;
+//        }
+//        return this.get(index).getController().getDutyCycle();
+//    }
 
     public double getPositionAtIndex(int index, String wheelName) {
         if (index >= size()) return 0;

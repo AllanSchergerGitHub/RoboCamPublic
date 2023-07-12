@@ -7,6 +7,8 @@ import PhiDevice.*;
 import PhiDevice.Electrical_Etc.Potentiameters;
 import RoverUI.Vehicle.DeviceInfo;
 import RoverUI.Vehicle.Wheel;
+import PhiDevice.MotorTemperatureSensorList;
+     
 import com.phidget22.*;
 
 import java.text.DecimalFormat;
@@ -32,13 +34,15 @@ public class WheelDevice {
     public static Executor mCommonServiceExecutor = Executors.newCachedThreadPool();
     
     private MotorPositionControllerList mPhidBLDCMotorPositionControllerList = null;
-    private MotorTemperature mMotorTemperatureSensor = null;
+    private MotorTemperatureSensorList mMotorTemperatureSensorList = null;
     private MotorPositionController bldc1 = null;
     private String mBLDCMotorPositionControllerChannelName;
+    private String mBLDCMotorTemperatureChannelName;
 
     private final Wheel mWheel;
     private String mEncoderChannelName;
     private DeviceChannelList mBLDCMotorPositionControllerChannel;
+    private DeviceChannelList mBLDCMotorTemperatureChannel;
     private DeviceChannel mEncoderChannel;
 
     private double trimSettingFromAutoTrim = 0;
@@ -267,12 +271,8 @@ public class WheelDevice {
     }
 
     public double getBLCDCTemperatureAtIndex(int index) {
-        if (mMotorTemperatureSensor == null) return 0;
-        try {
-            return mMotorTemperatureSensor.getTemperature();// * mBLDCMotorPosMult.get(0)
-        } catch (PhidgetException ex) {
-            return 0;
-        }
+        if (mMotorTemperatureSensorList == null) return 0;
+        return mMotorTemperatureSensorList.getTemperatureAtIndex(index);        
     }
     
     public String getBLDCPositionControllerStatus() {
@@ -632,6 +632,51 @@ public class WheelDevice {
         });
     }
 
+    private void detectTemperatureSensors(){
+        if (mBLDCMotorTemperatureChannelName == null) {
+            mBLDCMotorTemperatureChannelName = mConfigDB.getValue(
+                    getConfigName(BLDCMOTOR_POSITION_CONTROLLER_NAMES), null);
+        } else {
+            String newBLDCPosNames = mConfigDB.getValue(
+                    getConfigName(BLDCMOTOR_POSITION_CONTROLLER_NAMES), null);
+
+            //Adjust the lsit if configuration is  changed while running
+            if (!mBLDCMotorTemperatureChannelName.equals(newBLDCPosNames) && mBLDCMotorTemperatureChannel != null) {
+                DeviceChannelList newBLDCList = mDeviceManager.getChannelListByNames(newBLDCPosNames.split(","));
+                ArrayList<Integer> removableIndices = new ArrayList<Integer>();
+                int i = mBLDCMotorTemperatureChannel.size() - 1;
+                //Remove the unused BLDC Channels
+                while (i >= 0 && i < mBLDCMotorTemperatureChannel.size()) {
+                    if (newBLDCList.indexOf(mBLDCMotorTemperatureChannel.get(i)) < 0) {
+                        if (mPhidBLDCMotorPositionControllerList != null) {
+                            mPhidBLDCMotorPositionControllerList.remove(i);
+                        }
+                        mBLDCMotorTemperatureChannel.remove(i);
+                    } else {
+                        i--;
+                    }
+                }
+                
+                i = newBLDCList.size() - 1;
+                while (i >= 0) {
+                    
+                // New code for adding to MotorTemperatureSensorList
+                if (mBLDCMotorTemperatureChannel.indexOf(newBLDCList.get(i)) < 0) {
+                        mBLDCMotorTemperatureChannel.add(newBLDCList.get(i));
+                if (mMotorTemperatureSensorList != null) {
+                    mMotorTemperatureSensorList.add(
+                            new MotorTemperature(
+                                    newBLDCList.get(i).getTemperatureSensor(), // Assuming getTemperatureSensor() method exists
+                                    newBLDCList.get(i)
+                            )
+                    );
+                }}
+                    i--;
+                }
+            }
+        }
+    }
+    
     private void detectBLDCMotors() {
         if (mBLDCMotorPositionControllerChannelName == null) {
             mBLDCMotorPositionControllerChannelName = mConfigDB.getValue(
@@ -672,6 +717,7 @@ public class WheelDevice {
                     }
                     i--;
                 }
+                
                 //update channel lables
                 mBLDCMotorPositionControllerChannel.setSequentialChannelLabel("BLDC");
                 mBLDCMotorPositionControllerChannel.addDeviceChannelChangeListener(mDeviceChannelListener);
@@ -742,6 +788,7 @@ public class WheelDevice {
         if (mDevicesDisengaed) return false;
         //add something to the image views that shows the same point as the rover moves forward - to follow a single plant as i drive - can then weed everywere except whre the plant it
         detectBLDCMotors();
+        detectTemperatureSensors();
 
         if (mWheel.getWheelName().equals("FrontLeft") || mWheel.getWheelName().equals("FrontRight")) {
             if (bldc1 == null) {
