@@ -15,6 +15,9 @@ import java.awt.event.FocusListener;
 import java.util.ArrayList;
 
 /**
+ * Helps with assigning motors to each wheel in a dynamic fashion via
+ * checkboxes on the GUI. Other parts of the code are also involved in this
+ * step.
  * @author sujoy
  */
 public class WheelConfigPanel extends javax.swing.JPanel {
@@ -28,6 +31,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
 
     private String mPatternEncoder;
     private String mPatternBLDCPositionController;
+    private String mPatternTemperatureSensor;
 
     private WheelDevice mWheelDevice;
 
@@ -142,6 +146,9 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         mComboBoxEncoder.addActionListener(new WidgetParamChangeListener(
                 WheelDevice.ENCODER_NAME, Boolean.FALSE)
         );
+        mComboBoxTemperatureSensor.addActionListener(new WidgetParamChangeListener(
+                WheelDevice.BLDCMOTOR_TEMPERATURE_SENSOR_NAME, Boolean.FALSE)
+        );
         mDeviceCheckBoxList.addActionListener(new WidgetParamChangeListener(
                 WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES, Boolean.FALSE));
     }
@@ -185,6 +192,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         mConfig = config;
         mPatternEncoder = config.getPhidgetPatternFor("Encoder");
         mPatternBLDCPositionController = config.getPhidgetPatternFor("BLDCPositionController");
+        mPatternTemperatureSensor = config.getPhidgetPatternFor("TemperatureSensor");
         populateData();
     }
 
@@ -194,6 +202,7 @@ public class WheelConfigPanel extends javax.swing.JPanel {
 
     public void updateWheelDeviceStatus() {
         mLabelEncoderStatusValue.setText(mWheelDevice.getEncoderStatus());
+        mLabelBLDCTempSensorStatusValue.setText(mWheelDevice.getBLDCMotor_TemperatureSensorStatus());
         mLabelBLDCPosControllerStatusValue.setText(mWheelDevice.getBLDCPositionControllerStatus());
         mDeviceCheckBoxList.loadDevices();
     }
@@ -202,6 +211,8 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         if (mDataPopulated) return;
         if (mDeviceManager != null && mConfig != null) {
             /*Build Combo Box lists*/
+            mComboBoxTemperatureSensor.setModel(new DeviceListComboBoxModel(
+                    mDeviceManager, mPatternTemperatureSensor));
             mComboBoxEncoder.setModel(new DeviceListComboBoxModel(
                     mDeviceManager, mPatternEncoder));
             mDeviceCheckBoxList.loadDevices(
@@ -212,6 +223,9 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         if (mConfigDB != null) {
             mComboBoxEncoder.setSelectedItem(mConfigDB.getValue(
                             getConfigName(WheelDevice.ENCODER_NAME), ""
+                    ));
+            mComboBoxTemperatureSensor.setSelectedItem(mConfigDB.getValue(
+                            getConfigName(WheelDevice.BLDCMOTOR_TEMPERATURE_SENSOR_NAME), ""
                     ));
             String[] controllerNames = mConfigDB.getValue(
                     getConfigName(WheelDevice.BLDCMOTOR_POSITION_CONTROLLER_NAMES), ""
@@ -271,47 +285,49 @@ public class WheelConfigPanel extends javax.swing.JPanel {
         mLabelBLDCPositionControllers = new javax.swing.JLabel();
         mLabelBLDCPosControllerStatus = new javax.swing.JLabel();
         mLabelEncoderStatusValue = new javax.swing.JLabel();
-        mLabelEncoderStatus = new javax.swing.JLabel();
         btnShowUpdatedStatus = new javax.swing.JButton();
+        mComboBoxTemperatureSensor = new javax.swing.JComboBox<>();
+        mLabelTempSensor = new javax.swing.JLabel();
+        mLabelBLDCTempSensorStatusValue = new javax.swing.JLabel();
 
         setAlignmentY(0.0F);
         setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        mLabelEncoder.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelEncoder.setText("Encoder");
-        add(mLabelEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, -1, -1));
+        mLabelEncoder.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        mLabelEncoder.setText("<html>Encoder (we use a dropdown <br> because there is only one <br> of these per wheel.)</html>");
+        mLabelEncoder.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        add(mLabelEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 20, 170, 60));
 
         mComboBoxEncoder.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        add(mComboBoxEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 10, 560, -1));
+        add(mComboBoxEncoder, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 20, 560, -1));
 
-        mLabelBLDCPosControllerStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        mLabelBLDCPosControllerStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         mLabelBLDCPosControllerStatusValue.setText("< Status>");
+        mLabelBLDCPosControllerStatusValue.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         mLabelBLDCPosControllerStatusValue.setAlignmentX(0.5F);
         mLabelBLDCPosControllerStatusValue.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        add(mLabelBLDCPosControllerStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 460, 520, 110));
+        add(mLabelBLDCPosControllerStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 470, 520, 100));
 
         mDeviceCheckBoxList.setAutoscrolls(true);
         mScrollPaneDeviceCheckBoxList.setViewportView(mDeviceCheckBoxList);
 
-        add(mScrollPaneDeviceCheckBoxList, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 50, 600, 310));
+        add(mScrollPaneDeviceCheckBoxList, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 200, 600, 250));
 
         mLabelBLDCPositionControllers.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        mLabelBLDCPositionControllers.setText("BLDC Position Controllers");
+        mLabelBLDCPositionControllers.setText("<html>BLDC Position Controllers <br> (we use a checkbox because<br> there could be two of these per <br> wheel) </html>");
         mLabelBLDCPositionControllers.setAlignmentY(0.0F);
         mLabelBLDCPositionControllers.setVerticalTextPosition(javax.swing.SwingConstants.TOP);
-        add(mLabelBLDCPositionControllers, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 150, -1, -1));
+        add(mLabelBLDCPositionControllers, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 200, -1, -1));
 
         mLabelBLDCPosControllerStatus.setText("BLDC Position Controller Status");
-        add(mLabelBLDCPosControllerStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 490, -1, -1));
+        add(mLabelBLDCPosControllerStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 470, -1, -1));
 
-        mLabelEncoderStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        mLabelEncoderStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         mLabelEncoderStatusValue.setText("< Status>");
+        mLabelEncoderStatusValue.setVerticalAlignment(javax.swing.SwingConstants.TOP);
         mLabelEncoderStatusValue.setAlignmentX(0.5F);
         mLabelEncoderStatusValue.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        add(mLabelEncoderStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 420, 520, -1));
-
-        mLabelEncoderStatus.setText("Encoder Status");
-        add(mLabelEncoderStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 430, -1, -1));
+        add(mLabelEncoderStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 50, 520, 40));
 
         btnShowUpdatedStatus.setText("Show Updated Status");
         btnShowUpdatedStatus.addActionListener(new java.awt.event.ActionListener() {
@@ -320,6 +336,21 @@ public class WheelConfigPanel extends javax.swing.JPanel {
             }
         });
         add(btnShowUpdatedStatus, new org.netbeans.lib.awtextra.AbsoluteConstraints(420, 630, -1, -1));
+
+        mComboBoxTemperatureSensor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        add(mComboBoxTemperatureSensor, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 100, 560, -1));
+
+        mLabelTempSensor.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        mLabelTempSensor.setText("<html>BLDC Motor TempSensor<br> (we use a dropdown <br> because there is only one <br> of these per wheel.)</html>");
+        mLabelTempSensor.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        add(mLabelTempSensor, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 100, 170, 80));
+
+        mLabelBLDCTempSensorStatusValue.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        mLabelBLDCTempSensorStatusValue.setText("< Status>");
+        mLabelBLDCTempSensorStatusValue.setVerticalAlignment(javax.swing.SwingConstants.TOP);
+        mLabelBLDCTempSensorStatusValue.setAlignmentX(0.5F);
+        mLabelBLDCTempSensorStatusValue.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        add(mLabelBLDCTempSensorStatusValue, new org.netbeans.lib.awtextra.AbsoluteConstraints(210, 130, 520, 40));
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnShowUpdatedStatusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnShowUpdatedStatusActionPerformed
@@ -331,13 +362,15 @@ public class WheelConfigPanel extends javax.swing.JPanel {
     private javax.swing.JButton btnShowUpdatedStatus;
     private InterfaceComponents.DeviceCheckBoxList deviceCheckBoxList1;
     private javax.swing.JComboBox<String> mComboBoxEncoder;
+    private javax.swing.JComboBox<String> mComboBoxTemperatureSensor;
     private InterfaceComponents.DeviceCheckBoxList mDeviceCheckBoxList;
     private javax.swing.JLabel mLabelBLDCPosControllerStatus;
     private javax.swing.JLabel mLabelBLDCPosControllerStatusValue;
     private javax.swing.JLabel mLabelBLDCPositionControllers;
+    private javax.swing.JLabel mLabelBLDCTempSensorStatusValue;
     private javax.swing.JLabel mLabelEncoder;
-    private javax.swing.JLabel mLabelEncoderStatus;
     private javax.swing.JLabel mLabelEncoderStatusValue;
+    private javax.swing.JLabel mLabelTempSensor;
     private javax.swing.JScrollPane mScrollPaneDeviceCheckBoxList;
     // End of variables declaration//GEN-END:variables
 }

@@ -74,6 +74,7 @@ public final class Wheel {
     private boolean reengageNowPhidBLDCMotorPositionController = false;
 
     private int mEncoderPositionxyz = 0;
+    private double mBLDCmotorReadTemperature = 0;
 
     private ChartParamsDataset mChartParamsDataset;
 
@@ -204,6 +205,10 @@ public final class Wheel {
 
     public double getdistanceRemainingRover() {
         return distanceRemainingRover;
+    }
+
+    public void setBLDCmotorReadTemperature(double value) {
+        mBLDCmotorReadTemperature = value;
     }
 
     public void setBLDCmotorReadPos(int index, double value, String source) {
@@ -537,22 +542,24 @@ public final class Wheel {
                         ChartParamType.BLDC_2_POSITION,
                         ChartParamType.BLDC_1_DUTY_CYCLE,
                         ChartParamType.BLDC_2_DUTY_CYCLE,
+                        ChartParamType.BLDC_TEMPERATURE
                 }
         );
         return mChartParamsDataset;
     }
 
     /**
-     * UI side; not Rover.
+     * UI side; not Rover. This stores some data history so it can be displayed in trend graphs.
      */
     public void updateChartParamsDataset() { // 
         if (mChartParamsDataset == null) return;
-        mChartParamsDataset.addValue(ChartParamType.VELOCITY, mWheelSpeed);
-        mChartParamsDataset.addValue(ChartParamType.ANGLE, mDrawAngle);        
-        mChartParamsDataset.addValue(ChartParamType.BLDC_1_POSITION, getBLDCmotorReadPos1Device(0));
-        mChartParamsDataset.addValue(ChartParamType.BLDC_2_POSITION, getBLDCmotorReadPos1Device(1));
-        mChartParamsDataset.addValue(ChartParamType.BLDC_1_DUTY_CYCLE, mBLDCmotorDutyCycleList[0]);
-        mChartParamsDataset.addValue(ChartParamType.BLDC_2_DUTY_CYCLE, mBLDCmotorDutyCycleList[1]);
+        mChartParamsDataset.addValue(ChartParamType.VELOCITY, mWheelSpeed); // note how this is reading a variable
+        mChartParamsDataset.addValue(ChartParamType.ANGLE, mDrawAngle); // note how this is reading a variable
+        mChartParamsDataset.addValue(ChartParamType.BLDC_1_POSITION, getBLDCmotorReadPos1Device(0)); // note how this is calling a method
+        mChartParamsDataset.addValue(ChartParamType.BLDC_2_POSITION, getBLDCmotorReadPos1Device(1)); // note how this is calling a method
+        mChartParamsDataset.addValue(ChartParamType.BLDC_1_DUTY_CYCLE, mBLDCmotorDutyCycleList[0]); // note how this is reading a variable
+        mChartParamsDataset.addValue(ChartParamType.BLDC_2_DUTY_CYCLE, mBLDCmotorDutyCycleList[1]); // note how this is reading a variable
+        mChartParamsDataset.addValue(ChartParamType.BLDC_TEMPERATURE, mBLDCmotorReadTemperature);        
         //mChartParamsDataset.addValue(ChartParamType.BLDC_POS_DUTY_CYCLE, mBLDCmotorDutyCycleList[index]);
     }
 

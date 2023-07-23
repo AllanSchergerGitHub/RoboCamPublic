@@ -18,10 +18,16 @@ public class MotorTemperature {
     public MotorTemperature(TemperatureSensor controller, DeviceChannel deviceChannel){
         mMotorTemperatureReader = controller;
         mDeviceChannel = deviceChannel;
+        System.out.println("Added a MotorTemperature Object");
+    }
+    
+    public TemperatureSensor getController() {
+        return mMotorTemperatureReader;
     }
     
     // This method returns the current temperature of the motor
     public double getTemperature() {
+        System.err.println("Reporting the temperature: " + currentTemperature);
         return currentTemperature;
     }
     
@@ -29,6 +35,7 @@ public class MotorTemperature {
                                         TemperatureSensorTemperatureChangeEvent tempSensorUpdateEvent) {
         listener.onUpdate(mMotorTemperatureReader, tempSensorUpdateEvent);
         currentTemperature = tempSensorUpdateEvent.getTemperature(); // Update the current temperature
+        System.err.println("Checking the temperature: " + currentTemperature);
     }
     
   // Add a temperature change listener
@@ -38,7 +45,7 @@ public class MotorTemperature {
             @Override            
             public void onTemperatureChange(TemperatureSensorTemperatureChangeEvent tempSensorUpdateEvent) {
                     fireTempSensorListener(listener, tempSensorUpdateEvent);
-                    //System.out.println("Temperature changed to " + e.getTemperature());
+                    System.out.println("Action... Temperature changed to " + tempSensorUpdateEvent.getTemperature());
             }
         });   
     }

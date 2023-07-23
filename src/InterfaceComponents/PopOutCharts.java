@@ -246,6 +246,11 @@ public class PopOutCharts {
         } catch (InterruptedException ex) {
             Logger.getLogger(PopOutCharts.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        /**
+        * This timer works but the code isn't in the ideal place. It shouldn't be in code on the fringes; it 
+        * should be in some of the code more central to the application.
+        */
         mUpdaterTimer = new Timer(200, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

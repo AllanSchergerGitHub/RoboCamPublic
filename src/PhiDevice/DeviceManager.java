@@ -7,6 +7,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+    /**
+    * https://www.phidgets.com/docs/Phidget_Manager
+    * General Overview
+    * The Phidget Manager is an interface into the device channels available to the Phidget library. The API is strictly asynchronous, and 
+    * continuously monitors channels as they attach and detach.
+
+    * Each Phidget exports one or more device channels, and when a Phidget is plugged into a system (or becomes available over the network), a 
+    * manager attach event is fired for each channel available from the Phidget. When the Phidget is removed from the system, a manger detach 
+    * event is fired for each channel that is no longer available.
+
+    * It is important to understand the concepts of attach and detach as the they relate to the manager. A manager attach does not imply that a 
+    * user channel has attached to a device channel, but that the device channel has appeared, and the device channel is now ready to be attached 
+    * to a user channel. When a user channel closes and detaches from a device channel, a manager event is not fired. A manager detach event 
+    * is fired when the Phidget is removed from the system.
+    * 
+    */
 public class DeviceManager {
     private final Manager mphManager;
     private final ArrayList<DeviceChannel> mDeviceChannels;
@@ -32,7 +48,24 @@ public class DeviceManager {
         mphManager = new Manager();
         mphManager.addAttachListener((ManagerAttachEvent mae) -> {
             DeviceChannel device = new DeviceChannel(mae.getChannel());
-            //System.out.println("list devices x of y: "+device.getName()); 
+            /**
+             * For testing; print out the phidget devices that are connected.
+             */
+            //System.out.println("list devices x of y getName: "+device.getName());
+            /**
+             * For testing; print just the temperaturesensors.
+             */
+//            try {
+//                TemperatureSensor tempSensor = device.getTemperatureSensor();
+//                if(tempSensor != null) {
+//                    System.out.println("list devices x of y getTemperatureSensor(): "+ device.getTemperatureSensor());
+//                    System.out.println("list devices x of y SKU: "+ device.getTemperatureSensor().getDeviceSKU());
+//                }
+//                
+//                
+//            } catch (PhidgetException ex) {
+//                Logger.getLogger(DeviceManager.class.getName()).log(Level.SEVERE, null, ex);
+//            }
             synchronized (mDeviceChannels) {
                 mDeviceChannels.add(device);
             }
@@ -44,7 +77,13 @@ public class DeviceManager {
             for (DeviceChangeListener listener : mDeviceChangeListeners) {
                 //onChange does not need any argument at present,
                 //can be added later if needed in the owner of listener.
-                listener.onChange();  // what does this do? 'onChange' has nothing in it?
+                
+                /** 
+                 * onChange() is defined in WheelConfigPanel.java; it listens for changes in the phidget manager.
+                 * These changes are the results of phidgets being connected, disconnected, etc(??) from 
+                 * the system.
+                 */
+                listener.onChange();
             }
         });
 

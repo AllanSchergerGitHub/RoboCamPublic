@@ -95,13 +95,19 @@ public class DeviceCheckBoxList extends JPanel {
         }
     }
 
+    /**
+     * 
+     */
     public void loadDevices() {
         if (mDeviceManager == null) return;
         for (DeviceChannel channel : mDeviceManager.getChannels(mMatchPattern)) {
             String channelName = channel.getName();
+            /**
+             * This print statement is a way to see all the connected phidgets if needed for testing.
+             */
+            //System.out.println("channelName: " + channelName + " (this is a connected phidget that will be configured)");
             DeviceListItem listItem;
             if (!mCheckBoxMap.containsKey(channelName)) {
-                ;
                 listItem = new DeviceListItem(channelName);
                 listItem.setPreferredSize(new Dimension(0, 50));
                 listItem.addActionListener(mCheckBoxActionListener);

@@ -61,7 +61,7 @@ public class TruckDevice {
         }
     }
 
-    private double calcRemainingDistanceRatio() {
+    private void calcRemainingDistanceRatio() {
         int index = 0;
         double[] allPositions = {0, 0, 0, 0, 0, 0, 0, 0};
         double[] allMultipliers = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -89,6 +89,9 @@ public class TruckDevice {
         distanceRemainingRover = mTargetPositionRoverBody - avgAllDistances;
         //double[] RemainingDistances = Wheel.getBaseLengthStatic();
         //System.out.println(" avgAllDistances "+String.format("%.1f", avgAllDistances)+ " distanceRemainingRover "+String.format("%.1f", distanceRemainingRover));
+    }
+    
+    public double getDistanceRemainingRover() {
         return distanceRemainingRover;
     }
 
@@ -103,7 +106,7 @@ public class TruckDevice {
     }
 
     public void updateDevices() {
-        calcRemainingDistanceRatio(); // 1st - go get the position from all devices
+        calcRemainingDistanceRatio(); // 1st - go get the position from all devices and calculate the distanceremainingrover.
         for (WheelDevice wheelDevice : mWheelDevices) {
             wheelDevice.setDistanceTarget(distanceRemainingRover); // 2nd - calculate and set a Remaining Distance value
             wheelDevice.updateDevices(); // 3rd - update the device including the device's new target position
