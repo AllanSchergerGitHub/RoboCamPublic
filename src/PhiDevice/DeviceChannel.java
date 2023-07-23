@@ -32,6 +32,12 @@ public class DeviceChannel {
     public DeviceChannel(Phidget phidget) {
         mPhidget = phidget;
         try {
+            /**
+            * The mName variable holds a formatted string that represents the device's key details.
+            * It is used in several places throughout the application. Notably, it is used to populate
+            * the dropdown list of all devices in the configuration panel of the Rover GUI.
+            * @return 
+            */
             mName = String.format("%d - %s - %s - %s - %sHub Port %d",
                     mPhidget.getDeviceSerialNumber(), mPhidget.getDeviceSKU(),
                     mPhidget.getDeviceName(), mPhidget.getChannelName(),
@@ -51,7 +57,10 @@ public class DeviceChannel {
             @Override
             public void onAttach(AttachEvent ae) {
                 mIsAttached = true;
-                //System.out.println("DeviceChannel.java: "+getName() + " is attached");
+//                System.out.println("DeviceChannel.java: "+getName() + " is attached");
+//                System.out.println("Identity hash code of the device being attached in DeviceChannel: " 
+//                    + System.identityHashCode(getName()));
+
                 fireChannelListenersForProperty("attached", true);
                 try {
                     sleep(10);
@@ -139,6 +148,10 @@ public class DeviceChannel {
         return getName();
     }
 
+    /**
+     * This is used several places; one thing it does is populate the dropdown list of all devices on the configuration panel in the Rover GUI.
+     * @return 
+     */
     public String getName() {
         return mName;
     }
@@ -168,6 +181,13 @@ public class DeviceChannel {
     public MotorPositionController getMotorPos() {
         if (mPhidget instanceof MotorPositionController) {
             return (MotorPositionController) mPhidget;
+        }
+        return null;
+    }
+
+    public TemperatureSensor getTemperatureSensor() {
+        if (mPhidget instanceof TemperatureSensor) {
+            return (TemperatureSensor) mPhidget;
         }
         return null;
     }

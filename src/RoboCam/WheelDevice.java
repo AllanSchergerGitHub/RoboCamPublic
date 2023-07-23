@@ -7,7 +7,7 @@ import PhiDevice.*;
 import PhiDevice.Electrical_Etc.Potentiameters;
 import RoverUI.Vehicle.DeviceInfo;
 import RoverUI.Vehicle.Wheel;
-import PhiDevice.MotorTemperatureSensorList;
+//import PhiDevice.MotorTemperatureSensorList;
      
 import com.phidget22.*;
 
@@ -26,30 +26,37 @@ import java.util.logging.Logger;
 import static java.lang.Thread.sleep;
 
 public class WheelDevice {
-    public static final String ENCODER_NAME = "Encoder.Name";
-    public static final String BLDCMOTOR_POSITION_CONTROLLER_NAMES = "BLDCMotorPosCont.Names";
+    public static final String ENCODER_NAME = "Encoder.Name"; // for use with a dropdown box (one per wheel)
+    public static final String BLDCMOTOR_TEMPERATURE_SENSOR_NAME = "TemperatureSensor.Name"; // for use with a dropdown box (one per wheel)
+    
+    public static final String BLDCMOTOR_POSITION_CONTROLLER_NAMES = "BLDCMotorPosCont.Names"; // for use with the checkbox combo (one or more per wheel)
     public static final String BLDC_1_POSITION_MULTIPLIER = "BLDC.1.Pos.Mult";
     public static final String BLDC_2_POSITION_MULTIPLIER = "BLDC.2.Pos.Mult";
 
     public static Executor mCommonServiceExecutor = Executors.newCachedThreadPool();
-    
-    private MotorPositionControllerList mPhidBLDCMotorPositionControllerList = null;
-    private MotorTemperatureSensorList mMotorTemperatureSensorList = null;
-    private MotorPositionController bldc1 = null;
-    private String mBLDCMotorPositionControllerChannelName;
-    private String mBLDCMotorTemperatureChannelName;
-
-    private final Wheel mWheel;
-    private String mEncoderChannelName;
-    private DeviceChannelList mBLDCMotorPositionControllerChannel;
-    private DeviceChannelList mBLDCMotorTemperatureChannel;
-    private DeviceChannel mEncoderChannel;
-
-    private double trimSettingFromAutoTrim = 0;
 
     private final DeviceManager mDeviceManager;
 
+    private MotorPositionControllerList mPhidBLDCMotorPositionControllerList = null;
+    private MotorPositionController bldc1 = null;
+    private Encoder mPhidEncoder = null;
+    private TemperatureSensor mPhidBLDCMotor_TemperatureSensor = null;
+
+
+    private final Wheel mWheel;
+    
+    private String mEncoderChannelName;
+    private String mBLDCMotor_TemperatureSensorChannelName;
+    private String mBLDCMotorPositionControllerChannelName;
+
+    private DeviceChannel mEncoderChannel;
+    private DeviceChannel mBLDCMotorTemperatureSensorChannel;
+    private DeviceChannelList mBLDCMotorPositionControllerChannel;
+    
+    private double trimSettingFromAutoTrim = 0;
+
     double ConnectionAttemptCount = 0;
+
     double SteeringBLDCTargetPosition = 0;
     double SteeringBLDCTargetPositionConvertedToDegrees = 0;
 
@@ -59,9 +66,9 @@ public class WheelDevice {
     private WheelDeviceSubClassAutoTrim mWheelDeviceSubClassAutoTrim = new WheelDeviceSubClassAutoTrim();
 
     private boolean pauseThis = false; // false means don't pause. keep going. true means we should pause now.
-    private Encoder mPhidEncoder = null;
 
     private int encoderPosition = 0;
+    private double TemperatureSensorTemperature = 0;
     private double mReadDutyCycle = 0;
 
     double posActual_Steering = 0;
@@ -269,12 +276,16 @@ public class WheelDevice {
             return 0;
         }
     }
-
-    public double getBLCDCTemperatureAtIndex(int index) {
-        if (mMotorTemperatureSensorList == null) return 0;
-        return mMotorTemperatureSensorList.getTemperatureAtIndex(index);        
-    }
     
+    /**
+     * This provides the TemperatureSensorTemperature to RoverFrontEnd to be sent to the 
+     * UI Computer via the socket from the Rover Computer.
+     * @return
+     */
+    public double getBLDC_Temperature() {
+        return TemperatureSensorTemperature;
+    }
+
     public String getBLDCPositionControllerStatus() {
         String status;
         if (mBLDCMotorPositionControllerChannelName == null) {
@@ -315,7 +326,23 @@ public class WheelDevice {
         }
         return status;
     }
-
+    
+    public String getBLDCMotor_TemperatureSensorStatus() {
+        String status;
+        if (mBLDCMotor_TemperatureSensorChannelName == null) {
+            status = "Null-BLDCMotor_TemperatureSensorChannel-Name";
+        } else if (mBLDCMotorTemperatureSensorChannel == null) {
+            status = "Null-mBLDCMotorTemperatureSensorChannel";
+        } else if (!mBLDCMotorTemperatureSensorChannel.isOpen()) {
+            status = "Not-mBLDCMotorTemperatureSensorChannel-Open";
+        } else if (mPhidBLDCMotor_TemperatureSensor == null) {
+            status = "Null-mBLDCMotorTemperatureSensor-Controller";
+        } else {
+            status = "Ok";
+        }
+        return status;
+    }    
+    
     /*
      * This getChartParamsDataset method is for the Rover Interface charts only.
      * See getChartParamsDataset_For_Truck_For_UI in Wheel.java for the code that updates
@@ -556,7 +583,12 @@ public class WheelDevice {
         // ratio needs to be validated by looking at the gear ratios on each motor's gearbox.
         // why does frontleft motor0dutycycle start out negative when all the others are positive?
 
-        mWheel.setdistanceRemainingRover(mDistanceRemainingRover); // this is for displaying onto the GUI
+        /**
+         * This works for setting the value to display onto the Rover GUI (July 19, 2023) but
+         * it isn't working to set the value on the UI GUI.
+         * This is pushing the mdistanceremainingrover up to the wheel.
+         */
+        mWheel.setdistanceRemainingRover(mDistanceRemainingRover); 
 
         mVelocityVariableSetting = 1.0; // set/reset it to the default value prior to using the if statement to reduce it.
         if (Math.abs(mDistanceRemainingRover) < 400.0) {
@@ -631,47 +663,39 @@ public class WheelDevice {
 
         });
     }
-
-    private void detectTemperatureSensors(){
-        if (mBLDCMotorTemperatureChannelName == null) {
-            mBLDCMotorTemperatureChannelName = mConfigDB.getValue(
-                    getConfigName(BLDCMOTOR_POSITION_CONTROLLER_NAMES), null);
-        } else {
-            String newBLDCPosNames = mConfigDB.getValue(
-                    getConfigName(BLDCMOTOR_POSITION_CONTROLLER_NAMES), null);
-
-            //Adjust the lsit if configuration is  changed while running
-            if (!mBLDCMotorTemperatureChannelName.equals(newBLDCPosNames) && mBLDCMotorTemperatureChannel != null) {
-                DeviceChannelList newBLDCList = mDeviceManager.getChannelListByNames(newBLDCPosNames.split(","));
-                ArrayList<Integer> removableIndices = new ArrayList<Integer>();
-                int i = mBLDCMotorTemperatureChannel.size() - 1;
-                //Remove the unused BLDC Channels
-                while (i >= 0 && i < mBLDCMotorTemperatureChannel.size()) {
-                    if (newBLDCList.indexOf(mBLDCMotorTemperatureChannel.get(i)) < 0) {
-                        if (mPhidBLDCMotorPositionControllerList != null) {
-                            mPhidBLDCMotorPositionControllerList.remove(i);
+    
+    private void detectBLDCMotor_TemperatureSensors() {
+        if (mBLDCMotor_TemperatureSensorChannelName == null) {
+            mBLDCMotor_TemperatureSensorChannelName = mConfigDB.getValue(
+                    getConfigName(BLDCMOTOR_TEMPERATURE_SENSOR_NAME), null);
+        }
+        
+        if (mBLDCMotor_TemperatureSensorChannelName != null) {
+            mBLDCMotorTemperatureSensorChannel = mDeviceManager.getChannelByName(mBLDCMotor_TemperatureSensorChannelName);
+            if (mBLDCMotorTemperatureSensorChannel != null && mPhidBLDCMotor_TemperatureSensor == null) {
+                mBLDCMotorTemperatureSensorChannel.open();
+                if (mBLDCMotorTemperatureSensorChannel.isOpen()) {
+                    mPhidBLDCMotor_TemperatureSensor = mBLDCMotorTemperatureSensorChannel.getTemperatureSensor();
+                        if(mPhidBLDCMotor_TemperatureSensor != null) {
+                            add_BLDC_TemperatureSensorChangeListener();
                         }
-                        mBLDCMotorTemperatureChannel.remove(i);
-                    } else {
-                        i--;
-                    }
                 }
-                
-                i = newBLDCList.size() - 1;
-                while (i >= 0) {
-                    
-                // New code for adding to MotorTemperatureSensorList
-                if (mBLDCMotorTemperatureChannel.indexOf(newBLDCList.get(i)) < 0) {
-                        mBLDCMotorTemperatureChannel.add(newBLDCList.get(i));
-                if (mMotorTemperatureSensorList != null) {
-                    mMotorTemperatureSensorList.add(
-                            new MotorTemperature(
-                                    newBLDCList.get(i).getTemperatureSensor(), // Assuming getTemperatureSensor() method exists
-                                    newBLDCList.get(i)
-                            )
-                    );
-                }}
-                    i--;
+            }
+        }
+    }
+    
+    private void detectEncoders() {
+        if (mEncoderChannelName == null) {
+            mEncoderChannelName = mConfigDB.getValue(
+                    getConfigName(ENCODER_NAME), null);
+        }
+
+        if (mEncoderChannelName != null) {
+            mEncoderChannel = mDeviceManager.getChannelByName(mEncoderChannelName);
+            if (mEncoderChannel != null && mPhidEncoder == null) {
+                mEncoderChannel.open();
+                if (mEncoderChannel.isOpen()) {
+                    mPhidEncoder = mEncoderChannel.getEncoder();
                 }
             }
         }
@@ -754,6 +778,9 @@ public class WheelDevice {
                             //}                            
                         }
                         add_BLDC_POSChangeListener();
+                        // Why are these down here in detectBLDCMotors()?? See new location for TemperatureSensor and do same for POSChangeListener and DutyCycleListener?
+                        // Is the code even reaching this point?
+                        //add_BLDC_TemperatureSensorChangeListener();
                         add_DutyCycleListener();
                     }
                 }
@@ -787,8 +814,13 @@ public class WheelDevice {
     private boolean detectDevices() {
         if (mDevicesDisengaed) return false;
         //add something to the image views that shows the same point as the rover moves forward - to follow a single plant as i drive - can then weed everywere except whre the plant it
+        
+        /**
+         * Does this need to be done continually? perhaps to set up a new tempsensor if it disonncets and reconnects?
+         */ 
+        detectBLDCMotor_TemperatureSensors();
+         
         detectBLDCMotors();
-        detectTemperatureSensors();
 
         if (mWheel.getWheelName().equals("FrontLeft") || mWheel.getWheelName().equals("FrontRight")) {
             if (bldc1 == null) {
@@ -796,28 +828,30 @@ public class WheelDevice {
             }
         }
 
-        if (mEncoderChannelName == null) {
-            mEncoderChannelName = mConfigDB.getValue(
-                    getConfigName(ENCODER_NAME), null);
-        }
-
-        if (mEncoderChannelName != null) {
-            mEncoderChannel = mDeviceManager.getChannelByName(mEncoderChannelName);
-            if (mEncoderChannel != null && mPhidEncoder == null) {
-                mEncoderChannel.open();
-                //System.out.println("mEncoderChannel channel connected 1b2 "+mEncoderChannel);
-                if (mEncoderChannel.isOpen()) {
-                    mPhidEncoder = mEncoderChannel.getEncoder();
-                }
-            }
-        }
+        detectEncoders();
+        
 
         mBLDCMotorPosMult.set(0, mConfigDB.getValue(
                 getConfigName(BLDC_1_POSITION_MULTIPLIER), mBLDCMotorPosMult.get(0)));
         mBLDCMotorPosMult.set(1, mConfigDB.getValue(
                 getConfigName(BLDC_2_POSITION_MULTIPLIER), mBLDCMotorPosMult.get(1)));
 
-        return (mPhidBLDCMotorPositionControllerList != null && mPhidEncoder != null);
+        return (mPhidBLDCMotorPositionControllerList != null && mPhidEncoder != null && mPhidBLDCMotor_TemperatureSensor != null);
+    }
+    
+
+    public void add_BLDC_TemperatureSensorChangeListener() {
+        mPhidBLDCMotor_TemperatureSensor.addTemperatureChangeListener(// null pointer error here may mean that add_DutyCycleListener is starting too soon in the startup sequence
+                new TemperatureSensorTemperatureChangeListener() {
+                    public void onTemperatureChange(TemperatureSensorTemperatureChangeEvent e) {
+                        try {
+                            TemperatureSensorTemperature = mPhidBLDCMotor_TemperatureSensor.getTemperature()*9/5+32; // Temp of BLDC Motors in Fahrenheit.
+                        } catch (PhidgetException ex) {
+                            Logger.getLogger(WheelDevice.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        mWheel.setBLDCmotorReadTemperature(TemperatureSensorTemperature);
+                    }
+                });
     }
 
     public void add_BLDC_POSChangeListener() {
@@ -835,7 +869,7 @@ public class WheelDevice {
                     public void onPositionChange(MotorPositionControllerPositionChangeEvent e) {
                         mBLDCmotorDeviceReadPos[0] = mPhidBLDCMotorPositionControllerList.getPositionAtIndex(0, mWheel.getWheelName());
                         mWheel.setBLDCmotorReadPos(0, mBLDCmotorDeviceReadPos[0], (String) "WheelDevice");
-                        mWheel.setMotorPositionControllerList(mBLDCMotorPositionControllerChannel.getMotorPosList());
+                        mWheel.setMotorPositionControllerList(mBLDCMotorPositionControllerChannel.getMotorPosList()); // July 2023 note: this should probably be removed. It pushes the controller up to wheel
                     }
                 });
     }
@@ -922,6 +956,9 @@ public class WheelDevice {
             }
             if (mEncoderChannel != null) {
                 mEncoderChannel.close();
+            }
+            if (mBLDCMotorTemperatureSensorChannel != null) {
+                mBLDCMotorTemperatureSensorChannel.close();
             }
         }
     }

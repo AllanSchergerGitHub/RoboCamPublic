@@ -14,6 +14,7 @@ import PhiDevice.DeviceListJob;
 import PhiDevice.DeviceManager;
 import InterfaceComponents.DoubleListener;
 import InterfaceComponents.DoubleVarArgListener;
+import InterfaceComponents.GroundPanel;
 import InterfaceComponents.StringListener;
 import RoverUI.Vehicle.Wheel;
 import InterfaceComponents.XYDoubleListener;
@@ -62,6 +63,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     private final ComParser mComParser = new ComParser();
     DeviceManager mDeviceManager;
     DeviceListJob mDeviceListJob;
+    private GroundPanel mGroundPanel;
 
     String targetValue;
     int targetValue_int;
@@ -105,6 +107,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
     public UIFrontEnd(String roverHost, int roverPort) throws IOException, PhidgetException {
         initComponents();
         initMoreComponents();
+        this.mGroundPanel = mTruckSteerPanel.getGroundPanel();
         
         PopOutCharts popOutCharts = new PopOutCharts(mBtnExitApp, mTruckSteerPanel);
             popOutCharts.initCreateAngleCharts();
@@ -181,7 +184,13 @@ public class UIFrontEnd extends javax.swing.JFrame {
             public void onChange(double xPos, double yPos) {
                 mMousePosCommand.setPos(xPos, yPos);
                 mComPipe.putOut(mMousePosCommand.buildCommand());
-                mTruckSteerPanel.getTruck().updateChartParamsDataset();
+                /**
+                 * updateChartParamsDataset is better handled with a timer. The existing timer works 
+                 * and it is in PopOutCharts.java which isn't the ideal place for it. 
+                 * It shouldn't be in code on the fringes; it 
+                 * should be in some of the code more central to the application.
+                 */
+                //mTruckSteerPanel.getTruck().updateChartParamsDataset();
             }
         });
         mTruckSteerPanel.addMouseHandednessListener(new StringListener() {
@@ -610,19 +619,28 @@ public class UIFrontEnd extends javax.swing.JFrame {
                 */
             long lastMaxTime = System.nanoTime(); 
             while (true) {
+                
+                // start the timer here
+                long startTime = System.nanoTime();
+                
                 String line = mComPipe.getIn();
                 if (line != null) {
                     publish(line); // this line is published and the process method listens for it.
 //                    if(!line.contains(("cs"))){ // don't print out the common sensor commands - these are for the electrical monitor and they are very frequent.
-//                        System.out.println("bm1d = brushlessmotor1 dutycycle; bm1p = bm1 position. " + line);
+                        //System.out.println("This cs (common sensor) command contains the electrical current and the distanceremainingrover values. " + line);
 //                    }     
                 }
+                
+                // end the timer here. 
+                long endTime = System.nanoTime();
+                // Calculate the duration
+                long currentTimeLag = endTime - startTime;
+                
                 if (System.currentTimeMillis() - lastUpdatedAt > 200) {
                     lastUpdatedAt = System.currentTimeMillis();
                     publish("");
                 }
                 long currentTime = System.nanoTime();
-                long currentTimeLag = System.nanoTime() - currentTime;
                 long delta = currentTime-lastMaxTime;
                 /**
                  * On a regular basis update the shortTermMaxTimeLag; this is a measurement of slowest response time in recent history
@@ -652,10 +670,12 @@ public class UIFrontEnd extends javax.swing.JFrame {
                     NumberFormat nf = NumberFormat.getInstance(); // Get a NumberFormat instance for the default locale
                     nf.setMaximumFractionDigits(0); // Set maximum decimal places to 0
                     if (doInBackgroundCounter % 1000 == 0) {
-                        System.err.printf("avg lag: %s shortTermMaxTimeLag: %s max lag: %.4f seconds%n", 
-                            nf.format((double) (grandTotalLagTime1000Instances / 1000)), 
-                            nf.format((double) shortTermMaxTimeLag), 
-                            LongTermMaxTimeLag / 1_000_000_000.0);
+                        if(shortTermMaxTimeLag>250000){
+                            System.err.printf("High Lag.  Avg lag:%s shortTermMaxTimeLag: %s max lag: %.4f seconds%n", 
+                                nf.format((double) (grandTotalLagTime1000Instances / 1000)), 
+                                nf.format((double) shortTermMaxTimeLag), 
+                                LongTermMaxTimeLag / 1_000_000.0);
+                        }
                     }
                     avgLagTime.remove(1000);
                 }
@@ -672,6 +692,7 @@ public class UIFrontEnd extends javax.swing.JFrame {
         /**
         * Processes a list of commands published during the execution of the background task.
         * The list of commands is incoming data into the UIFrontEnd from the socket; these commands come from the Rover.
+        * This processes 2 types of commands; mCommonSensorCommands and WheelDeviceParamCommands.
         * 
         * This method is invoked in the Event Dispatch Thread.
         *
@@ -706,20 +727,31 @@ public class UIFrontEnd extends javax.swing.JFrame {
                             mCommonSensorCommand.getElectricalCurrent());
                     continue; // if this if statement is true; then skip to the next loop with 'continue' command.
                 }
+                
+                Wheel[] wheels = mTruckSteerPanel.getTruck().getWheels();
+                double DistanceRemainingRover = mCommonSensorCommand.getDistanceRemainingRover();
+                for (Wheel wheel : wheels) {
+                    wheel.setdistanceRemainingRover(DistanceRemainingRover);
+                }                
+                
                 /*
                     This is the UI processing messages sent to it from Rover via the robocam.socket jar.
                     Look for the publish code above.
+                    This is reading data from a WheelDeviceParamCommand.java (wdpc) and pushing the data
+                        over to a wheel. From the wheel it is then displayed on the UI interface.
                 */
                 for (WheelDeviceParamCommand wdpc : mWheelDeviceParamCommands) { 
                     if (wdpc.canServeCommand(command)) {
-                        System.out.println("wdpc command: " + command);
+                        //System.out.println("wdpc command: " + command);
                         wdpc.parseCommand(command);
                         Wheel wheel = mTruckSteerPanel
                                 .getTruck().getWheels()[wdpc.getWheelIndex()];
                         wheel.setBLDCmotorReadPos(0, wdpc.getBLDCMotorPos(0), (String) "UIFront");
                         //System.err.println("???????????????????????????UIFront is setting BLDC MOTOR POS? Maybe this causes errors? "+wdpc.getBLDCMotorPos(0)+" : "+wdpc.getBLDCMotorPos(1));
                         wheel.setBLDCmotorReadPos(1, wdpc.getBLDCMotorPos(1), (String) "UIFront");
+                        
                         //wheel.setReadDutyCycle(wdpc.getBLDCMotorDutyCycle());
+                        wheel.setBLDCmotorReadTemperature(wdpc.getBLDCMotorActualTemperature(0));
                         wheel.setBLCDCDutyCyleAtIndex(0, wdpc.getBLDCMotorDutyCycle(0));
                         wheel.setBLCDCDutyCyleAtIndex(1, wdpc.getBLDCMotorDutyCycle(1));
                         
@@ -727,6 +759,11 @@ public class UIFrontEnd extends javax.swing.JFrame {
                     }
                 }
             }
+            /**
+             * Repaint the UI interface each time a data update happens.
+             * See also the timer in GroundPanel that updates the interface on a periodic basis.
+             */
+            mGroundPanel.repaint();
         }
     }
 

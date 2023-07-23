@@ -67,6 +67,8 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     private DeviceManager mDeviceManager;
 
     private TruckDevice mTruckDevice;
+    private double mTruckDevice_distanceRemainingRover;
+    private double prior_mTruckDevice_distanceRemainingRover_value;
     private ConfigDB mConfigDB;
 
     private double startingTargetPotPositionFrontLeft = .7753; // the Pot reading when steering is straight ahead.
@@ -81,6 +83,7 @@ public class RoverFrontEnd extends javax.swing.JFrame {
     Potentiameters mPotentiometerFrontRight = null;
     RoboLights mLight = null;
 
+    int warning_counter = 0;
     int oldValue = 0;
     int changeSize = 0;
     double waitTime = 1;
@@ -374,8 +377,8 @@ public class RoverFrontEnd extends javax.swing.JFrame {
                 wdpc.setActualSteeringAngle(0, angleRightBasedOnPot);
             }
             
-            // index zero refers to how many motors are on each wheel; not the wheel number.
-            wdpc.setBLDCMotorActualTemperature(0, wheelDevice.getBLCDCTemperatureAtIndex(0));
+            // index zero refers to which motor to look at on each wheel; not the wheel number.
+            wdpc.setBLDCMotorActualTemperature(0, wheelDevice.getBLDC_Temperature());
             //look at getDutyCycle() in WheelDevice.java as a template to get temperature data
             
             // setGhostAngle in WheelDevice.java?
@@ -414,6 +417,15 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
                     //long startTime = System.nanoTime();
                     mTruckDevice.updateDevices();
+                    /**
+                     * The distanceRemainingRover shows how much further Rover needs to drive
+                     * to reach it's target position.
+                     * Bring the distanceRemainingRover into RoverFrontEnd so it can be sent to UI.
+                     * This same value is displayed on the Rover Interface via a call to
+                     * wheel.draw(g2d) in Truck.java. This causes Wheel.java to display this value
+                     * via a cursor = Utility.Drawing.drawString command of the variable distanceRemainingRover.
+                     */
+                    mTruckDevice_distanceRemainingRover = mTruckDevice.getDistanceRemainingRover();
                     //timeS = new SimpleDateFormat("HH.mm.ss.SSS").format(new Date()); 
                     //System.err.println("updateDevices "+timeS);
                     //
@@ -459,12 +471,35 @@ public class RoverFrontEnd extends javax.swing.JFrame {
             double oldCurrentValue = -1;
             while (true) {
                 currentSensor1_value = mElectricalCurrent.currentSensor1();
+                boolean shouldSendCommand = false;
+
                 if (currentSensor1_value != oldCurrentValue) {
                     oldCurrentValue = currentSensor1_value;
                     publish("current");
                     mCommonSensorCommand.setElectricalCurrent(currentSensor1_value);
-                    mComPipe.putOut(mCommonSensorCommand.buildCommand());
+                    shouldSendCommand = true;
                 }
+
+                if (mTruckDevice_distanceRemainingRover != prior_mTruckDevice_distanceRemainingRover_value) {
+                    prior_mTruckDevice_distanceRemainingRover_value = mTruckDevice_distanceRemainingRover;
+                    /**
+                     * Publish code stubbed in to be consistent with how the electricalcurrent reading is done above.
+                     * However, publish is commented out since publish here is for rover interface and
+                     * this same value is displayed on the Rover Interface via a call to
+                     * wheel.draw(g2d) in Truck.java. Truck.java causes Wheel.java to display this value
+                     * via a cursor = Utility.Drawing.drawString command of the variable distanceRemainingRover.
+                     */
+                    //publish("distanceRemaining");
+                    mCommonSensorCommand.setDistanceRemainingRover(mTruckDevice_distanceRemainingRover);
+                    /**
+                     * If True the distanceRemainingRover will be sent to UI via the mComPipe.putOut.
+                    */
+                    shouldSendCommand = true;
+                }
+
+                if (shouldSendCommand) {
+                    mComPipe.putOut(mCommonSensorCommand.buildCommand());
+                }                        
 
                 //jTextFieldLeftPot_2.setOpaque(true);
                 //jTextFieldLeftPot_2.setBackground(Color.red);
@@ -630,7 +665,11 @@ public class RoverFrontEnd extends javax.swing.JFrame {
 
                         // to avoid annoying printing on Sujoy's machine during testing we probably need a flag in the robo-confi.ini 
                         // for 'AllanMachine' or 'SujoyMachine' linked to allow/not allow error message
-                        System.err.println("STOPPED due to no connection - UI driver needs to reselect drive mode to continue.  Time: " + time_stamp_of_stop + " " + lastHeartBeatAge + " " + mFailSafeDelay);
+                        if(warning_counter%75 == 0){
+                            System.err.println("STOPPED due to no connection - UI driver needs to reselect drive mode to continue.  Time: " + time_stamp_of_stop + " " + lastHeartBeatAge + " " + mFailSafeDelay);
+                            //warning_counter=0;
+                        }
+                        warning_counter++;
 
 
 //                          this seems to hang it up when 'exit button' is pressed

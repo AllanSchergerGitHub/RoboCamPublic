@@ -4,12 +4,15 @@ import RoverUI.Vehicle.Truck;
 import com.phidget22.Encoder;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import javax.swing.Timer;
 
 public class GroundPanel extends javax.swing.JPanel
         implements MouseMotionListener {
@@ -31,6 +34,24 @@ public class GroundPanel extends javax.swing.JPanel
         initComponents();
         addMouseMotionListener(this);
         mTruck = new Truck(new Point.Double(getWidth() * 0.5, getHeight() * 0.6));
+        
+        {/**
+         * Create a Timer that fires an action event every 2500 milliseconds (2.5 seconds)
+         * This timer is possibly redundant with the 'mGroundPanel.repaint();' in UIFrontEnd.java.
+         * The mGroundPanel.repaint() updates the UI Interface every time the 
+         * "protected void process(List<String> list)" process runs on 
+         * information coming into the UI from Rover.
+         */ 
+        Timer timer = new Timer(2500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Call the repaint method on the GroundPanel instance
+                repaint();
+            }
+        });
+        // Start the Timer
+        timer.start();
+        }
     }
 
     public void setGroundImageUrl(String url) {
@@ -45,9 +66,16 @@ public class GroundPanel extends javax.swing.JPanel
         return mIPCamPanelGround;
     }
 
+    private int print_counter = 0;
     public void setTruckStreeMode(String streeModeName) {
         mTruck.setSteeringMode(streeModeName);
-        System.err.println("streeModeName " + streeModeName);
+        
+        if(print_counter==20){
+            System.err.println("streeModeName " + streeModeName);
+            print_counter=0;
+        }
+        print_counter=+1;
+        
         if (streeModeName == "Stopped") {
             mTruck.stopMoving();
         }
@@ -275,7 +303,7 @@ public class GroundPanel extends javax.swing.JPanel
                     0, 0, mGroundImage.getWidth(), mGroundImage.getHeight(), null);
         }
         mTruck.moveTo((int) (getWidth() * 0.5), (int) (getHeight() * 0.5));
-        mTruck.drawTruck((Graphics2D) grphcs); // this runs repeatedly
+        mTruck.drawTruck((Graphics2D) grphcs); // this runs repeatedly (it should but it isn't...?)
     }
 
     @Override

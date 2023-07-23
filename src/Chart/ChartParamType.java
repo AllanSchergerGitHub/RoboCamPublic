@@ -7,6 +7,7 @@ public enum ChartParamType {
     BLDC_2_POSITION("BLDC Motor 2 Position"),
     BLDC_1_DUTY_CYCLE("BLDC Motor 1 DutyCycle"),
     BLDC_2_DUTY_CYCLE("BLDC Motor 2 DutyCycle"),
+    BLDC_TEMPERATURE("BLDC Motor Temperature")
 
     ;
 

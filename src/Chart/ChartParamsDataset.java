@@ -19,6 +19,7 @@ public class ChartParamsDataset {
     private XYSeriesCollection mPosXYSeriesCollection;
     private XYSeriesCollection mANGLE_XYSeriesCollection;
     private XYSeriesCollection mVELOCITY_XYSeriesCollection;
+    private XYSeriesCollection mBLDC_Temperature_XYSeriesCollection;
 
     /*
      * These are used in both Rover Interface and UI Interface.
@@ -32,6 +33,7 @@ public class ChartParamsDataset {
         mPosXYSeriesCollection = new XYSeriesCollection();       // this is a collection of different series; each series is one line on a chart.
         mANGLE_XYSeriesCollection = new XYSeriesCollection();       // this is a collection of different series; each series is one line on a chart.
         mVELOCITY_XYSeriesCollection = new XYSeriesCollection();       // this is a collection of different series; each series is one line on a chart.
+        mBLDC_Temperature_XYSeriesCollection = new XYSeriesCollection();       // this is a collection of different series; each series is one line on a chart.
         
         for (ChartParamType paramType : paramTypes) {
             XYSeries series = new XYSeries(paramType.getName()); // this assigns a name to each series
@@ -45,6 +47,8 @@ public class ChartParamsDataset {
                 mANGLE_XYSeriesCollection.addSeries(series);
             } else if (paramType == ChartParamType.VELOCITY) {
                 mVELOCITY_XYSeriesCollection.addSeries(series);    
+            } else if (paramType == ChartParamType.BLDC_TEMPERATURE) {
+                mBLDC_Temperature_XYSeriesCollection.addSeries(series);    
             }
         }
     }
@@ -63,6 +67,10 @@ public class ChartParamsDataset {
 
     public XYSeriesCollection getVELOCITY_Dataset() {
         return mVELOCITY_XYSeriesCollection;
+    }
+    
+    public XYSeriesCollection getBLDCTemperature_Dataset() {
+        return mBLDC_Temperature_XYSeriesCollection;
     }
 
     public String getChartName() {
